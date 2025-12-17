@@ -78,20 +78,20 @@
                                                         <i class="bi bi-eye"></i> Xem
                                                     </a>
                                                     <!-- COD Approval Button - Only show for actual COD orders -->
-                                                    <button th:if="${order.status != null and (order.status == T(com.specialtyfood.model.OrderStatus).PROCESSING or order.status == T(com.specialtyfood.model.OrderStatus).PENDING) and order.paymentMethod == 'COD'}" 
+                                                    <button th:if="${order.status != null and (order.status == T(com.dacsanviet.model.OrderStatus).PROCESSING or order.status == T(com.dacsanviet.model.OrderStatus).PENDING) and order.paymentMethod == 'COD'}" 
                                                             class="btn btn-sm btn-success"
                                                             th:onclick="'showCODApprovalModal(' + ${order.id} + ', \'' + ${order.orderNumber ?: order.id} + '\')'">
                                                         <i class="bi bi-check-circle"></i> Phê duyệt COD
                                                     </button>
                                                     <!-- Show COD button for testing -->
-                                                    <button th:if="${order.status != null and (order.status == T(com.specialtyfood.model.OrderStatus).PROCESSING or order.status == T(com.specialtyfood.model.OrderStatus).PENDING)}" 
+                                                    <button th:if="${order.status != null and (order.status == T(com.dacsanviet.model.OrderStatus).PROCESSING or order.status == T(com.dacsanviet.model.OrderStatus).PENDING)}" 
                                                             class="btn btn-sm btn-warning"
                                                             th:onclick="'testCODApproval(' + ${order.id} + ', \'' + ${order.orderNumber ?: order.id} + '\')'">
                                                         <i class="bi bi-bug"></i> Test COD
                                                     </button>
                                                 </div>
                                                 <!-- Debug info -->
-                                                <small th:if="${order.status != null and (order.status == T(com.specialtyfood.model.OrderStatus).PROCESSING or order.status == T(com.specialtyfood.model.OrderStatus).PENDING)}" 
+                                                <small th:if="${order.status != null and (order.status == T(com.dacsanviet.model.OrderStatus).PROCESSING or order.status == T(com.dacsanviet.model.OrderStatus).PENDING)}" 
                                                        class="text-muted d-block mt-1" 
                                                        th:text="'Status: ' + ${order.status} + ', Payment: [' + ${order.paymentMethod ?: 'null'} + ']'"></small>
                                                 </div>

@@ -4,83 +4,149 @@
     <meta charset="UTF-8">
 </head>
 <body>
-    <!-- Footer -->
-    <footer class="bg-dark text-light mt-5" role="contentinfo" th:fragment="footer">
-        <div class="container py-4">
+
+<!-- Footer Fragment -->
+<footer th:fragment="footer" class="footer">
+
+    <!-- FOOTER MAIN -->
+    <div class="footer-main py-5">
+        <div class="container">
             <div class="row">
-                <!-- Company info -->
-                <div class="col-md-4 mb-3">
-                    <h5 class="fw-bold mb-3">
-                        <i class="bi bi-shop me-2" aria-hidden="true"></i>Đặc Sản Quê Hương
-                    </h5>
-                    <p class="text-muted">
-                        Chuyên cung cấp các sản phẩm đặc sản chất lượng cao từ khắp các vùng miền Việt Nam.
-                        Mang hương vị quê hương đến mọi gia đình.
-                    </p>
-                    <div class="d-flex gap-3" role="list" aria-label="Liên kết mạng xã hội">
-                        <a href="#" class="text-light" aria-label="Facebook"><i class="bi bi-facebook fs-5" aria-hidden="true"></i></a>
-                        <a href="#" class="text-light" aria-label="Instagram"><i class="bi bi-instagram fs-5" aria-hidden="true"></i></a>
-                        <a href="#" class="text-light" aria-label="YouTube"><i class="bi bi-youtube fs-5" aria-hidden="true"></i></a>
-                        <a href="#" class="text-light" aria-label="Email"><i class="bi bi-envelope fs-5" aria-hidden="true"></i></a>
+
+                <!-- CỘT 1 - LOGO & THÔNG TIN -->
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="footer-logo mb-4">
+                        <img src="https://files.catbox.moe/4ka4id.webp" alt="Đặc Sản Việt" style="height: 100px; width: auto;">
+                    </div>
+                    <div class="footer-contact">
+                        <div class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-geo-alt-fill me-2 mt-1 text-primary"></i>
+                            <span class="text-dark" style="font-size: 0.9rem;">01 Võ Văn Ngân, Phường Thủ Đức, TP Hồ Chí Minh</span>
+                        </div>
+                        <div class="mb-3 d-flex align-items-center">
+                            <i class="bi bi-telephone-fill me-2 text-primary"></i>
+                            <a href="tel:(028)38212430" class="footer-link text-dark" style="font-size: 0.9rem;">(028) 3896 8641</a>
+                        </div>
+                        <div class="mb-3 d-flex align-items-center">
+                            <i class="bi bi-envelope-fill me-2 text-primary"></i>
+                            <a href="mailto:dacsanviethotro@gmail.com" class="footer-link text-dark" style="font-size: 0.9rem;">dacsanviethotro@gmail.com</a>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Quick links -->
-                <div class="col-md-2 mb-3">
-                    <h6 class="fw-bold mb-3">Liên Kết</h6>
-                    <nav aria-label="Liên kết nhanh">
-                        <ul class="list-unstyled">
-                            <li><a href="#" class="text-muted text-decoration-none">Về Chúng Tôi</a></li>
-                            <li><a href="#" class="text-muted text-decoration-none">Liên Hệ</a></li>
-                            <li><a href="#" class="text-muted text-decoration-none">Chính Sách</a></li>
-                            <li><a href="#" class="text-muted text-decoration-none">Điều Khoản</a></li>
-                        </ul>
-                    </nav>
+
+                <!-- CỘT 2 - VỀ CHÚNG TÔI -->
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="fw-bold mb-3 text-dark" style = "color: #D2691E !important;">Về chúng tôi</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a th:href="@{/}" class="footer-link">Trang chủ</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">Giới thiệu</a></li>
+                        <li class="mb-2"><a th:href="@{/products}" class="footer-link">Sản phẩm</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">Tin tức</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">Liên hệ</a></li>
+                    </ul>
                 </div>
-                
-                <!-- Categories -->
-                <div class="col-md-3 mb-3">
-                    <h6 class="fw-bold mb-3">Danh Mục</h6>
-                    <nav aria-label="Danh mục sản phẩm">
-                        <ul class="list-unstyled">
-                            <li><a th:href="@{/products?category=1}" class="text-muted text-decoration-none">Đặc Sản Miền Bắc</a></li>
-                            <li><a th:href="@{/products?category=2}" class="text-muted text-decoration-none">Đặc Sản Miền Trung</a></li>
-                            <li><a th:href="@{/products?category=3}" class="text-muted text-decoration-none">Đặc Sản Miền Nam</a></li>
-                            <li><a th:href="@{/categories}" class="text-muted text-decoration-none">Tất Cả Danh Mục</a></li>
-                        </ul>
-                    </nav>
+
+                <!-- CỘT 3 - CHÍNH SÁCH -->
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="fw-bold mb-3 text-dark" style = "color: #D2691E !important;">Chính sách</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="footer-link">Chính sách bảo mật</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">Chính sách vận chuyển</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">Chính sách đổi trả</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">Quy định sử dụng</a></li>
+                        <li class="mb-2">
+                            <div class="d-flex gap-3 mt-3">
+                                <a href="https://www.facebook.com/nhatthien.nguyen.566" class="text-dark fs-5 hover-effect"><i class="bi bi-facebook"></i></a>
+                                <a href="https://www.youtube.com/@tee.2105" class="text-dark fs-5 hover-effect"><i class="bi bi-youtube"></i></a>
+                                <a href="https://www.tiktok.com/@nkqt.tee" class="text-dark fs-5 hover-effect"><i class="bi bi-tiktok"></i></a> 
+                            </div>
+                        </li>
+                    </ul>
                 </div>
-                
-                <!-- Contact info -->
-                <div class="col-md-3 mb-3">
-                    <h6 class="fw-bold mb-3">Liên Hệ</h6>
-                    <address class="text-muted">
-                        <div><i class="bi bi-geo-alt me-2" aria-hidden="true"></i>123 Đường ABC, Quận XYZ, TP.HCM</div>
-                        <div><i class="bi bi-telephone me-2" aria-hidden="true"></i><a href="tel:0123456789" class="text-muted text-decoration-none">0123 456 789</a></div>
-                        <div><i class="bi bi-envelope me-2" aria-hidden="true"></i><a href="mailto:info@dacsanquenhuong.vn" class="text-muted text-decoration-none">info@dacsanquenhuong.vn</a></div>
-                        <div><i class="bi bi-clock me-2" aria-hidden="true"></i>8:00 - 22:00 (Thứ 2 - CN)</div>
-                    </address>
-                </div>
-            </div>
-            
-            <hr class="my-4">
-            
-            <!-- Copyright -->
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <p class="text-muted mb-0">
-                        &copy; 2024 Đặc Sản Quê Hương. Tất cả quyền được bảo lưu.
-                    </p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <div role="img" aria-label="Phương thức thanh toán được chấp nhận">
-                        <img src="https://via.placeholder.com/40x25/007bff/ffffff?text=VISA" alt="Thẻ Visa" class="me-2">
-                        <img src="https://via.placeholder.com/40x25/ff5722/ffffff?text=MC" alt="Thẻ Mastercard" class="me-2">
-                        <img src="https://via.placeholder.com/40x25/4caf50/ffffff?text=ATM" alt="Thẻ ATM nội địa" class="me-2">
+
+                <!-- CỘT 4 - BẢN ĐỒ -->
+                <div class="col-lg-5 col-md-6 mb-4">
+                    <div class="footer-map" style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                        <iframe 
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4199.105974381276!2d106.76933817529977!3d10.850637657819977!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752763f23816ab%3A0x282f711441b6916f!2zVHLGsOG7nW5nIMSQ4bqhaSBo4buNYyBTxrAgcGjhuqFtIEvhu7kgdGh14bqtdCBUaMOgbmggcGjhu5EgSOG7kyBDaMOtIE1pbmg!5e1!3m2!1svi!2sus!4v1765991301515!5m2!1svi!2sus" 
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 12px;" 
+                            allowfullscreen="" 
+                            loading="lazy" 
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
                     </div>
                 </div>
+
             </div>
         </div>
-    </footer>
+    </div>
+
+    <!-- FOOTER BOTTOM -->
+    <div class="footer-bottom text-center py-4">
+        <div class="container">
+            <p class="mb-0">Copyright © 2025 Đặc Sản Việt - Kết nối hương vị quê hương đến mọi miền</p>
+        </div>
+    </div>
+
+    <!-- CSS -->
+    <style>
+        .footer-main {
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .footer-bottom {
+            background-color: #77c4dd;
+            color: #fff;
+            font-size: 14px;
+            padding: 30px 0;
+        }
+        
+        .footer-bottom p {
+            margin: 0;
+            color: #fff;
+        }
+
+        .footer-link {
+            color: #6c757d;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-link:hover {
+            color: #D2691E;
+            transform: translateX(3px);
+        }
+
+        .hover-effect {
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .hover-effect:hover {
+            color: #D2691E !important;
+            transform: scale(1.2);
+        }
+        
+        .footer-logo img {
+            transition: transform 0.3s ease;
+        }
+        
+        .footer-logo:hover img {
+            transform: scale(1.05);
+        }
+        
+        .footer-contact i {
+            font-size: 1.1rem;
+        }
+        
+        .footer-map iframe {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+
+</footer>
+
 </body>
 </html>

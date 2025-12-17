@@ -5,10 +5,10 @@
 
 /* CSS Variables */
 :root {
-    --primary-color: #e74c3c;
-    --primary-dark: #c0392b;
-    --primary-light: #f1948a;
-    --secondary-color: #34495e;
+    --primary-color: #D2691E;
+    --primary-dark: #8B4513;
+    --primary-light: #F4A460;
+    --secondary-color: #4ec2b6;
     --accent-color: #f39c12;
     --success-color: #27ae60;
     --warning-color: #f39c12;
@@ -184,6 +184,8 @@ h1, h2, h3, h4, h5, h6 {
     border: none;
     overflow: hidden;
     transition: all var(--transition-normal);
+    transform-style: preserve-3d;
+    perspective: 1000px;
 }
 
 .card:hover {
@@ -198,12 +200,22 @@ h1, h2, h3, h4, h5, h6 {
     border: 1px solid var(--gray-200);
     overflow: hidden;
     transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transform-style: preserve-3d;
+    perspective: 1000px;
 }
 
 .card-modern:hover {
     transform: translateY(-10px);
     box-shadow: var(--shadow-2xl);
     border-color: var(--primary-light);
+}
+
+/* 3D Card Effect on Mouse Move */
+.card-3d,
+.product-card {
+    transform-style: preserve-3d;
+    transition: transform 0.1s ease-out;
+    will-change: transform;
 }
 
 /* Forms */
@@ -713,17 +725,22 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
-/* Focus Styles */
-*:focus {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
+/* Focus Styles - Remove all outlines */
+*:focus,
+*:focus-visible {
+    outline: none !important;
 }
 
 .btn:focus,
 .form-control:focus,
-.form-select:focus {
-    outline: none;
-    box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.25);
+.form-select:focus,
+a:focus,
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 /* High Contrast Mode */
