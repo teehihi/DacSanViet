@@ -68,7 +68,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .headers(headers -> headers.frameOptions().sameOrigin()) // Allow H2 console frames
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(authz -> authz
                 // Public endpoints
                 .requestMatchers("/about", "/contact", "/test", "/test-simple", "/error").permitAll()
@@ -83,7 +83,8 @@ public class SecurityConfig {
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                 
                 // Product browsing (require login)
-                .requestMatchers("/", "/home", "/products/**", "/categories/**", "/search/**").hasRole("USER")
+                // Product browsing (public)
+                .requestMatchers("/", "/home", "/products/**", "/categories/**", "/search/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                 

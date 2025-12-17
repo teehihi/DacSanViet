@@ -23,6 +23,9 @@ import java.util.List;
     @Index(name = "idx_product_active", columnList = "is_active"),
     @Index(name = "idx_product_price", columnList = "price")
 })
+@lombok.Data
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class Product {
     
     @Id
@@ -66,12 +69,15 @@ public class Product {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
+    @lombok.ToString.Exclude
     private Category category;
     
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @lombok.ToString.Exclude
     private List<CartItem> cartItems = new ArrayList<>();
     
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @lombok.ToString.Exclude
     private List<OrderItem> orderItems = new ArrayList<>();
     
     @CreationTimestamp
@@ -82,135 +88,11 @@ public class Product {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    // Default constructor
-    public Product() {}
-    
     // Constructor with required fields
     public Product(String name, BigDecimal price, Category category) {
         this.name = name;
         this.price = price;
         this.category = category;
-    }
-    
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-    
-    public void setId(Long id) {
-        this.id = id;
-    }
-    
-    public String getName() {
-        return name;
-    }
-    
-    public void setName(String name) {
-        this.name = name;
-    }
-    
-    public String getDescription() {
-        return description;
-    }
-    
-    public void setDescription(String description) {
-        this.description = description;
-    }
-    
-    public BigDecimal getPrice() {
-        return price;
-    }
-    
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-    
-    public Integer getStockQuantity() {
-        return stockQuantity;
-    }
-    
-    public void setStockQuantity(Integer stockQuantity) {
-        this.stockQuantity = stockQuantity;
-    }
-    
-    public String getImageUrl() {
-        return imageUrl;
-    }
-    
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-    
-    public Boolean getIsActive() {
-        return isActive;
-    }
-    
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
-    }
-    
-    public Boolean getIsFeatured() {
-        return isFeatured;
-    }
-    
-    public void setIsFeatured(Boolean isFeatured) {
-        this.isFeatured = isFeatured;
-    }
-    
-    public Integer getWeightGrams() {
-        return weightGrams;
-    }
-    
-    public void setWeightGrams(Integer weightGrams) {
-        this.weightGrams = weightGrams;
-    }
-    
-    public String getOrigin() {
-        return origin;
-    }
-    
-    public void setOrigin(String origin) {
-        this.origin = origin;
-    }
-    
-    public Category getCategory() {
-        return category;
-    }
-    
-    public void setCategory(Category category) {
-        this.category = category;
-    }
-    
-    public List<CartItem> getCartItems() {
-        return cartItems;
-    }
-    
-    public void setCartItems(List<CartItem> cartItems) {
-        this.cartItems = cartItems;
-    }
-    
-    public List<OrderItem> getOrderItems() {
-        return orderItems;
-    }
-    
-    public void setOrderItems(List<OrderItem> orderItems) {
-        this.orderItems = orderItems;
-    }
-    
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-    
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-    
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-    
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
     
     // Helper methods
@@ -232,17 +114,5 @@ public class Product {
     
     public void increaseStock(Integer quantity) {
         stockQuantity += quantity;
-    }
-    
-    @Override
-    public String toString() {
-        return "Product{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", price=" + price +
-                ", stockQuantity=" + stockQuantity +
-                ", isActive=" + isActive +
-                ", category=" + (category != null ? category.getName() : null) +
-                '}';
     }
 }

@@ -6,7 +6,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import java.util.Collections;
 
 /**
  * UserPrincipal class implementing UserDetails
@@ -30,9 +29,12 @@ public class UserPrincipal implements UserDetails {
     }
     
     public static UserPrincipal create(User user) {
-        Collection<GrantedAuthority> authorities = Collections.singletonList(
-            new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
-        );
+        Collection<GrantedAuthority> authorities = new java.util.ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+        
+        if (Boolean.TRUE.equals(user.getAdmin())) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        }
         
         return new UserPrincipal(
             user.getId(),

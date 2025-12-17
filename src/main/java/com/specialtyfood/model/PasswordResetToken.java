@@ -11,6 +11,9 @@ import java.time.LocalDateTime;
     @Index(name = "idx_token", columnList = "token"),
     @Index(name = "idx_user_id", columnList = "user_id")
 })
+@lombok.Data
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class PasswordResetToken {
     
     @Id
@@ -22,6 +25,7 @@ public class PasswordResetToken {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @lombok.ToString.Exclude
     private User user;
     
     @Column(name = "expiry_date", nullable = false)
@@ -33,66 +37,17 @@ public class PasswordResetToken {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
-    // Default constructor
-    public PasswordResetToken() {
+    // Default initializer block
+    {
         this.createdAt = LocalDateTime.now();
     }
     
     // Constructor with required fields
     public PasswordResetToken(String token, User user, LocalDateTime expiryDate) {
-        this();
+        // Initializer block runs
         this.token = token;
         this.user = user;
         this.expiryDate = expiryDate;
-    }
-    
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-    
-    public void setId(Long id) {
-        this.id = id;
-    }
-    
-    public String getToken() {
-        return token;
-    }
-    
-    public void setToken(String token) {
-        this.token = token;
-    }
-    
-    public User getUser() {
-        return user;
-    }
-    
-    public void setUser(User user) {
-        this.user = user;
-    }
-    
-    public LocalDateTime getExpiryDate() {
-        return expiryDate;
-    }
-    
-    public void setExpiryDate(LocalDateTime expiryDate) {
-        this.expiryDate = expiryDate;
-    }
-    
-    public Boolean getUsed() {
-        return used;
-    }
-    
-    public void setUsed(Boolean used) {
-        this.used = used;
-    }
-    
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-    
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
     
     // Helper methods
@@ -102,16 +57,5 @@ public class PasswordResetToken {
     
     public boolean isValid() {
         return !this.used && !this.isExpired();
-    }
-    
-    @Override
-    public String toString() {
-        return "PasswordResetToken{" +
-                "id=" + id +
-                ", token='" + token + '\'' +
-                ", userId=" + (user != null ? user.getId() : null) +
-                ", expiryDate=" + expiryDate +
-                ", used=" + used +
-                '}';
     }
 }

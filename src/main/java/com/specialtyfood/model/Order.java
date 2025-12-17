@@ -21,6 +21,9 @@ import java.util.List;
     @Index(name = "idx_order_date", columnList = "order_date"),
     @Index(name = "idx_order_number", columnList = "order_number")
 })
+@lombok.Data
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class Order {
     
     @Id
@@ -32,6 +35,7 @@ public class Order {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @lombok.ToString.Exclude
     private User user;
     
     @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
@@ -49,10 +53,12 @@ public class Order {
     private OrderStatus status = OrderStatus.PENDING;
     
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @lombok.ToString.Exclude
     private List<OrderItem> orderItems = new ArrayList<>();
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shipping_address_id")
+    @lombok.ToString.Exclude
     private Address shippingAddress;
     
     @Column(name = "order_date", nullable = false)
@@ -88,72 +94,20 @@ public class Order {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    // Default constructor
-    public Order() {
+    // Constructor with defaults
+    {
         this.orderDate = LocalDateTime.now();
         this.orderNumber = generateOrderNumber();
     }
-    
+
     // Constructor with required fields
     public Order(User user, BigDecimal totalAmount) {
-        this();
+        // Initializer block runs automatically
         this.user = user;
         this.totalAmount = totalAmount;
     }
     
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-    
-    public void setId(Long id) {
-        this.id = id;
-    }
-    
-    public String getOrderNumber() {
-        return orderNumber;
-    }
-    
-    public void setOrderNumber(String orderNumber) {
-        this.orderNumber = orderNumber;
-    }
-    
-    public User getUser() {
-        return user;
-    }
-    
-    public void setUser(User user) {
-        this.user = user;
-    }
-    
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
-    
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
-    }
-    
-    public BigDecimal getShippingFee() {
-        return shippingFee;
-    }
-    
-    public void setShippingFee(BigDecimal shippingFee) {
-        this.shippingFee = shippingFee;
-    }
-    
-    public BigDecimal getTaxAmount() {
-        return taxAmount;
-    }
-    
-    public void setTaxAmount(BigDecimal taxAmount) {
-        this.taxAmount = taxAmount;
-    }
-    
-    public OrderStatus getStatus() {
-        return status;
-    }
-    
+    // Custom Setter for Status
     public void setStatus(OrderStatus status) {
         this.status = status;
         
@@ -163,94 +117,6 @@ public class Order {
         } else if (status == OrderStatus.DELIVERED && deliveredDate == null) {
             deliveredDate = LocalDateTime.now();
         }
-    }
-    
-    public List<OrderItem> getOrderItems() {
-        return orderItems;
-    }
-    
-    public void setOrderItems(List<OrderItem> orderItems) {
-        this.orderItems = orderItems;
-    }
-    
-    public Address getShippingAddress() {
-        return shippingAddress;
-    }
-    
-    public void setShippingAddress(Address shippingAddress) {
-        this.shippingAddress = shippingAddress;
-    }
-    
-    public LocalDateTime getOrderDate() {
-        return orderDate;
-    }
-    
-    public void setOrderDate(LocalDateTime orderDate) {
-        this.orderDate = orderDate;
-    }
-    
-    public LocalDateTime getShippedDate() {
-        return shippedDate;
-    }
-    
-    public void setShippedDate(LocalDateTime shippedDate) {
-        this.shippedDate = shippedDate;
-    }
-    
-    public LocalDateTime getDeliveredDate() {
-        return deliveredDate;
-    }
-    
-    public void setDeliveredDate(LocalDateTime deliveredDate) {
-        this.deliveredDate = deliveredDate;
-    }
-    
-    public String getTrackingNumber() {
-        return trackingNumber;
-    }
-    
-    public void setTrackingNumber(String trackingNumber) {
-        this.trackingNumber = trackingNumber;
-    }
-    
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-    
-    public void setPaymentMethod(String paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
-    
-    public String getPaymentStatus() {
-        return paymentStatus;
-    }
-    
-    public void setPaymentStatus(String paymentStatus) {
-        this.paymentStatus = paymentStatus;
-    }
-    
-    public String getNotes() {
-        return notes;
-    }
-    
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
-    
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-    
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-    
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-    
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
     
     // Helper methods
@@ -295,17 +161,5 @@ public class Order {
         // Generate order number with timestamp
         long timestamp = System.currentTimeMillis();
         return "ORD" + timestamp;
-    }
-    
-    @Override
-    public String toString() {
-        return "Order{" +
-                "id=" + id +
-                ", orderNumber='" + orderNumber + '\'' +
-                ", totalAmount=" + totalAmount +
-                ", status=" + status +
-                ", orderDate=" + orderDate +
-                ", itemCount=" + (orderItems != null ? orderItems.size() : 0) +
-                '}';
     }
 }

@@ -17,6 +17,9 @@ import java.util.List;
 @Table(name = "categories", indexes = {
     @Index(name = "idx_category_name", columnList = "name")
 })
+@lombok.Data
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class Category {
     
     @Id
@@ -36,6 +39,7 @@ public class Category {
     private Boolean isActive = true;
     
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @lombok.ToString.Exclude
     private List<Product> products = new ArrayList<>();
     
     @CreationTimestamp
@@ -45,9 +49,6 @@ public class Category {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-    
-    // Default constructor
-    public Category() {}
     
     // Constructor with required fields
     public Category(String name) {
@@ -59,63 +60,6 @@ public class Category {
         this.description = description;
     }
     
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-    
-    public void setId(Long id) {
-        this.id = id;
-    }
-    
-    public String getName() {
-        return name;
-    }
-    
-    public void setName(String name) {
-        this.name = name;
-    }
-    
-    public String getDescription() {
-        return description;
-    }
-    
-    public void setDescription(String description) {
-        this.description = description;
-    }
-    
-    public Boolean getIsActive() {
-        return isActive;
-    }
-    
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
-    }
-    
-    public List<Product> getProducts() {
-        return products;
-    }
-    
-    public void setProducts(List<Product> products) {
-        this.products = products;
-    }
-    
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-    
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-    
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-    
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-    
     // Helper methods
     public void addProduct(Product product) {
         products.add(product);
@@ -125,15 +69,5 @@ public class Category {
     public void removeProduct(Product product) {
         products.remove(product);
         product.setCategory(null);
-    }
-    
-    @Override
-    public String toString() {
-        return "Category{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", isActive=" + isActive +
-                '}';
     }
 }

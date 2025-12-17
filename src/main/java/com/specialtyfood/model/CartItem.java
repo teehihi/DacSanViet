@@ -21,6 +21,9 @@ import java.time.LocalDateTime;
         @UniqueConstraint(name = "uk_cart_user_product", columnNames = {"user_id", "product_id"})
     }
 )
+@lombok.Data
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class CartItem {
     
     @Id
@@ -29,10 +32,12 @@ public class CartItem {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @lombok.ToString.Exclude
     private User user;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
+    @lombok.ToString.Exclude
     private Product product;
     
     @Column(nullable = false)
@@ -50,9 +55,6 @@ public class CartItem {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    // Default constructor
-    public CartItem() {}
-    
     // Constructor with required fields
     public CartItem(User user, Product product, Integer quantity) {
         this.user = user;
@@ -61,64 +63,12 @@ public class CartItem {
         this.unitPrice = product.getPrice(); // Set current price
     }
     
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-    
-    public void setId(Long id) {
-        this.id = id;
-    }
-    
-    public User getUser() {
-        return user;
-    }
-    
-    public void setUser(User user) {
-        this.user = user;
-    }
-    
-    public Product getProduct() {
-        return product;
-    }
-    
+    // Custom setter for product to update unit price
     public void setProduct(Product product) {
         this.product = product;
         if (product != null) {
             this.unitPrice = product.getPrice(); // Update price when product changes
         }
-    }
-    
-    public Integer getQuantity() {
-        return quantity;
-    }
-    
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
-    }
-    
-    public BigDecimal getUnitPrice() {
-        return unitPrice;
-    }
-    
-    public void setUnitPrice(BigDecimal unitPrice) {
-        this.unitPrice = unitPrice;
-    }
-    
-    public LocalDateTime getAddedDate() {
-        return addedDate;
-    }
-    
-    public void setAddedDate(LocalDateTime addedDate) {
-        this.addedDate = addedDate;
-    }
-    
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-    
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
     
     // Helper methods
@@ -151,16 +101,5 @@ public class CartItem {
             throw new IllegalArgumentException("Cannot decrease quantity below 1");
         }
         this.quantity -= amount;
-    }
-    
-    @Override
-    public String toString() {
-        return "CartItem{" +
-                "id=" + id +
-                ", quantity=" + quantity +
-                ", unitPrice=" + unitPrice +
-                ", totalPrice=" + getTotalPrice() +
-                ", product=" + (product != null ? product.getName() : null) +
-                '}';
     }
 }

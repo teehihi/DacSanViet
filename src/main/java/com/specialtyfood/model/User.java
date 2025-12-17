@@ -20,6 +20,9 @@ import java.util.List;
     @Index(name = "idx_user_email", columnList = "email"),
     @Index(name = "idx_user_username", columnList = "username")
 })
+@lombok.Data
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class User {
     
     @Id
@@ -52,16 +55,22 @@ public class User {
     @Column(nullable = false)
     private Role role = Role.USER;
     
+    @Column(name = "admin")
+    private Boolean admin = false;
+    
     @Column(name = "is_active")
     private Boolean isActive = true;
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @lombok.ToString.Exclude
     private List<Address> addresses = new ArrayList<>();
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @lombok.ToString.Exclude
     private List<Order> orders = new ArrayList<>();
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @lombok.ToString.Exclude
     private List<CartItem> cartItems = new ArrayList<>();
     
     @CreationTimestamp
@@ -72,119 +81,11 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    // Default constructor
-    public User() {}
-    
-    // Constructor with required fields
+    // Custom Constructor for required fields (Lombok @RequiredArgsConstructor handles final fields, but these aren't final)
     public User(String username, String email, String password) {
         this.username = username;
         this.email = email;
         this.password = password;
-    }
-    
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-    
-    public void setId(Long id) {
-        this.id = id;
-    }
-    
-    public String getUsername() {
-        return username;
-    }
-    
-    public void setUsername(String username) {
-        this.username = username;
-    }
-    
-    public String getEmail() {
-        return email;
-    }
-    
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    
-    public String getPassword() {
-        return password;
-    }
-    
-    public void setPassword(String password) {
-        this.password = password;
-    }
-    
-    public String getFullName() {
-        return fullName;
-    }
-    
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-    
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-    
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-    
-    public Role getRole() {
-        return role;
-    }
-    
-    public void setRole(Role role) {
-        this.role = role;
-    }
-    
-    public Boolean getIsActive() {
-        return isActive;
-    }
-    
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
-    }
-    
-    public List<Address> getAddresses() {
-        return addresses;
-    }
-    
-    public void setAddresses(List<Address> addresses) {
-        this.addresses = addresses;
-    }
-    
-    public List<Order> getOrders() {
-        return orders;
-    }
-    
-    public void setOrders(List<Order> orders) {
-        this.orders = orders;
-    }
-    
-    public List<CartItem> getCartItems() {
-        return cartItems;
-    }
-    
-    public void setCartItems(List<CartItem> cartItems) {
-        this.cartItems = cartItems;
-    }
-    
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-    
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-    
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-    
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
     
     // Helper methods
@@ -211,17 +112,5 @@ public class User {
     public void removeCartItem(CartItem cartItem) {
         cartItems.remove(cartItem);
         cartItem.setUser(null);
-    }
-    
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", username='" + username + '\'' +
-                ", email='" + email + '\'' +
-                ", fullName='" + fullName + '\'' +
-                ", role=" + role +
-                ", isActive=" + isActive +
-                '}';
     }
 }

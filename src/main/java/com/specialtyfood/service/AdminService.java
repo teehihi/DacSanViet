@@ -370,6 +370,10 @@ public class AdminService {
                 notificationService.sendInternalNotification("SALES", 
                     String.format("Order %s delivered successfully", order.getOrderNumber()));
                 break;
+            case CANCELLED:
+                notificationService.sendInternalNotification("INVENTORY", 
+                    String.format("Order %s cancelled and inventory restored", order.getOrderNumber()));
+                break;
         }
     }
     
