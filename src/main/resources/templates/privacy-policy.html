@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chính Sách Bảo Mật - Đặc Sản Việt</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/header.css(v=2)}">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+        }
+        
+        .policy-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .policy-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #4ec2b6;
+        }
+        
+        .policy-header h1 {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .policy-header p {
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+        
+        .policy-section {
+            margin-bottom: 30px;
+        }
+        
+        .policy-section h2 {
+            color: #4ec2b6;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            margin-top: 30px;
+        }
+        
+        .policy-section h3 {
+            color: #2c3e50;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            margin-top: 20px;
+        }
+        
+        .policy-section p {
+            color: #495057;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        
+        .policy-section ul {
+            color: #495057;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        
+        .policy-section ul li {
+            margin-bottom: 8px;
+        }
+        
+        .highlight-box {
+            background: #f0f9f8;
+            border-left: 4px solid #4ec2b6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .contact-info {
+            background: #fff5f0;
+            border: 2px solid #4ec2b6;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        
+        .contact-info h3 {
+            color: #4ec2b6;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div th:replace="~{fragments/header :: header}"></div>
+    <div th:replace="~{fragments/header :: mobile-menu}"></div>
+    
+    <div class="container">
+        <div class="policy-container">
+            <div class="policy-header">
+                <h1><i class="fas fa-shield-alt me-2"></i>Chính Sách Bảo Mật</h1>
+                <p>Cập nhật lần cuối: Tháng 12, 2025</p>
+            </div>
+            
+            <div class="policy-section">
+                <h2>1. Giới Thiệu</h2>
+                <p>
+                    Chào mừng bạn đến với Đặc Sản Việt. Chúng tôi cam kết bảo vệ quyền riêng tư và thông tin cá nhân của bạn. 
+                    Chính sách bảo mật này giải thích cách chúng tôi thu thập, sử dụng, lưu trữ và bảo vệ thông tin của bạn 
+                    khi bạn sử dụng website và dịch vụ của chúng tôi.
+                </p>
+            </div>
+            
+            <div class="policy-section">
+                <h2>2. Thông Tin Chúng Tôi Thu Thập</h2>
+                <h3>2.1. Thông tin cá nhân</h3>
+                <p>Khi bạn đăng ký tài khoản hoặc đặt hàng, chúng tôi có thể thu thập:</p>
+                <ul>
+                    <li>Họ và tên</li>
+                    <li>Địa chỉ email</li>
+                    <li>Số điện thoại</li>
+                    <li>Địa chỉ giao hàng</li>
+                    <li>Thông tin thanh toán</li>
+                </ul>
+                
+                <h3>2.2. Thông tin tự động</h3>
+                <p>Chúng tôi tự động thu thập một số thông tin khi bạn truy cập website:</p>
+                <ul>
+                    <li>Địa chỉ IP</li>
+                    <li>Loại trình duyệt</li>
+                    <li>Thời gian truy cập</li>
+                    <li>Trang web bạn đã xem</li>
+                    <li>Cookie và công nghệ theo dõi tương tự</li>
+                </ul>
+            </div>
+            
+            <div class="policy-section">
+                <h2>3. Cách Chúng Tôi Sử Dụng Thông Tin</h2>
+                <p>Thông tin của bạn được sử dụng để:</p>
+                <ul>
+                    <li>Xử lý và giao hàng đơn đặt hàng của bạn</li>
+                    <li>Cung cấp dịch vụ khách hàng và hỗ trợ</li>
+                    <li>Gửi thông báo về đơn hàng và cập nhật dịch vụ</li>
+                    <li>Cải thiện trải nghiệm người dùng trên website</li>
+                    <li>Gửi thông tin khuyến mãi và ưu đãi (nếu bạn đồng ý)</li>
+                    <li>Phát hiện và ngăn chặn gian lận</li>
+                    <li>Tuân thủ các nghĩa vụ pháp lý</li>
+                </ul>
+            </div>
+            
+            <div class="highlight-box">
+                <strong><i class="fas fa-info-circle me-2"></i>Lưu ý quan trọng:</strong>
+                <p class="mb-0">
+                    Chúng tôi không bao giờ bán, cho thuê hoặc chia sẻ thông tin cá nhân của bạn với bên thứ ba 
+                    cho mục đích tiếp thị mà không có sự đồng ý của bạn.
+                </p>
+            </div>
+            
+            <div class="policy-section">
+                <h2>4. Bảo Mật Thông Tin</h2>
+                <p>Chúng tôi áp dụng các biện pháp bảo mật kỹ thuật và tổ chức phù hợp để bảo vệ thông tin của bạn:</p>
+                <ul>
+                    <li>Mã hóa SSL/TLS cho tất cả các giao dịch</li>
+                    <li>Lưu trữ dữ liệu trên máy chủ an toàn</li>
+                    <li>Kiểm soát truy cập nghiêm ngặt</li>
+                    <li>Giám sát và kiểm tra bảo mật thường xuyên</li>
+                    <li>Đào tạo nhân viên về bảo mật thông tin</li>
+                </ul>
+            </div>
+            
+            <div class="policy-section">
+                <h2>5. Cookie và Công Nghệ Theo Dõi</h2>
+                <p>
+                    Chúng tôi sử dụng cookie và các công nghệ tương tự để cải thiện trải nghiệm của bạn. 
+                    Cookie giúp chúng tôi ghi nhớ tùy chọn của bạn, phân tích lưu lượng truy cập và cá nhân hóa nội dung.
+                </p>
+                <p>Bạn có thể quản lý cookie thông qua cài đặt trình duyệt của mình.</p>
+            </div>
+            
+            <div class="policy-section">
+                <h2>6. Quyền Của Bạn</h2>
+                <p>Bạn có các quyền sau đối với thông tin cá nhân của mình:</p>
+                <ul>
+                    <li><strong>Quyền truy cập:</strong> Yêu cầu xem thông tin chúng tôi lưu trữ về bạn</li>
+                    <li><strong>Quyền chỉnh sửa:</strong> Cập nhật hoặc sửa đổi thông tin không chính xác</li>
+                    <li><strong>Quyền xóa:</strong> Yêu cầu xóa thông tin cá nhân của bạn</li>
+                    <li><strong>Quyền từ chối:</strong> Từ chối nhận email tiếp thị</li>
+                    <li><strong>Quyền khiếu nại:</strong> Khiếu nại với cơ quan có thẩm quyền</li>
+                </ul>
+            </div>
+            
+            <div class="policy-section">
+                <h2>7. Chia Sẻ Thông Tin</h2>
+                <p>Chúng tôi chỉ chia sẻ thông tin của bạn với:</p>
+                <ul>
+                    <li><strong>Đối tác vận chuyển:</strong> Để giao hàng đến bạn</li>
+                    <li><strong>Nhà cung cấp thanh toán:</strong> Để xử lý giao dịch</li>
+                    <li><strong>Nhà cung cấp dịch vụ:</strong> Hỗ trợ vận hành website</li>
+                    <li><strong>Cơ quan pháp luật:</strong> Khi được yêu cầu theo quy định pháp luật</li>
+                </ul>
+            </div>
+            
+            <div class="policy-section">
+                <h2>8. Lưu Trữ Thông Tin</h2>
+                <p>
+                    Chúng tôi lưu trữ thông tin của bạn trong thời gian cần thiết để cung cấp dịch vụ và tuân thủ 
+                    nghĩa vụ pháp lý. Sau đó, thông tin sẽ được xóa hoặc ẩn danh một cách an toàn.
+                </p>
+            </div>
+            
+            <div class="policy-section">
+                <h2>9. Thay Đổi Chính Sách</h2>
+                <p>
+                    Chúng tôi có thể cập nhật chính sách bảo mật này theo thời gian. Mọi thay đổi sẽ được đăng tải 
+                    trên trang này với ngày cập nhật mới. Chúng tôi khuyến khích bạn xem lại chính sách định kỳ.
+                </p>
+            </div>
+            
+            <div class="contact-info">
+                <h3><i class="fas fa-envelope me-2"></i>Liên Hệ</h3>
+                <p>Nếu bạn có bất kỳ câu hỏi nào về chính sách bảo mật này, vui lòng liên hệ:</p>
+                <ul class="list-unstyled">
+                   <li><i class="fas fa-envelope me-2"></i>Email: dacsanviethotro@gmail.com</li>
+                    <li><i class="fas fa-phone me-2"></i>Hotline: (028) 3896 8641</li>
+                    <li><i class="fas fa-map-marker-alt me-2"></i>Địa chỉ: 01 Võ Văn Ngân, phường Thủ Đức, TP.HCM</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/header.js}"></script>
+</body>
+</html>

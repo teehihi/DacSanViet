@@ -105,12 +105,14 @@ public class HomeController {
     @GetMapping("/login")
     public String login(Model model) {
         model.addAttribute("pageTitle", "Đăng Nhập");
+        model.addAttribute("categories", categoryService.getAllActiveCategories());
         return "auth/login";
     }
     
     @GetMapping("/register")
     public String register(Model model) {
         model.addAttribute("pageTitle", "Đăng Ký");
+        model.addAttribute("categories", categoryService.getAllActiveCategories());
         return "auth/register";
     }
     
@@ -119,5 +121,18 @@ public class HomeController {
         return "test-simple";
     }
     
+    @GetMapping("/privacy-policy")
+    public String privacyPolicy(Model model) {
+        model.addAttribute("pageTitle", "Chính Sách Bảo Mật");
+        model.addAttribute("categories", categoryService.getAllActiveCategories());
+        return "privacy-policy";
+    }
+    
+    @GetMapping("/terms-of-service")
+    public String termsOfService(Model model) {
+        model.addAttribute("pageTitle", "Điều Khoản Sử Dụng");
+        model.addAttribute("categories", categoryService.getAllActiveCategories());
+        return "terms-of-service";
+    }
 
 }

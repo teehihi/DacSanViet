@@ -254,6 +254,42 @@ body {
     font-size: 14px;
 }
 
+/* Login/Register Buttons */
+.login-section .btn {
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    border-width: 2px;
+}
+
+.login-section .btn-outline-primary {
+    border-color: #4ec2b6;
+    color: #4ec2b6;
+    background: transparent;
+}
+
+.login-section .btn-outline-primary:hover {
+    background: #4ec2b6;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(78, 194, 182, 0.3);
+}
+
+.login-section .btn-primary {
+    background: #4ec2b6;
+    border-color: #4ec2b6;
+    color: white;
+}
+
+.login-section .btn-primary:hover {
+    background: #2e857c;
+    border-color: #2e857c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(78, 194, 182, 0.4);
+}
+
 /* Mobile Menu */
 .mobile-menu-toggle {
     border: none;

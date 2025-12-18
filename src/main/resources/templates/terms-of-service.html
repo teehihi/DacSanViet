@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Điều Khoản Sử Dụng - Đặc Sản Việt</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/header.css(v=2)}">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+        }
+        
+        .policy-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .policy-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #4ec2b6;
+        }
+        
+        .policy-header h1 {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .policy-header p {
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+        
+        .policy-section {
+            margin-bottom: 30px;
+        }
+        
+        .policy-section h2 {
+            color: #4ec2b6;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            margin-top: 30px;
+        }
+        
+        .policy-section h3 {
+            color: #2c3e50;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            margin-top: 20px;
+        }
+        
+        .policy-section p {
+            color: #495057;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        
+        .policy-section ul {
+            color: #495057;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        
+        .policy-section ul li {
+            margin-bottom: 8px;
+        }
+        
+        .highlight-box {
+            background: #f0f9f8;
+            border-left: 4px solid #4ec2b6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .contact-info {
+            background: #fff5f0;
+            border: 2px solid #4ec2b6;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        
+        .contact-info h3 {
+            color: #4ec2b6;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div th:replace="~{fragments/header :: header}"></div>
+    <div th:replace="~{fragments/header :: mobile-menu}"></div>
+    
+    <div class="container">
+        <div class="policy-container">
+            <div class="policy-header">
+                <h1><i class="fas fa-file-contract me-2"></i>Điều Khoản Sử Dụng</h1>
+                <p>Cập nhật lần cuối: Tháng 12, 2025</p>
+            </div>
+            
+            <div class="policy-section">
+                <h2>1. Chấp Nhận Điều Khoản</h2>
+                <p>
+                    Bằng việc truy cập và sử dụng website Đặc Sản Việt, bạn đồng ý tuân thủ và bị ràng buộc bởi 
+                    các điều khoản và điều kiện sử dụng sau đây. Nếu bạn không đồng ý với bất kỳ phần nào của 
+                    các điều khoản này, vui lòng không sử dụng dịch vụ của chúng tôi.
+                </p>
+            </div>
+            
+            <div class="policy-section">
+                <h2>2. Tài Khoản Người Dùng</h2>
+                <h3>2.1. Đăng ký tài khoản</h3>
+                <ul>
+                    <li>Bạn phải cung cấp thông tin chính xác, đầy đủ và cập nhật</li>
+                    <li>Bạn chịu trách nhiệm bảo mật thông tin đăng nhập</li>
+                    <li>Bạn phải từ 18 tuổi trở lên để đăng ký tài khoản</li>
+                    <li>Một người chỉ được tạo một tài khoản</li>
+                </ul>
+                
+                <h3>2.2. Trách nhiệm của người dùng</h3>
+                <ul>
+                    <li>Thông báo ngay cho chúng tôi nếu phát hiện sử dụng trái phép</li>
+                    <li>Không chia sẻ tài khoản với người khác</li>
+                    <li>Chịu trách nhiệm về mọi hoạt động dưới tài khoản của bạn</li>
+                </ul>
+            </div>
+            
+            <div class="policy-section">
+                <h2>3. Đặt Hàng và Thanh Toán</h2>
+                <h3>3.1. Quy trình đặt hàng</h3>
+                <ul>
+                    <li>Tất cả đơn hàng phải được xác nhận qua email hoặc điện thoại</li>
+                    <li>Giá cả và tình trạng sản phẩm có thể thay đổi mà không cần thông báo trước</li>
+                    <li>Chúng tôi có quyền từ chối hoặc hủy đơn hàng trong một số trường hợp</li>
+                </ul>
+                
+                <h3>3.2. Thanh toán</h3>
+                <ul>
+                    <li>Chấp nhận thanh toán qua thẻ tín dụng, chuyển khoản, COD</li>
+                    <li>Thanh toán phải được hoàn tất trước khi giao hàng (trừ COD)</li>
+                    <li>Hóa đơn VAT được cung cấp theo yêu cầu</li>
+                </ul>
+            </div>
+            
+            <div class="highlight-box">
+                <strong><i class="fas fa-exclamation-triangle me-2"></i>Lưu ý:</strong>
+                <p class="mb-0">
+                    Chúng tôi có quyền hủy đơn hàng nếu phát hiện thông tin gian lận hoặc vi phạm điều khoản sử dụng.
+                </p>
+            </div>
+            
+            <div class="policy-section">
+                <h2>4. Giao Hàng</h2>
+                <ul>
+                    <li>Thời gian giao hàng: 2-5 ngày làm việc (nội thành), 5-7 ngày (ngoại thành)</li>
+                    <li>Phí vận chuyển được tính dựa trên địa chỉ và trọng lượng</li>
+                    <li>Miễn phí vận chuyển cho đơn hàng từ 300.000đ (nội thành)</li>
+                    <li>Khách hàng cần kiểm tra hàng trước khi nhận</li>
+                </ul>
+            </div>
+            
+            <div class="policy-section">
+                <h2>5. Chính Sách Đổi Trả</h2>
+                <h3>5.1. Điều kiện đổi trả</h3>
+                <ul>
+                    <li>Sản phẩm lỗi, hư hỏng hoặc không đúng mô tả</li>
+                    <li>Thông báo trong vòng 24 giờ kể từ khi nhận hàng</li>
+                    <li>Sản phẩm còn nguyên vẹn, chưa qua sử dụng</li>
+                    <li>Có đầy đủ hóa đơn, tem nhãn, bao bì</li>
+                </ul>
+                
+                <h3>5.2. Sản phẩm không được đổi trả</h3>
+                <ul>
+                    <li>Sản phẩm thực phẩm tươi sống đã qua sử dụng</li>
+                    <li>Sản phẩm khuyến mãi, giảm giá đặc biệt</li>
+                    <li>Sản phẩm đã qua 7 ngày kể từ ngày nhận hàng</li>
+                </ul>
+            </div>
+            
+            <div class="policy-section">
+                <h2>6. Quyền Sở Hữu Trí Tuệ</h2>
+                <p>
+                    Tất cả nội dung trên website bao gồm văn bản, hình ảnh, logo, thiết kế đều thuộc quyền sở hữu 
+                    của Đặc Sản Việt. Nghiêm cấm sao chép, phân phối hoặc sử dụng mà không có sự cho phép.
+                </p>
+            </div>
+            
+            <div class="policy-section">
+                <h2>7. Hành Vi Bị Cấm</h2>
+                <p>Người dùng không được:</p>
+                <ul>
+                    <li>Sử dụng dịch vụ cho mục đích bất hợp pháp</li>
+                    <li>Gửi spam, virus hoặc mã độc hại</li>
+                    <li>Can thiệp vào hoạt động của hệ thống</li>
+                    <li>Thu thập thông tin người dùng khác</li>
+                    <li>Mạo danh người khác hoặc tổ chức</li>
+                    <li>Đăng tải nội dung vi phạm pháp luật</li>
+                </ul>
+            </div>
+            
+            <div class="policy-section">
+                <h2>8. Giới Hạn Trách Nhiệm</h2>
+                <p>
+                    Đặc Sản Việt không chịu trách nhiệm về:
+                </p>
+                <ul>
+                    <li>Thiệt hại gián tiếp, ngẫu nhiên hoặc do hậu quả</li>
+                    <li>Mất mát dữ liệu hoặc lợi nhuận</li>
+                    <li>Gián đoạn dịch vụ do bảo trì hoặc sự cố kỹ thuật</li>
+                    <li>Hành vi của bên thứ ba (đối tác vận chuyển, thanh toán)</li>
+                </ul>
+            </div>
+            
+            <div class="policy-section">
+                <h2>9. Thay Đổi Điều Khoản</h2>
+                <p>
+                    Chúng tôi có quyền sửa đổi các điều khoản này bất kỳ lúc nào. Các thay đổi có hiệu lực ngay 
+                    khi được đăng tải trên website. Việc bạn tiếp tục sử dụng dịch vụ sau khi có thay đổi đồng nghĩa 
+                    với việc bạn chấp nhận các điều khoản mới.
+                </p>
+            </div>
+            
+            <div class="policy-section">
+                <h2>10. Luật Áp Dụng</h2>
+                <p>
+                    Các điều khoản này được điều chỉnh bởi pháp luật Việt Nam. Mọi tranh chấp phát sinh sẽ được 
+                    giải quyết tại Tòa án có thẩm quyền tại Hà Nội, Việt Nam.
+                </p>
+            </div>
+            
+            <div class="contact-info">
+                <h3><i class="fas fa-envelope me-2"></i>Liên Hệ</h3>
+                <p>Nếu bạn có câu hỏi về điều khoản sử dụng, vui lòng liên hệ:</p>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-envelope me-2"></i>Email: dacsanviethotro@gmail.com</li>
+                    <li><i class="fas fa-phone me-2"></i>Hotline: (028) 3896 8641</li>
+                    <li><i class="fas fa-map-marker-alt me-2"></i>Địa chỉ: 01 Võ Văn Ngân, phường Thủ Đức, TP.HCM</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/header.js}"></script>
+</body>
+</html>

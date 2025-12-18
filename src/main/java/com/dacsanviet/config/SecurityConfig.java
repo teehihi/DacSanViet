@@ -71,7 +71,9 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(authz -> authz
                 // Public endpoints
-                .requestMatchers("/about", "/contact", "/test", "/test-simple", "/error").permitAll()
+                .requestMatchers("/about", "/contact", "/test", "/test-simple").permitAll()
+                .requestMatchers("/privacy-policy", "/terms-of-service").permitAll()
+                .requestMatchers("/error/**").permitAll()
                 .requestMatchers("/init-data", "/clear-test-data", "/check-conflicts", "/view-database", "/database").permitAll()
                 .requestMatchers("/login", "/register").permitAll()
                 .requestMatchers("/auth/**").permitAll()
@@ -108,6 +110,27 @@ public class SecurityConfig {
                 // All other requests require authentication
                 .anyRequest().authenticated()
             );
+        
+        // Form login configuration
+        http.formLogin(form -> form
+            .loginPage("/login")
+            .loginProcessingUrl("/login")
+            .defaultSuccessUrl("/", true)
+            .failureUrl("/login?error=true")
+            .usernameParameter("username")
+            .passwordParameter("password")
+            .permitAll()
+        );
+        
+        // Logout configuration
+        http.logout(logout -> logout
+            .logoutUrl("/logout")
+            .logoutSuccessUrl("/")
+            .invalidateHttpSession(true)
+            .clearAuthentication(true)
+            .deleteCookies("JSESSIONID", "JWT-TOKEN")
+            .permitAll()
+        );
         
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

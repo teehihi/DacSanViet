@@ -14,15 +14,17 @@ public class UserPrincipal implements UserDetails {
     private Long id;
     private String username;
     private String email;
+    private String fullName;
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
     private boolean isActive;
     
-    public UserPrincipal(Long id, String username, String email, String password, 
+    public UserPrincipal(Long id, String username, String email, String fullName, String password, 
                         Collection<? extends GrantedAuthority> authorities, boolean isActive) {
         this.id = id;
         this.username = username;
         this.email = email;
+        this.fullName = fullName;
         this.password = password;
         this.authorities = authorities;
         this.isActive = isActive;
@@ -40,6 +42,7 @@ public class UserPrincipal implements UserDetails {
             user.getId(),
             user.getUsername(),
             user.getEmail(),
+            user.getFullName() != null ? user.getFullName() : user.getUsername(),
             user.getPassword(),
             authorities,
             user.getIsActive()
@@ -52,6 +55,10 @@ public class UserPrincipal implements UserDetails {
     
     public String getEmail() {
         return email;
+    }
+    
+    public String getFullName() {
+        return fullName;
     }
     
     @Override
