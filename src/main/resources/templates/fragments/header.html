@@ -97,11 +97,10 @@
                                         <div class="d-flex align-items-center">
                                             <div class="avatar-circle-small me-2">
                                                 <span class="avatar-text-small fw-bold text-white" 
-                                                      th:text="${#strings.substring(#authentication.name, 0, 1).toUpperCase()}">U</span>
+                                                      th:text="${#strings.substring(#authentication.principal.fullName, 0, 1).toUpperCase()}">U</span>
                                             </div>
                                             <div>
-                                                <div class="fw-semibold" sec:authentication="name">User</div>
-                                                <small class="text-muted">Khách hàng thân thiết</small>
+                                                <div class="fw-semibold" th:text="${#authentication.principal.fullName}">User</div>
                                             </div>
                                         </div>
                                     </li>
@@ -208,10 +207,10 @@
                         <div class="d-flex align-items-center mb-3">
                             <div class="avatar-circle-small me-2">
                                 <span class="avatar-text-small fw-bold text-white" 
-                                      th:text="${#strings.substring(#authentication.name, 0, 1).toUpperCase()}">U</span>
+                                      th:text="${#strings.substring(#authentication.principal.fullName, 0, 1).toUpperCase()}">U</span>
                             </div>
                             <div>
-                                <div class="fw-semibold" sec:authentication="name">User</div>
+                                <div class="fw-semibold" th:text="${#authentication.principal.fullName}">User</div>
                                 <small class="text-muted">Khách hàng thân thiết</small>
                             </div>
                         </div>

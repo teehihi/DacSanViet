@@ -292,8 +292,19 @@
                             <h3>Đăng Nhập</h3>
                             <p class="subtitle">Nhập thông tin để tiếp tục</p>
                             
-                            <!-- Alert -->
-                            <div id="alert-container"></div>
+                            <!-- Error Alert -->
+                            <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                <strong>Đăng nhập thất bại!</strong> Email/Tên đăng nhập hoặc mật khẩu không đúng.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            
+                            <!-- Logout Success Alert -->
+                            <div th:if="${param.logout}" class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>Đăng xuất thành công!</strong> Hẹn gặp lại bạn.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
                             
                             <!-- Login Form -->
                             <form id="loginForm" th:action="@{/login}" method="post">

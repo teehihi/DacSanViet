@@ -19,6 +19,9 @@ public class CategoryDao {
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
     
+    @Size(max = 500, message = "Image URL must not exceed 500 characters")
+    private String imageUrl;
+    
     private Boolean isActive;
     private Long productCount;
     private LocalDateTime createdAt;
@@ -28,11 +31,12 @@ public class CategoryDao {
     public CategoryDao() {}
     
     // Constructor with all fields
-    public CategoryDao(Long id, String name, String description, Boolean isActive, 
+    public CategoryDao(Long id, String name, String description, String imageUrl, Boolean isActive, 
                       Long productCount, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.imageUrl = imageUrl;
         this.isActive = isActive;
         this.productCount = productCount;
         this.createdAt = createdAt;
@@ -107,5 +111,13 @@ public class CategoryDao {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public String getImageUrl() {
+        return imageUrl;
+    }
+    
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

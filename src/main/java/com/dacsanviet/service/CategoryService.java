@@ -226,6 +226,7 @@ public class CategoryService {
             category.getId(),
             category.getName(),
             category.getDescription(),
+            category.getImageUrl(),
             category.getIsActive(),
             null, // productCount will be set separately when needed
             category.getCreatedAt(),

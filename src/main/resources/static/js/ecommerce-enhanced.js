@@ -1,7 +1,7 @@
 // Enhanced E-commerce JavaScript - Đặc Sản Quê Hương
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🛒 Đặc Sản Quê Hương - Enhanced E-commerce Loaded');
+    console.log('Đặc Sản Việt - Enhanced E-commerce Loaded');
     
     // Initialize all features
     initializeEnhancedFeatures();

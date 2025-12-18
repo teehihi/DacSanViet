@@ -6,6 +6,8 @@ import com.dacsanviet.model.User;
 import com.dacsanviet.repository.CategoryRepository;
 import com.dacsanviet.repository.ProductRepository;
 import com.dacsanviet.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,6 +20,8 @@ import java.math.BigDecimal;
  */
 @Component
 public class DataLoader implements CommandLineRunner {
+
+    private static final Logger logger = LoggerFactory.getLogger(DataLoader.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -114,19 +118,28 @@ public class DataLoader implements CommandLineRunner {
     private Product createProductIfNotExists(String name, String description, BigDecimal price, 
                                            Integer stock, Category category, String imageUrl, 
                                            String origin, Integer weight) {
-        return productRepository.findByName(name).orElseGet(() -> {
-            Product product = new Product();
-            product.setName(name);
-            product.setDescription(description);
-            product.setPrice(price);
-            product.setStockQuantity(stock);
-            product.setCategory(category);
-            product.setImageUrl(imageUrl);
-            product.setOrigin(origin);
-            product.setWeightGrams(weight);
-            product.setIsActive(true);
-            product.setIsFeatured(Math.random() > 0.7); // 30% chance to be featured
-            return productRepository.save(product);
-        });
+        try {
+            return productRepository.findByName(name).orElseGet(() -> {
+                Product product = new Product();
+                product.setName(name);
+                product.setDescription(description);
+                product.setPrice(price);
+                product.setStockQuantity(stock);
+                product.setCategory(category);
+                product.setImageUrl(imageUrl);
+                product.setOrigin(origin);
+                product.setWeightGrams(weight);
+                product.setIsActive(true);
+                product.setIsFeatured(Math.random() > 0.7); // 30% chance to be featured
+                return productRepository.save(product);
+            });
+        } catch (Exception e) {
+            // If duplicate found, just return the first one
+            logger.warn("Duplicate product found: {}, skipping creation", name);
+            return productRepository.findAll().stream()
+                .filter(p -> p.getName().equals(name))
+                .findFirst()
+                .orElse(null);
+        }
     }
 }
