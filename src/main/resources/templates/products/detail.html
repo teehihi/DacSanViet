@@ -283,6 +283,53 @@
             </div>
         </div>
         
+        <!-- Q&A Section (Real-time Discussion) -->
+        <div class="qa-section mt-5" id="qaSection" th:if="${product != null}">
+            <h3 class="section-title mb-4"><i class="bi bi-chat-dots me-2"></i>Hỏi Đáp Sản Phẩm</h3>
+            
+            <div class="qa-container">
+                <!-- Question Form -->
+                <div class="qa-form-card mb-4">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="userNameInput" placeholder="Tên của bạn *" required>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="email" class="form-control" id="userEmailInput" placeholder="Email của bạn *" required>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start gap-3">
+                        <img src="https://ui-avatars.com/api/?name=User&background=4ec2b6&color=fff" 
+                             class="qa-avatar" alt="Avatar" id="userAvatar">
+                        <div class="flex-grow-1">
+                            <textarea class="form-control qa-input" 
+                                      id="questionInput" 
+                                      rows="3" 
+                                      placeholder="Đặt câu hỏi về sản phẩm này..."></textarea>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Câu hỏi sẽ được hiển thị real-time cho mọi người
+                                </small>
+                                <button class="btn btn-primary btn-sm" onclick="sendQuestion()">
+                                    <i class="bi bi-send me-1"></i>Gửi câu hỏi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Questions List -->
+                <div class="qa-list" id="qaList">
+                    <!-- Questions will be loaded here -->
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-chat-square-text fs-1"></i>
+                        <p class="mt-2">Chưa có câu hỏi nào. Hãy là người đầu tiên đặt câu hỏi!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- FAQ Section -->
         <div class="faq-section mt-5" th:if="${product != null}">
             <h3 class="section-title mb-4"><i class="bi bi-question-circle me-2"></i>Câu Hỏi Thường Gặp</h3>
@@ -400,6 +447,404 @@
                 }
             }
         </script>
+        
+        <!-- Q&A WebSocket Script -->
+        <script th:if="${product != null}" th:inline="javascript">
+            /*<![CDATA[*/
+            let stompClient = null;
+            const productId = /*[[${product.id}]]*/ 0;
+            
+            // Connect to WebSocket
+            function connectQA() {
+                const socket = new SockJS('/ws');
+                stompClient = Stomp.over(socket);
+                
+                stompClient.connect({}, function(frame) {
+                    console.log('Connected to Q&A: ' + frame);
+                    
+                    // Subscribe to product Q&A topic (new questions/replies)
+                    stompClient.subscribe('/topic/product/' + productId + '/qa', function(message) {
+                        const qa = JSON.parse(message.body);
+                        displayQuestion(qa);
+                    });
+                    
+                    // Subscribe to like updates
+                    stompClient.subscribe('/topic/product/' + productId + '/qa/like', function(message) {
+                        const likeUpdate = JSON.parse(message.body);
+                        updateLikeCount(likeUpdate.id, likeUpdate.likesCount);
+                    });
+                    
+                    // Load existing questions from server
+                    loadExistingQuestions();
+                }, function(error) {
+                    console.error('WebSocket connection error:', error);
+                    setTimeout(connectQA, 5000); // Retry after 5 seconds
+                });
+            }
+            
+            // Send question or reply
+            function sendQuestion(parentId = null) {
+                const input = parentId ? document.getElementById('replyInput_' + parentId) : document.getElementById('questionInput');
+                const question = input.value.trim();
+                
+                if (!question) {
+                    alert('Vui lòng nhập câu hỏi');
+                    return;
+                }
+                
+                // Get name and email from inputs
+                const nameInput = document.getElementById('userNameInput');
+                const emailInput = document.getElementById('userEmailInput');
+                
+                const userName = nameInput ? nameInput.value.trim() : '';
+                const userEmail = emailInput ? emailInput.value.trim() : '';
+                
+                if (!userName || !userEmail) {
+                    alert('Vui lòng nhập tên và email');
+                    // Focus on first empty field
+                    if (!userName && nameInput) {
+                        nameInput.focus();
+                    } else if (!userEmail && emailInput) {
+                        emailInput.focus();
+                    }
+                    return;
+                }
+                
+                // Validate email format
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(userEmail)) {
+                    alert('Email không hợp lệ');
+                    if (emailInput) emailInput.focus();
+                    return;
+                }
+                
+                // Save to localStorage
+                localStorage.setItem('qa_username', userName);
+                localStorage.setItem('qa_email', userEmail);
+                
+                const qaData = {
+                    productId: productId,
+                    parentId: parentId,
+                    userName: userName,
+                    userEmail: userEmail,
+                    question: question,
+                    timestamp: new Date().toISOString()
+                };
+                
+                if (stompClient && stompClient.connected) {
+                    // Send to server
+                    stompClient.send('/app/product/qa', {}, JSON.stringify(qaData));
+                    input.value = '';
+                    
+                    // Hide reply form if it's a reply
+                    if (parentId) {
+                        const replyForm = document.getElementById('replyForm_' + parentId);
+                        if (replyForm) replyForm.style.display = 'none';
+                    }
+                } else {
+                    alert('Đang kết nối... Vui lòng thử lại');
+                    connectQA();
+                }
+            }
+            
+            // Display question
+            function displayQuestion(qa) {
+                const qaList = document.getElementById('qaList');
+                
+                // Check if this question already exists (prevent duplicates)
+                const existingItem = document.querySelector(`[data-qa-id="${qa.id}"]`);
+                if (existingItem) {
+                    console.log('Question already displayed, skipping duplicate');
+                    return;
+                }
+                
+                // Remove empty message if exists
+                const emptyMsg = qaList.querySelector('.text-center');
+                if (emptyMsg) {
+                    emptyMsg.remove();
+                }
+                
+                const qaItem = document.createElement('div');
+                qaItem.className = qa.parentId ? 'qa-reply-item' : 'qa-item';
+                qaItem.setAttribute('data-qa-id', qa.id);
+                
+                const likesCount = qa.likesCount || 0;
+                const repliesCount = qa.repliesCount || 0;
+                
+                let actionsHtml = '<div class="qa-actions mt-2">';
+                actionsHtml += '<button class="qa-action-btn" onclick="toggleLike(' + qa.id + ')" data-qa-like-btn="' + qa.id + '">';
+                actionsHtml += '<i class="bi bi-hand-thumbs-up me-1"></i>Thích ' + (likesCount > 0 ? '(' + likesCount + ')' : '');
+                actionsHtml += '</button>';
+                
+                if (!qa.parentId) {
+                    actionsHtml += '<button class="qa-action-btn ms-2" onclick="toggleReplyForm(' + qa.id + ')">';
+                    actionsHtml += '<i class="bi bi-reply me-1"></i>Trả lời ' + (repliesCount > 0 ? '(' + repliesCount + ')' : '');
+                    actionsHtml += '</button>';
+                }
+                actionsHtml += '</div>';
+                
+                let replyFormHtml = '';
+                if (!qa.parentId) {
+                    const currentUserName = getUserName() || 'User';
+                    replyFormHtml += '<div id="replyForm_' + qa.id + '" class="qa-reply-form mt-3" style="display: none;">';
+                    replyFormHtml += '<div class="d-flex align-items-start gap-2">';
+                    replyFormHtml += '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUserName) + '&background=4ec2b6&color=fff" class="qa-avatar-small" alt="Avatar">';
+                    replyFormHtml += '<div class="flex-grow-1">';
+                    replyFormHtml += '<textarea class="form-control form-control-sm" id="replyInput_' + qa.id + '" rows="2" placeholder="Viết câu trả lời..."></textarea>';
+                    replyFormHtml += '<div class="mt-2">';
+                    replyFormHtml += '<button class="btn btn-primary btn-sm" onclick="sendQuestion(' + qa.id + ')"><i class="bi bi-send me-1"></i>Gửi</button>';
+                    replyFormHtml += '<button class="btn btn-secondary btn-sm ms-2" onclick="toggleReplyForm(' + qa.id + ')">Hủy</button>';
+                    replyFormHtml += '</div></div></div></div>';
+                    replyFormHtml += '<div id="replies_' + qa.id + '" class="qa-replies-container mt-3"></div>';
+                }
+                
+                qaItem.innerHTML = 
+                    '<div class="qa-item-header">' +
+                        '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(qa.userName) + '&background=4ec2b6&color=fff" class="qa-avatar" alt="' + qa.userName + '">' +
+                        '<div class="qa-item-content">' +
+                            '<div class="d-flex justify-content-between align-items-start">' +
+                                '<div>' +
+                                    '<span class="qa-item-author">' + qa.userName + '</span>' +
+                                    '<span class="qa-item-time ms-2">' + formatTime(qa.timestamp) + '</span>' +
+                                '</div>' +
+                            '</div>' +
+                            '<p class="qa-item-question mt-2">' + qa.question + '</p>' +
+                            actionsHtml +
+                            replyFormHtml +
+                        '</div>' +
+                    '</div>';
+                
+                // If it's a reply, add to parent's replies container
+                if (qa.parentId) {
+                    const repliesContainer = document.getElementById('replies_' + qa.parentId);
+                    if (repliesContainer) {
+                        repliesContainer.appendChild(qaItem);
+                        updateReplyCount(qa.parentId);
+                    }
+                } else {
+                    qaList.insertBefore(qaItem, qaList.firstChild);
+                    if (repliesCount > 0) {
+                        loadReplies(qa.id);
+                    }
+                }
+                
+                // Check if current user has liked this Q&A
+                checkLikedStatus(qa.id);
+            }
+            
+            // Check if current user has liked a Q&A
+            function checkLikedStatus(qaId) {
+                const userIdentifier = getUserIdentifier();
+                fetch('/api/products/qa/' + qaId + '/hasLiked?userIdentifier=' + encodeURIComponent(userIdentifier))
+                    .then(response => response.json())
+                    .then(hasLiked => {
+                        const likeBtn = document.querySelector('[data-qa-like-btn="' + qaId + '"]');
+                        if (likeBtn && hasLiked) {
+                            likeBtn.classList.add('liked');
+                            const icon = likeBtn.querySelector('i');
+                            if (icon) {
+                                icon.classList.remove('bi-hand-thumbs-up');
+                                icon.classList.add('bi-hand-thumbs-up-fill');
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error checking liked status:', error));
+            }
+            
+            // Toggle reply form
+            function toggleReplyForm(questionId) {
+                const replyForm = document.getElementById('replyForm_' + questionId);
+                if (replyForm) {
+                    replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
+                }
+            }
+            
+            // Get user identifier (email if logged in, or generate session ID)
+            function getUserIdentifier() {
+                // Try to get email from form
+                const emailInput = document.getElementById('userEmailInput');
+                if (emailInput && emailInput.value.trim()) {
+                    return emailInput.value.trim();
+                }
+                
+                // Try localStorage
+                const savedEmail = localStorage.getItem('qa_email');
+                if (savedEmail) {
+                    return savedEmail;
+                }
+                
+                // Generate session ID if not logged in
+                let sessionId = localStorage.getItem('qa_session_id');
+                if (!sessionId) {
+                    sessionId = 'guest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    localStorage.setItem('qa_session_id', sessionId);
+                }
+                return sessionId;
+            }
+            
+            // Toggle like
+            function toggleLike(qaId) {
+                const userIdentifier = getUserIdentifier();
+                
+                fetch('/api/products/qa/' + qaId + '/like?userIdentifier=' + encodeURIComponent(userIdentifier))
+                    .then(response => response.json())
+                    .catch(error => console.error('Error toggling like:', error));
+            }
+            
+            // Update like count in UI (called from WebSocket)
+            function updateLikeCount(qaId, newLikesCount) {
+                const qaItem = document.querySelector('[data-qa-id="' + qaId + '"]');
+                if (qaItem) {
+                    const likeBtn = qaItem.querySelector('.qa-action-btn');
+                    if (likeBtn) {
+                        const likesText = newLikesCount > 0 ? '(' + newLikesCount + ')' : '';
+                        
+                        // Check if current user has liked
+                        const userIdentifier = getUserIdentifier();
+                        fetch('/api/products/qa/' + qaId + '/hasLiked?userIdentifier=' + encodeURIComponent(userIdentifier))
+                            .then(response => response.json())
+                            .then(hasLiked => {
+                                const iconClass = hasLiked ? 'bi-hand-thumbs-up-fill' : 'bi-hand-thumbs-up';
+                                const btnClass = hasLiked ? 'qa-action-btn liked' : 'qa-action-btn';
+                                likeBtn.className = btnClass;
+                                likeBtn.innerHTML = '<i class="bi ' + iconClass + ' me-1"></i>Thích ' + likesText;
+                            });
+                    }
+                }
+            }
+            
+            // Load replies for a question
+            function loadReplies(questionId) {
+                fetch('/api/products/qa/' + questionId + '/replies')
+                    .then(response => response.json())
+                    .then(replies => {
+                        replies.forEach(reply => displayQuestion(reply));
+                    })
+                    .catch(error => console.error('Error loading replies:', error));
+            }
+            
+            // Update reply count
+            function updateReplyCount(questionId) {
+                const repliesContainer = document.getElementById('replies_' + questionId);
+                if (repliesContainer) {
+                    const count = repliesContainer.querySelectorAll('.qa-reply-item').length;
+                    const qaItem = document.querySelector('[data-qa-id="' + questionId + '"]');
+                    if (qaItem) {
+                        const replyBtns = qaItem.querySelectorAll('.qa-action-btn');
+                        // Reply button is the second one (after Like button)
+                        if (replyBtns.length > 1) {
+                            const replyBtn = replyBtns[1];
+                            const repliesText = count > 0 ? '(' + count + ')' : '';
+                            replyBtn.innerHTML = '<i class="bi bi-reply me-1"></i>Trả lời ' + repliesText;
+                        }
+                    }
+                }
+            }
+            
+            // Load existing questions
+            function loadExistingQuestions() {
+                // Fetch existing Q&A from backend
+                fetch('/api/products/' + productId + '/qa')
+                    .then(response => response.json())
+                    .then(questions => {
+                        questions.forEach(qa => displayQuestion(qa));
+                    })
+                    .catch(error => {
+                        console.error('Error loading Q&A:', error);
+                    });
+            }
+            
+            // Get user name
+            function getUserName() {
+                const nameInput = document.getElementById('userNameInput');
+                if (nameInput && nameInput.value.trim()) {
+                    localStorage.setItem('qa_username', nameInput.value.trim());
+                    return nameInput.value.trim();
+                }
+                
+                // Try localStorage
+                const savedName = localStorage.getItem('qa_username');
+                if (savedName && nameInput) {
+                    nameInput.value = savedName;
+                }
+                return savedName || '';
+            }
+            
+            // Get user email
+            function getUserEmail() {
+                const emailInput = document.getElementById('userEmailInput');
+                if (emailInput && emailInput.value.trim()) {
+                    localStorage.setItem('qa_email', emailInput.value.trim());
+                    return emailInput.value.trim();
+                }
+                
+                // Try localStorage
+                const savedEmail = localStorage.getItem('qa_email');
+                if (savedEmail && emailInput) {
+                    emailInput.value = savedEmail;
+                }
+                return savedEmail || '';
+            }
+            
+            // Update avatar when name changes
+            document.addEventListener('DOMContentLoaded', function() {
+                const nameInput = document.getElementById('userNameInput');
+                const emailInput = document.getElementById('userEmailInput');
+                const avatar = document.getElementById('userAvatar');
+                
+                // Load saved values
+                const savedName = localStorage.getItem('qa_username');
+                const savedEmail = localStorage.getItem('qa_email');
+                if (savedName) nameInput.value = savedName;
+                if (savedEmail) emailInput.value = savedEmail;
+                
+                // Update avatar on name change
+                if (nameInput) {
+                    nameInput.addEventListener('input', function() {
+                        if (this.value.trim()) {
+                            avatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(this.value)}&background=4ec2b6&color=fff`;
+                        }
+                    });
+                }
+            });
+            
+            // Format time
+            function formatTime(timestamp) {
+                const date = new Date(timestamp);
+                const now = new Date();
+                const diff = Math.floor((now - date) / 1000); // seconds
+                
+                if (diff < 60) return 'Vừa xong';
+                if (diff < 3600) return Math.floor(diff / 60) + ' phút trước';
+                if (diff < 86400) return Math.floor(diff / 3600) + ' giờ trước';
+                return Math.floor(diff / 86400) + ' ngày trước';
+            }
+            
+            // Enter key to send
+            document.getElementById('questionInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendQuestion();
+                }
+            });
+            
+            // Connect on page load
+            document.addEventListener('DOMContentLoaded', function() {
+                connectQA();
+            });
+            
+            // Disconnect on page unload
+            window.addEventListener('beforeunload', function() {
+                if (stompClient) {
+                    stompClient.disconnect();
+                }
+            });
+            /*]]>*/
+        </script>
+        
+        <!-- SockJS and STOMP libraries -->
+        <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
         
         <!-- Related Products Section -->
         <div class="related-products mt-5" th:if="${product != null and relatedProducts != null and !relatedProducts.empty}">
