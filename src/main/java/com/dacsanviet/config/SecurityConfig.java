@@ -1,5 +1,6 @@
 package com.dacsanviet.config;
 
+import com.dacsanviet.security.CustomAuthenticationSuccessHandler;
 import com.dacsanviet.security.JwtAuthenticationEntryPoint;
 import com.dacsanviet.security.JwtAuthenticationFilter;
 import com.dacsanviet.security.UserDetailsServiceImpl;
@@ -38,6 +39,9 @@ public class SecurityConfig {
     
     @Autowired
     private JwtAuthenticationEntryPoint unauthorizedHandler;
+    
+    @Autowired
+    private CustomAuthenticationSuccessHandler authenticationSuccessHandler;
     
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
@@ -90,9 +94,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                 
+                // Cart endpoints (allow guests)
+                .requestMatchers("/cart/**", "/api/cart/**").permitAll()
+                
                 // User-specific endpoints
-                .requestMatchers("/profile/**", "/orders/**", "/cart/**").hasAnyRole("USER", "ADMIN")
-                .requestMatchers("/api/profile/**", "/api/orders/**", "/api/cart/**").hasAnyRole("USER", "ADMIN")
+                .requestMatchers("/profile/**", "/orders/**").hasAnyRole("USER", "ADMIN")
+                .requestMatchers("/api/profile/**", "/api/orders/**").hasAnyRole("USER", "ADMIN")
                 
                 // Admin endpoints
                 .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -115,7 +122,7 @@ public class SecurityConfig {
         http.formLogin(form -> form
             .loginPage("/login")
             .loginProcessingUrl("/login")
-            .defaultSuccessUrl("/", true)
+            .successHandler(authenticationSuccessHandler) // Use custom success handler to merge cart
             .failureUrl("/login?error=true")
             .usernameParameter("username")
             .passwordParameter("password")

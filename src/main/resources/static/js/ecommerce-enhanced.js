@@ -81,18 +81,20 @@ function initializeNavbarEffects() {
 
 // Product Interactions
 function initializeProductInteractions() {
-    // Enhanced add to cart functionality
-    document.querySelectorAll('.add-to-cart-btn, [data-product-id]').forEach(button => {
-        button.addEventListener('click', function(e) {
+    // Enhanced add to cart functionality using event delegation
+    // This works for dynamically shown/hidden elements (pagination, etc.)
+    document.body.addEventListener('click', function(e) {
+        const button = e.target.closest('.add-to-cart-btn, [data-product-id]');
+        if (button) {
             e.preventDefault();
             
-            const productId = this.getAttribute('data-product-id');
-            const quantity = this.getAttribute('data-quantity') || 1;
+            const productId = button.getAttribute('data-product-id');
+            const quantity = button.getAttribute('data-quantity') || 1;
             
             if (productId) {
-                addToCartEnhanced(productId, quantity, this);
+                addToCartEnhanced(productId, quantity, button);
             }
-        });
+        }
     });
     
     // Product quick view
@@ -133,7 +135,7 @@ function initializeProductInteractions() {
     });
 }
 
-// Enhanced Add to Cart
+// Enhanced Add to Cart (uses localStorage for guests, server for logged-in users)
 function addToCartEnhanced(productId, quantity, buttonElement) {
     // Show loading state
     const originalContent = buttonElement.innerHTML;
@@ -156,50 +158,38 @@ function addToCartEnhanced(productId, quantity, buttonElement) {
         document.head.appendChild(style);
     }
     
-    const token = localStorage.getItem('accessToken');
+    // Get product info from card
+    const productCard = buttonElement.closest('.product-card, .card');
+    const productName = productCard?.querySelector('.product-title, .card-title')?.textContent || 'Sản phẩm';
+    const priceText = productCard?.querySelector('.product-price, .price-tag')?.textContent || '0';
+    const price = parseFloat(priceText.replace(/[^\d]/g, ''));
+    const imageUrl = productCard?.querySelector('img')?.src || '';
     
-    if (!token) {
-        showEnhancedNotification('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng', 'warning');
-        setTimeout(() => {
-            window.location.href = '/login';
-        }, 2000);
-        return;
-    }
-    
-    fetch('/api/cart/add', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            productId: parseInt(productId),
-            quantity: parseInt(quantity)
-        })
-    })
-    .then(response => {
-        if (response.status === 401) {
-            localStorage.clear();
-            showEnhancedNotification('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 'warning');
-            setTimeout(() => {
-                window.location.href = '/login';
-            }, 2000);
-            return;
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data && data.success) {
-            // Update cart badge with animation
-            updateCartBadgeEnhanced(data.cartItemCount);
-            
-            // Show success notification
-            showEnhancedNotification('Đã thêm sản phẩm vào giỏ hàng!', 'success');
+    // Add to localStorage cart (works for everyone)
+    if (window.CartManager) {
+        try {
+            CartManager.addItem(parseInt(productId), productName, price, parseInt(quantity), imageUrl);
             
             // Success animation for button
-            buttonElement.innerHTML = '<i class="bi bi-check-circle text-success"></i> Đã thêm!';
+            buttonElement.innerHTML = '<i class="bi bi-check-circle text-success success-checkmark"></i> Đã thêm!';
             buttonElement.classList.add('btn-success');
+            
+            // 1. Scroll to show header
+            if (window.scrollToShowHeader) {
+                scrollToShowHeader();
+            }
+            
+            // 2. Create floating product bubble animation
+            if (window.createProductBubbleAnimation) {
+                createProductBubbleAnimation(buttonElement, imageUrl);
+            }
+            
+            // 3. Show cart summary modal after animation
+            setTimeout(() => {
+                if (window.showCartSummaryModal) {
+                    showCartSummaryModal();
+                }
+            }, 800);
             
             // Reset button after 2 seconds
             setTimeout(() => {
@@ -208,21 +198,18 @@ function addToCartEnhanced(productId, quantity, buttonElement) {
                 buttonElement.disabled = false;
             }, 2000);
             
-            // Add floating cart animation
-            createFloatingCartAnimation(buttonElement);
-            
-        } else if (data) {
-            showEnhancedNotification(data.message || 'Có lỗi xảy ra khi thêm sản phẩm', 'error');
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+            showEnhancedNotification('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
             buttonElement.innerHTML = originalContent;
             buttonElement.disabled = false;
         }
-    })
-    .catch(error => {
-        console.error('Error adding to cart:', error);
-        showEnhancedNotification('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+    } else {
+        console.error('CartManager not loaded');
+        showEnhancedNotification('Có lỗi xảy ra. Vui lòng tải lại trang.', 'error');
         buttonElement.innerHTML = originalContent;
         buttonElement.disabled = false;
-    });
+    }
 }
 
 // Enhanced Cart Badge Update
@@ -864,6 +851,13 @@ function showQuickViewModal(productCard) {
     const productImage = productCard.querySelector('img')?.src || '';
     const productDescription = productCard.querySelector('.product-description, .card-text')?.textContent || '';
     
+    // Get product ID from the add to cart button in the card
+    const addToCartBtn = productCard.querySelector('[data-product-id]');
+    const productId = addToCartBtn ? addToCartBtn.getAttribute('data-product-id') : null;
+    
+    // Get product link for "View Details" button
+    const productLink = productCard.querySelector('a[href*="/products/"]')?.href || '#';
+    
     // Create modal HTML
     const modalHTML = `
         <div class="modal fade" id="quickViewModal" tabindex="-1">
@@ -885,12 +879,16 @@ function showQuickViewModal(productCard) {
                                     <span class="h4 text-primary fw-bold">${productPrice}</span>
                                 </div>
                                 <div class="d-grid gap-2">
-                                    <button class="btn btn-primary btn-lg">
+                                    <button class="btn btn-primary btn-lg quick-view-add-to-cart" 
+                                            data-product-id="${productId}"
+                                            data-product-name="${productName}"
+                                            data-product-price="${productPrice}"
+                                            data-product-image="${productImage}">
                                         <i class="bi bi-cart-plus me-2"></i>Thêm vào giỏ hàng
                                     </button>
-                                    <button class="btn btn-outline-secondary">
+                                    <a href="${productLink}" class="btn btn-outline-secondary">
                                         <i class="bi bi-eye me-2"></i>Xem chi tiết
-                                    </button>
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -912,6 +910,49 @@ function showQuickViewModal(productCard) {
     // Show modal
     const modal = new bootstrap.Modal(document.getElementById('quickViewModal'));
     modal.show();
+    
+    // Add event listener for add to cart button in modal
+    const modalAddToCartBtn = document.querySelector('.quick-view-add-to-cart');
+    if (modalAddToCartBtn && productId) {
+        modalAddToCartBtn.addEventListener('click', function() {
+            const btn = this;
+            const originalContent = btn.innerHTML;
+            
+            // Show loading
+            btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Đang thêm...';
+            btn.disabled = true;
+            
+            // Get product info
+            const name = btn.getAttribute('data-product-name');
+            const priceText = btn.getAttribute('data-product-price');
+            const price = parseFloat(priceText.replace(/[^\d]/g, ''));
+            const image = btn.getAttribute('data-product-image');
+            const id = btn.getAttribute('data-product-id');
+            
+            // Add to cart
+            if (window.CartManager) {
+                CartManager.addItem(parseInt(id), name, price, 1, image);
+                
+                // Success
+                btn.innerHTML = '<i class="bi bi-check-circle text-success"></i> Đã thêm!';
+                btn.classList.add('btn-success');
+                btn.classList.remove('btn-primary');
+                
+                // Animations
+                if (window.scrollToShowHeader) scrollToShowHeader();
+                if (window.createProductBubbleAnimation) createProductBubbleAnimation(btn, image);
+                
+                setTimeout(() => {
+                    if (window.showCartDropdown) showCartDropdown();
+                }, 800);
+                
+                // Close modal after 1.5 seconds
+                setTimeout(() => {
+                    modal.hide();
+                }, 1500);
+            }
+        });
+    }
     
     // Clean up when modal is hidden
     document.getElementById('quickViewModal').addEventListener('hidden.bs.modal', function() {

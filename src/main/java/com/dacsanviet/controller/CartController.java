@@ -5,6 +5,7 @@ import com.dacsanviet.dao.CartDao;
 import com.dacsanviet.dto.UpdateCartItemRequest;
 import com.dacsanviet.security.UserPrincipal;
 import com.dacsanviet.service.CartService;
+import com.dacsanviet.service.SessionCartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -12,11 +13,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import java.util.Map;
 
 /**
  * Cart controller for shopping cart functionality
+ * Supports both authenticated users (database cart) and guests (session cart)
  */
 @Controller
 @RequestMapping("/cart")
@@ -25,44 +28,45 @@ public class CartController {
     @Autowired
     private CartService cartService;
     
+    @Autowired
+    private SessionCartService sessionCartService;
+    
     @GetMapping
     public String viewCart(Model model, Authentication authentication) {
         try {
             model.addAttribute("pageTitle", "Giỏ Hàng");
             
-            if (authentication != null && authentication.isAuthenticated()) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                CartDao cart = cartService.getCart(userPrincipal.getId());
-                
-                model.addAttribute("cart", cart);
-                model.addAttribute("cartItems", cart.getItems());
-                model.addAttribute("subtotal", cart.getTotalAmount());
-                model.addAttribute("itemCount", cart.getTotalItems());
-            } else {
-                return "redirect:/login";
-            }
+            // YAME BEHAVIOR: Always use localStorage cart (guest-cart.html)
+            // Both guests and logged-in users see the same cart page
+            // Cart is loaded from localStorage on client-side
+            return "cart/guest-cart";
             
-            return "cart/simple-index";
         } catch (Exception e) {
             model.addAttribute("error", "Không thể tải giỏ hàng: " + e.getMessage());
-            return "cart/simple-index";
+            return "cart/guest-cart";
         }
     }
     
     /**
      * Add product to cart (AJAX)
+     * Works for both authenticated users and guests
      */
     @PostMapping("/add")
     @ResponseBody
     public ResponseEntity<?> addToCart(@Valid @RequestBody AddToCartRequest request, 
-                                      Authentication authentication) {
+                                      Authentication authentication,
+                                      HttpSession session) {
         try {
-            if (authentication == null || !authentication.isAuthenticated()) {
-                return ResponseEntity.status(401).body(Map.of("success", false, "message", "Vui lòng đăng nhập"));
-            }
+            CartDao cart;
             
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            CartDao cart = cartService.addToCart(userPrincipal.getId(), request);
+            if (authentication != null && authentication.isAuthenticated()) {
+                // Logged in user - save to database
+                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+                cart = cartService.addToCart(userPrincipal.getId(), request);
+            } else {
+                // Guest user - save to session
+                cart = sessionCartService.addToSessionCart(session, request);
+            }
             
             return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -85,14 +89,17 @@ public class CartController {
     @PutMapping("/update")
     @ResponseBody
     public ResponseEntity<?> updateCartItem(@Valid @RequestBody UpdateCartItemRequest request,
-                                           Authentication authentication) {
+                                           Authentication authentication,
+                                           HttpSession session) {
         try {
-            if (authentication == null || !authentication.isAuthenticated()) {
-                return ResponseEntity.status(401).body(Map.of("success", false, "message", "Vui lòng đăng nhập"));
-            }
+            CartDao cart;
             
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            CartDao cart = cartService.updateCartItem(userPrincipal.getId(), request);
+            if (authentication != null && authentication.isAuthenticated()) {
+                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+                cart = cartService.updateCartItem(userPrincipal.getId(), request);
+            } else {
+                cart = sessionCartService.updateSessionCartItem(session, request.getProductId(), request.getQuantity());
+            }
             
             return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -115,14 +122,17 @@ public class CartController {
     @DeleteMapping("/remove/{productId}")
     @ResponseBody
     public ResponseEntity<?> removeFromCart(@PathVariable Long productId,
-                                           Authentication authentication) {
+                                           Authentication authentication,
+                                           HttpSession session) {
         try {
-            if (authentication == null || !authentication.isAuthenticated()) {
-                return ResponseEntity.status(401).body(Map.of("success", false, "message", "Vui lòng đăng nhập"));
-            }
+            CartDao cart;
             
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            CartDao cart = cartService.removeFromCart(userPrincipal.getId(), productId);
+            if (authentication != null && authentication.isAuthenticated()) {
+                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+                cart = cartService.removeFromCart(userPrincipal.getId(), productId);
+            } else {
+                cart = sessionCartService.removeFromSessionCart(session, productId);
+            }
             
             return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -144,14 +154,14 @@ public class CartController {
      */
     @DeleteMapping("/clear")
     @ResponseBody
-    public ResponseEntity<?> clearCart(Authentication authentication) {
+    public ResponseEntity<?> clearCart(Authentication authentication, HttpSession session) {
         try {
-            if (authentication == null || !authentication.isAuthenticated()) {
-                return ResponseEntity.status(401).body(Map.of("success", false, "message", "Vui lòng đăng nhập"));
+            if (authentication != null && authentication.isAuthenticated()) {
+                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+                cartService.clearCart(userPrincipal.getId());
+            } else {
+                sessionCartService.clearSessionCart(session);
             }
-            
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            cartService.clearCart(userPrincipal.getId());
             
             return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -160,6 +170,37 @@ public class CartController {
                 "cartTotal", 0
             ));
             
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Get cart items (for syncing with localStorage)
+     */
+    @GetMapping("/api/items")
+    @ResponseBody
+    public ResponseEntity<?> getCartItems(Authentication authentication) {
+        try {
+            if (authentication != null && authentication.isAuthenticated()) {
+                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+                CartDao cart = cartService.getCart(userPrincipal.getId());
+                
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "items", cart.getItems(),
+                    "total", cart.getTotalAmount()
+                ));
+            } else {
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "items", new java.util.ArrayList<>(),
+                    "total", 0
+                ));
+            }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,

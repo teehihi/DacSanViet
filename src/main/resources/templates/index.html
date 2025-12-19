@@ -510,7 +510,7 @@
             <!-- Dynamic Categories from Database -->
             <div class="row g-4" th:if="${categories != null and !categories.empty}">
                 <div class="col-lg-3 col-md-6" th:each="category, iterStat : ${categories}">
-                    <a th:href="@{/products(categoryId=${category.id})}" class="text-decoration-none">
+                    <a th:href="@{/products(categoryId=${category.id})}" class="text-decoration-none" th:title="${'Xem sản phẩm ' + category.name}">
                         <div class="card modern-card h-100 category-card-hover animate-fade-in-up" 
                              th:attr="style='overflow: hidden; border-radius: 15px; animation-delay: ' + ${iterStat.index * 0.1} + 's'">
                             <div class="position-relative" style="height: 200px; overflow: hidden;">
@@ -1234,6 +1234,9 @@
     
     <!-- Common Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/cart-manager.js(v=1)}"></script>
+    <script th:src="@{/js/cart-sync.js(v=1)}"></script>
+    <script th:src="@{/js/cart-animations-v2.js(v=1)}"></script>
     <script th:src="@{/js/header.js(v=1)}"></script>
     <script th:src="@{/js/cursor-trail.js(v=1)}"></script>
     <script th:src="@{/js/card-3d-effect.js(v=1)}"></script>
@@ -1426,34 +1429,8 @@
                     });
                 }
                 
-                // Re-initialize 3D card effects for visible cards
-                setTimeout(() => {
-                    const visibleCards = document.querySelectorAll('.product-item[style*="display: block"] .product-card');
-                    visibleCards.forEach(card => {
-                        // Remove old listeners
-                        const newCard = card.cloneNode(true);
-                        card.parentNode.replaceChild(newCard, card);
-                        
-                        // Re-apply 3D effect
-                        newCard.addEventListener('mousemove', function(e) {
-                            const rect = this.getBoundingClientRect();
-                            const x = e.clientX - rect.left;
-                            const y = e.clientY - rect.top;
-                            
-                            const centerX = rect.width / 2;
-                            const centerY = rect.height / 2;
-                            
-                            const rotateX = (y - centerY) / 10;
-                            const rotateY = (centerX - x) / 10;
-                            
-                            this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
-                        });
-                        
-                        newCard.addEventListener('mouseleave', function() {
-                            this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
-                        });
-                    });
-                }, 100);
+                // Event delegation in ecommerce-enhanced.js handles all add-to-cart buttons
+                // No need to re-attach listeners here
             }
             
             // Create page numbers

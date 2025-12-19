@@ -454,14 +454,14 @@
                         <a href="#" class="category-filter-item filter-category active" data-category="all">
                             <i class="bi bi-grid me-2"></i>Tất Cả Sản Phẩm
                         </a>
-                        <a href="#" class="category-filter-item filter-category" data-category="1">
-                            <i class="bi bi-geo-alt me-2"></i>Đặc Sản Miền Bắc
-                        </a>
-                        <a href="#" class="category-filter-item filter-category" data-category="2">
-                            <i class="bi bi-sun me-2"></i>Đặc Sản Miền Trung
-                        </a>
-                        <a href="#" class="category-filter-item filter-category" data-category="3">
-                            <i class="bi bi-water me-2"></i>Đặc Sản Miền Nam
+                        <!-- Dynamic categories from database -->
+                        <a th:each="category : ${categories}" 
+                           href="#" 
+                           class="category-filter-item filter-category"
+                           th:classappend="${selectedCategory != null and selectedCategory == category.id.toString()} ? 'active' : ''"
+                           th:data-category="${category.id}">
+                            <i class="bi bi-tag me-2"></i>
+                            <span th:text="${category.name}">Category Name</span>
                         </a>
                     </div>
                     
@@ -901,7 +901,12 @@
     <div th:replace="fragments/footer :: footer"></div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/cart-manager.js(v=1)}"></script>
+    <script th:src="@{/js/cart-sync.js(v=1)}"></script>
+    <script th:src="@{/js/cart-animations-v2.js(v=1)}"></script>
     <script th:src="@{/js/cursor-trail.js(v=1)}"></script>
+    <script th:src="@{/js/header.js(v=1)}"></script>
+    <script th:src="@{/js/ecommerce-enhanced.js(v=1)}"></script>
     
     <!-- Header scroll effect -->
     <script>
@@ -1032,6 +1037,19 @@
         document.addEventListener('DOMContentLoaded', function() {
             allProducts = Array.from(document.querySelectorAll('.product-item'));
             
+            // Check URL parameters for initial category filter
+            const urlParams = new URLSearchParams(window.location.search);
+            const categoryIdParam = urlParams.get('categoryId');
+            if (categoryIdParam) {
+                currentCategory = categoryIdParam;
+                // Update active state in sidebar
+                document.querySelectorAll('.filter-category').forEach(f => f.classList.remove('active'));
+                const activeFilter = document.querySelector(`.filter-category[data-category="${categoryIdParam}"]`);
+                if (activeFilter) {
+                    activeFilter.classList.add('active');
+                }
+            }
+            
             // Category filters
             document.querySelectorAll('.filter-category').forEach(filter => {
                 filter.addEventListener('click', function(e) {
@@ -1040,6 +1058,16 @@
                     this.classList.add('active');
                     currentCategory = this.dataset.category;
                     currentPage = 1;
+                    
+                    // Update URL with category parameter
+                    const newUrl = new URL(window.location);
+                    if (currentCategory === 'all') {
+                        newUrl.searchParams.delete('categoryId');
+                    } else {
+                        newUrl.searchParams.set('categoryId', currentCategory);
+                    }
+                    window.history.pushState({}, '', newUrl);
+                    
                     filterAndDisplay();
                 });
             });
@@ -1217,8 +1245,12 @@
             // Filter products
             let filtered = allProducts.filter(product => {
                 // Category filter
-                if (currentCategory !== 'all' && product.dataset.category !== currentCategory) {
-                    return false;
+                if (currentCategory !== 'all') {
+                    const productCategory = product.dataset.category;
+                    // Compare as strings to handle both string and number comparisons
+                    if (productCategory != currentCategory) {
+                        return false;
+                    }
                 }
                 
                 // Price filter
