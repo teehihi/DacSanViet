@@ -40,8 +40,10 @@ public class Product {
     @Size(min = 2, max = 200, message = "Product name must be between 2 and 200 characters")
     private String name;
     
-    @Column(length = 2000)
-    @Size(max = 2000, message = "Description must not exceed 2000 characters")
+    @Column(name = "short_description", columnDefinition = "TEXT")
+    private String shortDescription;
+    
+    @Column(columnDefinition = "TEXT")
     private String description;
     
     @Column(nullable = false, precision = 10, scale = 2)
@@ -69,6 +71,12 @@ public class Product {
     @Column(name = "origin", length = 100)
     @Size(max = 100, message = "Origin must not exceed 100 characters")
     private String origin;
+    
+    @Column(name = "story", columnDefinition = "TEXT")
+    private String story;
+    
+    @Column(name = "story_image_url", length = 500)
+    private String storyImageUrl;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)

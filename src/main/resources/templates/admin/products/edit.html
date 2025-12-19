@@ -77,11 +77,20 @@
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
                             </div>
                             
+                            <!-- Short Description -->
+                            <div class="mb-3">
+                                <label for="shortDescription" class="form-label">Mô tả ngắn</label>
+                                <textarea class="form-control" id="shortDescription" th:field="*{shortDescription}" 
+                                          rows="2" placeholder="Mô tả ngắn gọn về sản phẩm (text thuần)"></textarea>
+                                <small class="text-muted">Mô tả ngắn hiển thị trên trang chi tiết sản phẩm</small>
+                            </div>
+                            
                             <!-- Description -->
                             <div class="mb-3">
-                                <label for="description" class="form-label">Mô tả sản phẩm</label>
-                                <textarea class="form-control" id="description" th:field="*{description}" 
-                                          rows="4" placeholder="Nhập mô tả chi tiết về sản phẩm"></textarea>
+                                <label for="description" class="form-label">Mô tả chi tiết</label>
+                                <textarea class="form-control tinymce-editor" id="description" th:field="*{description}" 
+                                          rows="6" placeholder="Mô tả chi tiết về sản phẩm (có thể chứa HTML, ảnh, link...)"></textarea>
+                                <small class="text-muted">Mô tả chi tiết hiển thị trong tab "Mô Tả", hỗ trợ HTML</small>
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
                             </div>
                             
@@ -146,6 +155,28 @@
                                         <div class="invalid-feedback" th:if="${#fields.hasErrors('origin')}" th:errors="*{origin}"></div>
                                     </div>
                                 </div>
+                            </div>
+                            
+                            <!-- Product Story -->
+                            <div class="mb-3">
+                                <label for="story" class="form-label">
+                                    <i class="bi bi-book me-1"></i>Câu Chuyện Sản Phẩm
+                                </label>
+                                <small class="text-muted d-block mb-2">
+                                    Sử dụng editor để tạo nội dung đẹp mắt với tiêu đề, danh sách, định dạng...
+                                </small>
+                                <textarea class="form-control tinymce-editor" id="story" th:field="*{story}" 
+                                          rows="10" placeholder="Nhập câu chuyện về sản phẩm..."></textarea>
+                            </div>
+                            
+                            <!-- Story Image URL -->
+                            <div class="mb-3">
+                                <label for="storyImageUrl" class="form-label">
+                                    <i class="bi bi-image me-1"></i>URL Hình Ảnh Câu Chuyện
+                                </label>
+                                <input type="url" class="form-control" id="storyImageUrl" th:field="*{storyImageUrl}" 
+                                       placeholder="https://example.com/story-image.jpg">
+                                <small class="text-muted">Hình ảnh hiển thị bên cạnh câu chuyện sản phẩm</small>
                             </div>
                         </div>
                         
@@ -221,7 +252,29 @@
     </th:block>
     
     <th:block layout:fragment="scripts-extra">
+        <!-- TinyMCE Rich Text Editor -->
+        <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
         <script>
+            // Initialize TinyMCE for story field
+            tinymce.init({
+                selector: '.tinymce-editor',
+                height: 400,
+                menubar: false,
+                plugins: [
+                    'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                    'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                    'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                ],
+                toolbar: 'undo redo | blocks | ' +
+                    'bold italic forecolor | alignleft aligncenter ' +
+                    'alignright alignjustify | bullist numlist outdent indent | ' +
+                    'removeformat | help',
+                content_style: 'body { font-family:Inter,Arial,sans-serif; font-size:14px }',
+                language: 'vi',
+                branding: false,
+                promotion: false
+            });
+            
             function previewImage(input) {
                 const preview = document.getElementById('imagePreview');
                 

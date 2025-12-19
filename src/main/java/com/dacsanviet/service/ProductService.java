@@ -388,6 +388,8 @@ public class ProductService {
         // Set additional fields
         dto.setCategoryId(categoryId);
         dto.setCategoryName(categoryName);
+        dto.setStory(product.getStory());
+        dto.setStoryImageUrl(product.getStoryImageUrl());
         
         return dto;
     }
