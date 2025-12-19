@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/header.css(v=1)}">
     <link rel="stylesheet" th:href="@{/css/modern-ecommerce.css(v=1)}">
-    <link rel="stylesheet" th:href="@{/css/product-detail.css(v=1)}">
+    <link rel="stylesheet" th:href="@{/css/product-detail.css(v=4)}">
 </head>
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
@@ -179,6 +179,7 @@
             </div>
         </div>
         
+        <!-- Product Tabs -->
         <div class="product-tabs mt-5">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item">
@@ -349,53 +350,9 @@
                     </button>
                 </div>
                 
-                <!-- Right: Write Review Form & Reviews List -->
+                <!-- Right: Reviews List -->
                 <div class="review-content-box">
-                    <!-- Write Review Form -->
-                    <div class="write-review-form">
-                        <h5 class="form-title">Share your experience</h5>
-                        <form id="reviewForm" enctype="multipart/form-data">
-                            <input type="hidden" id="reviewProductId" th:value="${product.id}">
-                            <input type="hidden" id="reviewRating" value="5">
-                            
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <input type="text" class="form-control" id="reviewerName" placeholder="Your Name *" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <input type="email" class="form-control" id="reviewerEmail" placeholder="Your Email *" required>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group mb-3">
-                                <input type="text" class="form-control" id="reviewTitle" placeholder="Review Title">
-                                <div class="star-rating-input" id="starRatingInput">
-                                    <i class="bi bi-star-fill" data-rating="1"></i>
-                                    <i class="bi bi-star-fill" data-rating="2"></i>
-                                    <i class="bi bi-star-fill" data-rating="3"></i>
-                                    <i class="bi bi-star-fill" data-rating="4"></i>
-                                    <i class="bi bi-star-fill" data-rating="5"></i>
-                                    <span class="rating-hint">(Click to rate)</span>
-                                </div>
-                            </div>
-                            <div class="form-group mb-3">
-                                <textarea class="form-control" id="reviewContent" rows="4" placeholder="How was the taste? Was the shipping fast?" required></textarea>
-                            </div>
-                            <div class="form-actions">
-                                <div>
-                                    <input type="file" id="reviewImages" name="images" multiple accept="image/*" style="display: none;">
-                                    <button type="button" class="btn-add-photos" onclick="document.getElementById('reviewImages').click()">
-                                        <i class="bi bi-camera me-2"></i>Add Photos
-                                    </button>
-                                    <span id="imageCount" class="ms-2 text-muted"></span>
-                                </div>
-                                <button type="submit" class="btn-submit-review">Submit Review</button>
-                            </div>
-                        </form>
-                    </div>
-            
-                    <!-- Reviews List -->
-                    <div class="reviews-list-modern"></div>
+                    <div class="reviews-list-modern">
                         <div class="review-item-modern">
                             <div class="reviewer-header">
                                 <div class="reviewer-avatar-circle">L</div>
@@ -586,437 +543,30 @@
             </div>
         </div>
         
-        <script>
-            function toggleFaq(button) {
-                const answer = button.nextElementSibling;
-                const isActive = button.classList.contains('active');
-                
-                // Close all other FAQs in the same column
-                const column = button.closest('.col-md-6');
-                column.querySelectorAll('.faq-question').forEach(q => {
-                    q.classList.remove('active');
-                    q.nextElementSibling.classList.remove('show');
-                });
-                
-                // Toggle current FAQ
-                if (!isActive) {
-                    button.classList.add('active');
-                    answer.classList.add('show');
-                }
-            }
-            
-            function scrollToReviews(event) {
-                event.preventDefault();
-                const reviewsSection = document.getElementById('reviewsSection');
-                if (reviewsSection) {
-                    reviewsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            }
-        </script>
-        
-        <!-- Q&A WebSocket Script -->
-        <script th:if="${product != null}" th:inline="javascript">
-            /*<![CDATA[*/
-            let stompClient = null;
-            const productId = /*[[${product.id}]]*/ 0;
-            
-            // Connect to WebSocket
-            function connectQA() {
-                const socket = new SockJS('/ws');
-                stompClient = Stomp.over(socket);
-                
-                stompClient.connect({}, function(frame) {
-                    console.log('Connected to Q&A: ' + frame);
-                    
-                    // Subscribe to product Q&A topic (new questions/replies)
-                    stompClient.subscribe('/topic/product/' + productId + '/qa', function(message) {
-                        const qa = JSON.parse(message.body);
-                        displayQuestion(qa);
-                    });
-                    
-                    // Subscribe to like updates
-                    stompClient.subscribe('/topic/product/' + productId + '/qa/like', function(message) {
-                        const likeUpdate = JSON.parse(message.body);
-                        updateLikeCount(likeUpdate.id, likeUpdate.likesCount);
-                    });
-                    
-                    // Load existing questions from server
-                    loadExistingQuestions();
-                }, function(error) {
-                    console.error('WebSocket connection error:', error);
-                    setTimeout(connectQA, 5000); // Retry after 5 seconds
-                });
-            }
-            
-            // Send question or reply
-            function sendQuestion(parentId = null) {
-                const input = parentId ? document.getElementById('replyInput_' + parentId) : document.getElementById('questionInput');
-                const question = input.value.trim();
-                
-                if (!question) {
-                    alert('Vui lòng nhập câu hỏi');
-                    return;
-                }
-                
-                // Get name and email from inputs
-                const nameInput = document.getElementById('userNameInput');
-                const emailInput = document.getElementById('userEmailInput');
-                
-                const userName = nameInput ? nameInput.value.trim() : '';
-                const userEmail = emailInput ? emailInput.value.trim() : '';
-                
-                if (!userName || !userEmail) {
-                    alert('Vui lòng nhập tên và email');
-                    // Focus on first empty field
-                    if (!userName && nameInput) {
-                        nameInput.focus();
-                    } else if (!userEmail && emailInput) {
-                        emailInput.focus();
-                    }
-                    return;
-                }
-                
-                // Validate email format
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(userEmail)) {
-                    alert('Email không hợp lệ');
-                    if (emailInput) emailInput.focus();
-                    return;
-                }
-                
-                // Save to localStorage
-                localStorage.setItem('qa_username', userName);
-                localStorage.setItem('qa_email', userEmail);
-                
-                const qaData = {
-                    productId: productId,
-                    parentId: parentId,
-                    userName: userName,
-                    userEmail: userEmail,
-                    question: question,
-                    timestamp: new Date().toISOString()
-                };
-                
-                if (stompClient && stompClient.connected) {
-                    // Send to server
-                    stompClient.send('/app/product/qa', {}, JSON.stringify(qaData));
-                    input.value = '';
-                    
-                    // Hide reply form if it's a reply
-                    if (parentId) {
-                        const replyForm = document.getElementById('replyForm_' + parentId);
-                        if (replyForm) replyForm.style.display = 'none';
-                    }
-                } else {
-                    alert('Đang kết nối... Vui lòng thử lại');
-                    connectQA();
-                }
-            }
-            
-            // Display question
-            function displayQuestion(qa) {
-                const qaList = document.getElementById('qaList');
-                
-                // Check if this question already exists (prevent duplicates)
-                const existingItem = document.querySelector(`[data-qa-id="${qa.id}"]`);
-                if (existingItem) {
-                    console.log('Question already displayed, skipping duplicate');
-                    return;
-                }
-                
-                // Remove empty message if exists
-                const emptyMsg = qaList.querySelector('.text-center');
-                if (emptyMsg) {
-                    emptyMsg.remove();
-                }
-                
-                const qaItem = document.createElement('div');
-                qaItem.className = qa.parentId ? 'qa-reply-item' : 'qa-item';
-                qaItem.setAttribute('data-qa-id', qa.id);
-                
-                const likesCount = qa.likesCount || 0;
-                const repliesCount = qa.repliesCount || 0;
-                
-                let actionsHtml = '<div class="qa-actions mt-2">';
-                actionsHtml += '<button class="qa-action-btn" onclick="toggleLike(' + qa.id + ')" data-qa-like-btn="' + qa.id + '">';
-                actionsHtml += '<i class="bi bi-hand-thumbs-up me-1"></i>Thích ' + (likesCount > 0 ? '(' + likesCount + ')' : '');
-                actionsHtml += '</button>';
-                
-                if (!qa.parentId) {
-                    actionsHtml += '<button class="qa-action-btn ms-2" onclick="toggleReplyForm(' + qa.id + ')">';
-                    actionsHtml += '<i class="bi bi-reply me-1"></i>Trả lời ' + (repliesCount > 0 ? '(' + repliesCount + ')' : '');
-                    actionsHtml += '</button>';
-                }
-                actionsHtml += '</div>';
-                
-                let replyFormHtml = '';
-                if (!qa.parentId) {
-                    const currentUserName = getUserName() || 'User';
-                    replyFormHtml += '<div id="replyForm_' + qa.id + '" class="qa-reply-form mt-3" style="display: none;">';
-                    replyFormHtml += '<div class="d-flex align-items-start gap-2">';
-                    replyFormHtml += '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUserName) + '&background=4ec2b6&color=fff" class="qa-avatar-small" alt="Avatar">';
-                    replyFormHtml += '<div class="flex-grow-1">';
-                    replyFormHtml += '<textarea class="form-control form-control-sm" id="replyInput_' + qa.id + '" rows="2" placeholder="Viết câu trả lời..."></textarea>';
-                    replyFormHtml += '<div class="mt-2">';
-                    replyFormHtml += '<button class="btn btn-primary btn-sm" onclick="sendQuestion(' + qa.id + ')"><i class="bi bi-send me-1"></i>Gửi</button>';
-                    replyFormHtml += '<button class="btn btn-secondary btn-sm ms-2" onclick="toggleReplyForm(' + qa.id + ')">Hủy</button>';
-                    replyFormHtml += '</div></div></div></div>';
-                    replyFormHtml += '<div id="replies_' + qa.id + '" class="qa-replies-container mt-3"></div>';
-                }
-                
-                qaItem.innerHTML = 
-                    '<div class="qa-item-header">' +
-                        '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(qa.userName) + '&background=4ec2b6&color=fff" class="qa-avatar" alt="' + qa.userName + '">' +
-                        '<div class="qa-item-content">' +
-                            '<div class="d-flex justify-content-between align-items-start">' +
-                                '<div>' +
-                                    '<span class="qa-item-author">' + qa.userName + '</span>' +
-                                    '<span class="qa-item-time ms-2">' + formatTime(qa.timestamp) + '</span>' +
-                                '</div>' +
-                            '</div>' +
-                            '<p class="qa-item-question mt-2">' + qa.question + '</p>' +
-                            actionsHtml +
-                            replyFormHtml +
-                        '</div>' +
-                    '</div>';
-                
-                // If it's a reply, add to parent's replies container
-                if (qa.parentId) {
-                    const repliesContainer = document.getElementById('replies_' + qa.parentId);
-                    if (repliesContainer) {
-                        repliesContainer.appendChild(qaItem);
-                        updateReplyCount(qa.parentId);
-                    }
-                } else {
-                    qaList.insertBefore(qaItem, qaList.firstChild);
-                    if (repliesCount > 0) {
-                        loadReplies(qa.id);
-                    }
-                }
-                
-                // Check if current user has liked this Q&A
-                checkLikedStatus(qa.id);
-            }
-            
-            // Check if current user has liked a Q&A
-            function checkLikedStatus(qaId) {
-                const userIdentifier = getUserIdentifier();
-                fetch('/api/products/qa/' + qaId + '/hasLiked?userIdentifier=' + encodeURIComponent(userIdentifier))
-                    .then(response => response.json())
-                    .then(hasLiked => {
-                        const likeBtn = document.querySelector('[data-qa-like-btn="' + qaId + '"]');
-                        if (likeBtn && hasLiked) {
-                            likeBtn.classList.add('liked');
-                            const icon = likeBtn.querySelector('i');
-                            if (icon) {
-                                icon.classList.remove('bi-hand-thumbs-up');
-                                icon.classList.add('bi-hand-thumbs-up-fill');
-                            }
-                        }
-                    })
-                    .catch(error => console.error('Error checking liked status:', error));
-            }
-            
-            // Toggle reply form
-            function toggleReplyForm(questionId) {
-                const replyForm = document.getElementById('replyForm_' + questionId);
-                if (replyForm) {
-                    replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
-                }
-            }
-            
-            // Get user identifier (email if logged in, or generate session ID)
-            function getUserIdentifier() {
-                // Try to get email from form
-                const emailInput = document.getElementById('userEmailInput');
-                if (emailInput && emailInput.value.trim()) {
-                    return emailInput.value.trim();
-                }
-                
-                // Try localStorage
-                const savedEmail = localStorage.getItem('qa_email');
-                if (savedEmail) {
-                    return savedEmail;
-                }
-                
-                // Generate session ID if not logged in
-                let sessionId = localStorage.getItem('qa_session_id');
-                if (!sessionId) {
-                    sessionId = 'guest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                    localStorage.setItem('qa_session_id', sessionId);
-                }
-                return sessionId;
-            }
-            
-            // Toggle like
-            function toggleLike(qaId) {
-                const userIdentifier = getUserIdentifier();
-                
-                fetch('/api/products/qa/' + qaId + '/like?userIdentifier=' + encodeURIComponent(userIdentifier))
-                    .then(response => response.json())
-                    .catch(error => console.error('Error toggling like:', error));
-            }
-            
-            // Update like count in UI (called from WebSocket)
-            function updateLikeCount(qaId, newLikesCount) {
-                const qaItem = document.querySelector('[data-qa-id="' + qaId + '"]');
-                if (qaItem) {
-                    const likeBtn = qaItem.querySelector('.qa-action-btn');
-                    if (likeBtn) {
-                        const likesText = newLikesCount > 0 ? '(' + newLikesCount + ')' : '';
-                        
-                        // Check if current user has liked
-                        const userIdentifier = getUserIdentifier();
-                        fetch('/api/products/qa/' + qaId + '/hasLiked?userIdentifier=' + encodeURIComponent(userIdentifier))
-                            .then(response => response.json())
-                            .then(hasLiked => {
-                                const iconClass = hasLiked ? 'bi-hand-thumbs-up-fill' : 'bi-hand-thumbs-up';
-                                const btnClass = hasLiked ? 'qa-action-btn liked' : 'qa-action-btn';
-                                likeBtn.className = btnClass;
-                                likeBtn.innerHTML = '<i class="bi ' + iconClass + ' me-1"></i>Thích ' + likesText;
-                            });
-                    }
-                }
-            }
-            
-            // Load replies for a question
-            function loadReplies(questionId) {
-                fetch('/api/products/qa/' + questionId + '/replies')
-                    .then(response => response.json())
-                    .then(replies => {
-                        replies.forEach(reply => displayQuestion(reply));
-                    })
-                    .catch(error => console.error('Error loading replies:', error));
-            }
-            
-            // Update reply count
-            function updateReplyCount(questionId) {
-                const repliesContainer = document.getElementById('replies_' + questionId);
-                if (repliesContainer) {
-                    const count = repliesContainer.querySelectorAll('.qa-reply-item').length;
-                    const qaItem = document.querySelector('[data-qa-id="' + questionId + '"]');
-                    if (qaItem) {
-                        const replyBtns = qaItem.querySelectorAll('.qa-action-btn');
-                        // Reply button is the second one (after Like button)
-                        if (replyBtns.length > 1) {
-                            const replyBtn = replyBtns[1];
-                            const repliesText = count > 0 ? '(' + count + ')' : '';
-                            replyBtn.innerHTML = '<i class="bi bi-reply me-1"></i>Trả lời ' + repliesText;
-                        }
-                    }
-                }
-            }
-            
-            // Load existing questions
-            function loadExistingQuestions() {
-                // Fetch existing Q&A from backend
-                fetch('/api/products/' + productId + '/qa')
-                    .then(response => response.json())
-                    .then(questions => {
-                        questions.forEach(qa => displayQuestion(qa));
-                    })
-                    .catch(error => {
-                        console.error('Error loading Q&A:', error);
-                    });
-            }
-            
-            // Get user name
-            function getUserName() {
-                const nameInput = document.getElementById('userNameInput');
-                if (nameInput && nameInput.value.trim()) {
-                    localStorage.setItem('qa_username', nameInput.value.trim());
-                    return nameInput.value.trim();
-                }
-                
-                // Try localStorage
-                const savedName = localStorage.getItem('qa_username');
-                if (savedName && nameInput) {
-                    nameInput.value = savedName;
-                }
-                return savedName || '';
-            }
-            
-            // Get user email
-            function getUserEmail() {
-                const emailInput = document.getElementById('userEmailInput');
-                if (emailInput && emailInput.value.trim()) {
-                    localStorage.setItem('qa_email', emailInput.value.trim());
-                    return emailInput.value.trim();
-                }
-                
-                // Try localStorage
-                const savedEmail = localStorage.getItem('qa_email');
-                if (savedEmail && emailInput) {
-                    emailInput.value = savedEmail;
-                }
-                return savedEmail || '';
-            }
-            
-            // Update avatar when name changes
-            document.addEventListener('DOMContentLoaded', function() {
-                const nameInput = document.getElementById('userNameInput');
-                const emailInput = document.getElementById('userEmailInput');
-                const avatar = document.getElementById('userAvatar');
-                
-                // Load saved values
-                const savedName = localStorage.getItem('qa_username');
-                const savedEmail = localStorage.getItem('qa_email');
-                if (savedName) nameInput.value = savedName;
-                if (savedEmail) emailInput.value = savedEmail;
-                
-                // Update avatar on name change
-                if (nameInput) {
-                    nameInput.addEventListener('input', function() {
-                        if (this.value.trim()) {
-                            avatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(this.value)}&background=4ec2b6&color=fff`;
-                        }
-                    });
-                }
-            });
-            
-            // Format time
-            function formatTime(timestamp) {
-                const date = new Date(timestamp);
-                const now = new Date();
-                const diff = Math.floor((now - date) / 1000); // seconds
-                
-                if (diff < 60) return 'Vừa xong';
-                if (diff < 3600) return Math.floor(diff / 60) + ' phút trước';
-                if (diff < 86400) return Math.floor(diff / 3600) + ' giờ trước';
-                return Math.floor(diff / 86400) + ' ngày trước';
-            }
-            
-            // Enter key to send
-            document.getElementById('questionInput').addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendQuestion();
-                }
-            });
-            
-            // Connect on page load
-            document.addEventListener('DOMContentLoaded', function() {
-                connectQA();
-            });
-            
-            // Disconnect on page unload
-            window.addEventListener('beforeunload', function() {
-                if (stompClient) {
-                    stompClient.disconnect();
-                }
-            });
-            /*]]>*/
-        </script>
-        
-        <!-- SockJS and STOMP libraries -->
-        <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
-        
         <!-- Related Products Section -->
-        <div class="related-products mt-5" th:if="${product != null and relatedProducts != null and !relatedProducts.empty}">
+        <div class="related-products mt-5" th:if="${product != null}">
             <h3 class="section-title mb-4"><i class="bi bi-grid me-2"></i>Có Thể Bạn Thích</h3>
             <div class="related-products-slider-wrapper">
                 <div class="related-products-slider" id="relatedProductsSlider">
+                    <!-- Sample products for testing if relatedProducts is empty -->
+                    <div class="related-product-item" th:if="${relatedProducts == null or relatedProducts.empty}">
+                        <div class="product-card h-100">
+                            <div class="position-relative">
+                                <img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=80" 
+                                     class="product-img w-100" alt="Sản phẩm mẫu">
+                            </div>
+                            <div class="p-3">
+                                <h6 class="fw-bold mb-2">Sản phẩm mẫu 1</h6>
+                                <p class="text-muted small mb-2">Mô tả sản phẩm mẫu</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-primary fw-bold">100,000₫</span>
+                                    <button class="btn btn-sm btn-primary">
+                                        <i class="bi bi-cart-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="related-product-item" th:each="relatedProduct : ${relatedProducts}">
                         <div class="product-card h-100">
                             <div class="position-relative">
@@ -1054,291 +604,327 @@
                 </div>
             </div>
         </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script>
+        function toggleFaq(button) {
+            const answer = button.nextElementSibling;
+            const isActive = button.classList.contains('active');
+            
+            // Close all other FAQs in the same column
+            const column = button.closest('.col-md-6');
+            column.querySelectorAll('.faq-question').forEach(q => {
+                q.classList.remove('active');
+                q.nextElementSibling.classList.remove('show');
+            });
+            
+            // Toggle current FAQ
+            if (!isActive) {
+                button.classList.add('active');
+                answer.classList.add('show');
+            }
+        }
         
-        <script>
-            // Related Products Auto Slider
-            document.addEventListener('DOMContentLoaded', function() {
-                const slider = document.getElementById('relatedProductsSlider');
-                if (!slider) return;
+        function scrollToReviews(event) {
+            event.preventDefault();
+            const reviewsSection = document.getElementById('reviewsSection');
+            if (reviewsSection) {
+                reviewsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        
+        // Image gallery functions
+        function changeMainImage(thumbnail) {
+            const mainImage = document.getElementById('mainProductImage');
+            if (mainImage && thumbnail) {
+                mainImage.src = thumbnail.src;
                 
-                const items = slider.querySelectorAll('.related-product-item');
-                if (items.length <= 4) return; // No need to slide if 4 or fewer items
-                
-                // Clone items for infinite loop
-                items.forEach(item => {
-                    const clone = item.cloneNode(true);
-                    slider.appendChild(clone);
+                // Update active state
+                document.querySelectorAll('.thumbnail-horizontal').forEach(t => {
+                    t.classList.remove('active');
                 });
-                
-                let scrollPosition = 0;
-                let isHovered = false;
-                let animationId = null;
-                
-                function autoSlide() {
-                    if (!isHovered) {
-                        scrollPosition += 0.5; // Scroll speed
-                        
-                        // Reset position for infinite loop
-                        const itemWidth = items[0].offsetWidth + 16; // width + gap
-                        const totalWidth = itemWidth * items.length;
-                        
-                        if (scrollPosition >= totalWidth) {
-                            scrollPosition = 0;
-                        }
-                        
-                        slider.style.transform = `translateX(-${scrollPosition}px)`;
-                    }
-                    
-                    animationId = requestAnimationFrame(autoSlide);
-                }
-                
-                // Start auto slide
-                autoSlide();
-                
-                // Pause on hover
-                slider.addEventListener('mouseenter', function() {
-                    isHovered = true;
-                });
-                
-                // Resume on mouse leave
-                slider.addEventListener('mouseleave', function() {
-                    isHovered = false;
-                });
-                
-                // Clean up on page unload
-                window.addEventListener('beforeunload', function() {
-                    if (animationId) {
-                        cancelAnimationFrame(animationId);
-                    }
-                });
-            });
+                thumbnail.classList.add('active');
+            }
+        }
+        
+        function openImageModal() {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            const mainImage = document.getElementById('mainProductImage');
             
-            // Image gallery management
-            let currentImageIndex = 0;
-            let imageUrls = [];
+            if (modal && modalImg && mainImage) {
+                modal.classList.add('show');
+                modalImg.src = mainImage.src;
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            if (modal) {
+                modal.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Simple Q&A function
+        function sendQuestion() {
+            const input = document.getElementById('questionInput');
+            const nameInput = document.getElementById('userNameInput');
+            const emailInput = document.getElementById('userEmailInput');
             
-            // Initialize image URLs
-            document.addEventListener('DOMContentLoaded', function() {
-                const thumbnails = document.querySelectorAll('.thumbnail-horizontal');
-                imageUrls = Array.from(thumbnails).map(thumb => thumb.src);
-                
-                // Auto slide images
-                if (thumbnails.length > 1) {
-                    setInterval(function() {
-                        currentImageIndex = (currentImageIndex + 1) % thumbnails.length;
-                        changeMainImage(thumbnails[currentImageIndex]);
-                    }, 3000); // Change image every 3 seconds
-                }
-            });
-            
-            // Change main image when clicking thumbnail
-            function changeMainImage(thumbnail) {
-                const mainImage = document.getElementById('mainProductImage');
-                if (mainImage && thumbnail) {
-                    mainImage.src = thumbnail.src;
-                    
-                    // Update active state
-                    document.querySelectorAll('.thumbnail-horizontal').forEach(t => {
-                        t.classList.remove('active');
-                    });
-                    thumbnail.classList.add('active');
-                    
-                    // Update current index
-                    const thumbnails = document.querySelectorAll('.thumbnail-horizontal');
-                    currentImageIndex = Array.from(thumbnails).indexOf(thumbnail);
-                }
+            if (!nameInput.value.trim() || !emailInput.value.trim() || !input.value.trim()) {
+                alert('Vui lòng điền đầy đủ thông tin');
+                return;
             }
             
-            // Open image modal
-            function openImageModal() {
-                const modal = document.getElementById('imageModal');
-                const modalImg = document.getElementById('modalImage');
-                const mainImage = document.getElementById('mainProductImage');
-                
-                if (modal && modalImg && mainImage) {
-                    modal.classList.add('show');
-                    modalImg.src = mainImage.src;
-                    document.body.style.overflow = 'hidden'; // Prevent scrolling
-                }
-            }
+            alert('Câu hỏi đã được gửi! (Chức năng này cần backend để hoạt động)');
+            input.value = '';
+        }
+        
+        // Add to cart function for main product
+        document.addEventListener('DOMContentLoaded', function() {
+            const addToCartBtn = document.querySelector('.btn-add-cart-modern');
             
-            // Close image modal
-            function closeImageModal() {
-                const modal = document.getElementById('imageModal');
-                if (modal) {
-                    modal.classList.remove('show');
-                    document.body.style.overflow = ''; // Restore scrolling
-                }
-            }
-            
-            // Previous image in modal
-            function prevImage() {
-                if (imageUrls.length > 0) {
-                    currentImageIndex = (currentImageIndex - 1 + imageUrls.length) % imageUrls.length;
-                    const modalImg = document.getElementById('modalImage');
-                    if (modalImg) {
-                        modalImg.src = imageUrls[currentImageIndex];
-                    }
-                }
-            }
-            
-            // Next image in modal
-            function nextImage() {
-                if (imageUrls.length > 0) {
-                    currentImageIndex = (currentImageIndex + 1) % imageUrls.length;
-                    const modalImg = document.getElementById('modalImage');
-                    if (modalImg) {
-                        modalImg.src = imageUrls[currentImageIndex];
-                    }
-                }
-            }
-            
-            // Keyboard navigation
-            document.addEventListener('keydown', function(e) {
-                const modal = document.getElementById('imageModal');
-                if (modal && modal.classList.contains('show')) {
-                    if (e.key === 'Escape') {
-                        closeImageModal();
-                    } else if (e.key === 'ArrowLeft') {
-                        prevImage();
-                    } else if (e.key === 'ArrowRight') {
-                        nextImage();
-                    }
-                }
-            });
-            
-            // Review Form Handling
-            document.addEventListener('DOMContentLoaded', function() {
-                // Star rating input
-                const starInputs = document.querySelectorAll('#starRatingInput i');
-                starInputs.forEach(star => {
-                    star.addEventListener('click', function() {
-                        const rating = parseInt(this.getAttribute('data-rating'));
-                        document.getElementById('reviewRating').value = rating;
-                        
-                        // Update star display
-                        starInputs.forEach((s, index) => {
-                            if (index < rating) {
-                                s.classList.remove('bi-star');
-                                s.classList.add('bi-star-fill');
-                            } else {
-                                s.classList.remove('bi-star-fill');
-                                s.classList.add('bi-star');
-                            }
-                        });
-                    });
-                });
-                
-                // Image file input change
-                document.getElementById('reviewImages').addEventListener('change', function() {
-                    const count = this.files.length;
-                    document.getElementById('imageCount').textContent = count > 0 ? `${count} photo(s) selected` : '';
-                });
-                
-                // Form submit
-                document.getElementById('reviewForm').addEventListener('submit', function(e) {
-                    e.preventDefault();
+            if (addToCartBtn) {
+                addToCartBtn.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-product-id');
+                    const quantityInput = document.getElementById('quantity');
+                    const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
                     
-                    const formData = new FormData();
-                    formData.append('productId', document.getElementById('reviewProductId').value);
-                    formData.append('reviewerName', document.getElementById('reviewerName').value);
-                    formData.append('reviewerEmail', document.getElementById('reviewerEmail').value);
-                    formData.append('rating', document.getElementById('reviewRating').value);
-                    formData.append('title', document.getElementById('reviewTitle').value);
-                    formData.append('content', document.getElementById('reviewContent').value);
-                    
-                    // Add images
-                    const images = document.getElementById('reviewImages').files;
-                    for (let i = 0; i < images.length; i++) {
-                        formData.append('images', images[i]);
+                    // Validate quantity
+                    if (quantity < 1) {
+                        showNotification('Số lượng phải lớn hơn 0', 'error');
+                        return;
                     }
                     
-                    // Submit
-                    fetch('/api/reviews/create', {
+                    // Show loading state
+                    const originalContent = this.innerHTML;
+                    this.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Đang thêm...';
+                    this.disabled = true;
+                    
+                    // Call API to add to cart
+                    fetch('/cart/add', {
                         method: 'POST',
-                        body: formData
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            productId: parseInt(productId),
+                            quantity: quantity
+                        })
                     })
                     .then(response => response.json())
                     .then(data => {
-                        alert('Review submitted successfully!');
-                        location.reload(); // Reload to show new review
+                        if (data.success) {
+                            // Success state
+                            this.innerHTML = '<i class="bi bi-check-circle me-2"></i>Đã thêm!';
+                            this.classList.add('btn-success');
+                            
+                            // Show success notification
+                            showNotification(data.message || 'Đã thêm sản phẩm vào giỏ hàng!', 'success');
+                            
+                            // Update cart badge if exists
+                            updateCartBadge(data.cartItemCount);
+                            
+                            // Reset button after 2 seconds
+                            setTimeout(() => {
+                                this.innerHTML = originalContent;
+                                this.classList.remove('btn-success');
+                                this.disabled = false;
+                            }, 2000);
+                        } else {
+                            // Error state
+                            this.innerHTML = originalContent;
+                            this.disabled = false;
+                            showNotification(data.message || 'Có lỗi xảy ra khi thêm sản phẩm', 'error');
+                        }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        alert('Failed to submit review. Please try again.');
+                        this.innerHTML = originalContent;
+                        this.disabled = false;
+                        showNotification('Có lỗi xảy ra khi thêm sản phẩm', 'error');
                     });
                 });
-            });
-            
-            // Add to cart from related products
-            function addToCartFromRelated(button) {
-                const productId = button.getAttribute('data-product-id');
-                const productName = button.getAttribute('data-product-name');
-                const productPrice = parseFloat(button.getAttribute('data-product-price'));
-                const productImage = button.getAttribute('data-product-image');
-                
-                // Add to cart using cart manager
-                if (typeof addToCart === 'function') {
-                    const product = {
-                        id: productId,
-                        name: productName,
-                        price: productPrice,
-                        imageUrl: productImage,
-                        quantity: 1
-                    };
-                    
-                    // Add to localStorage cart
-                    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-                    const existingItem = cart.find(item => item.id == productId);
-                    
-                    if (existingItem) {
-                        existingItem.quantity += 1;
-                    } else {
-                        cart.push(product);
-                    }
-                    
-                    localStorage.setItem('cart', JSON.stringify(cart));
-                    
-                    // Update cart badge
-                    if (typeof updateCartBadge === 'function') {
-                        updateCartBadge();
-                    }
-                    
-                    // Show success feedback
-                    const originalHTML = button.innerHTML;
-                    button.innerHTML = '<i class="bi bi-check-lg"></i>';
-                    button.classList.add('btn-success');
-                    button.classList.remove('btn-primary');
-                    button.disabled = true;
-                    
-                    setTimeout(() => {
-                        button.innerHTML = originalHTML;
-                        button.classList.remove('btn-success');
-                        button.classList.add('btn-primary');
-                        button.disabled = false;
-                    }, 1500);
-                }
             }
-        </script>
-    </div>
+        });
+        
+        // Add to cart function for related products
+        function addToCartFromRelated(button) {
+            const productId = button.getAttribute('data-product-id');
+            const productName = button.getAttribute('data-product-name');
+            const productPrice = button.getAttribute('data-product-price');
+            const productImage = button.getAttribute('data-product-image');
+            
+            // Show loading state
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+            button.disabled = true;
+            
+            // Call API to add to cart
+            fetch('/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    productId: parseInt(productId),
+                    quantity: 1
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Success state
+                    button.innerHTML = '<i class="bi bi-check"></i>';
+                    button.classList.add('btn-success');
+                    
+                    // Show success notification
+                    showNotification(data.message || 'Đã thêm sản phẩm vào giỏ hàng!', 'success');
+                    
+                    // Update cart badge if exists
+                    updateCartBadge(data.cartItemCount);
+                    
+                    // Reset button after 2 seconds
+                    setTimeout(() => {
+                        button.innerHTML = originalContent;
+                        button.classList.remove('btn-success');
+                        button.disabled = false;
+                    }, 2000);
+                } else {
+                    // Error state
+                    button.innerHTML = originalContent;
+                    button.disabled = false;
+                    showNotification(data.message || 'Có lỗi xảy ra khi thêm sản phẩm', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.innerHTML = originalContent;
+                button.disabled = false;
+                showNotification('Có lỗi xảy ra khi thêm sản phẩm', 'error');
+            });
+        }
+        
+        // Notification function
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="bi bi-${getNotificationIcon(type)} me-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            // Add to page
+            document.body.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // Hide and remove notification
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        function getNotificationIcon(type) {
+            switch(type) {
+                case 'success': return 'check-circle-fill';
+                case 'error': return 'exclamation-triangle-fill';
+                case 'warning': return 'exclamation-triangle-fill';
+                default: return 'info-circle-fill';
+            }
+        }
+        
+        // Update cart badge
+        function updateCartBadge(count) {
+            const cartBadges = document.querySelectorAll('.cart-badge, .badge');
+            cartBadges.forEach(badge => {
+                if (badge.closest('.cart-icon') || badge.closest('[href*="cart"]')) {
+                    badge.textContent = count;
+                    if (count > 0) {
+                        badge.style.display = 'inline-block';
+                    }
+                }
+            });
+        }
+    </script>
     
-    <div class="container py-5" th:if="${product == null}">
-        <div class="text-center">
-            <i class="bi bi-exclamation-triangle display-1 text-muted"></i>
-            <h2 class="mt-3">Không Tìm Thấy Sản Phẩm</h2>
-            <a th:href="@{/products}" class="btn btn-primary mt-3"><i class="bi bi-arrow-left me-2"></i>Quay Lại</a>
-        </div>
-    </div>
+    <!-- Notification Styles -->
+    <style>
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+        
+        .notification-error {
+            background: linear-gradient(135deg, #dc3545, #e74c3c);
+        }
+        
+        .notification-warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+        }
+        
+        .notification-info {
+            background: linear-gradient(135deg, #17a2b8, #007bff);
+        }
+        
+        .notification-content {
+            display: flex;
+            align-items: center;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997) !important;
+            border-color: #28a745 !important;
+        }
+        
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Footer -->
     <div th:replace="~{fragments/footer :: footer}"></div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script th:src="@{/js/cart-manager.js(v=1)}"></script>
-    <script th:src="@{/js/cart-sync.js(v=1)}"></script>
-    <script th:src="@{/js/cart-animations-v2.js(v=1)}"></script>
-    <script th:src="@{/js/ecommerce-enhanced.js(v=1)}"></script>
-    <script th:src="@{/js/product-detail.js(v=1)}"></script>
-    <script th:src="@{/js/header.js(v=1)}"></script>
 </body>
 </html>

@@ -520,6 +520,9 @@ body {
     padding: 2rem;
     box-shadow: 0 10px 40px rgba(0,0,0,0.1);
     margin-bottom: 2rem;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Product Description Content - HTML Support */
@@ -623,8 +626,9 @@ body {
     padding: 2rem;
     box-shadow: 0 10px 40px rgba(0,0,0,0.1);
     scroll-margin-top: 100px;
-    width: 100%;
-    max-width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .review-layout {
@@ -1030,12 +1034,13 @@ body {
     border-radius: 20px;
     padding: 2rem;
     box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-    width: 100%;
-    max-width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .qa-container {
-    width: 100%;
+    max-width: 100%;
 }
 
 .qa-form-card {
@@ -1185,8 +1190,9 @@ body {
     border-radius: 20px;
     padding: 2rem;
     box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-    width: 100%;
-    max-width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .faq-section .row {
@@ -1271,8 +1277,9 @@ body {
     border-radius: 20px;
     padding: 2rem;
     box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-    width: 100%;
-    max-width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .section-title {
@@ -1751,4 +1758,27 @@ body {
 
 .story-content a:hover {
     text-decoration: underline;
+}
+
+/* Force consistent width for all sections */
+.product-tabs,
+.reviews-section,
+.qa-section,
+.faq-section,
+.related-products {
+    width: 100% !important;
+    max-width: 1200px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* Ensure container doesn't override */
+.container .product-tabs,
+.container .reviews-section,
+.container .qa-section,
+.container .faq-section,
+.container .related-products {
+    width: 100% !important;
+    max-width: 1200px !important;
 }
