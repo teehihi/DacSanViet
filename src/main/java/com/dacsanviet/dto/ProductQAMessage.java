@@ -17,6 +17,7 @@ public class ProductQAMessage {
     private String answerTimestamp;
     private Integer likesCount;
     private Integer repliesCount;
+    private Boolean isReply; // Flag to indicate if this is a reply to another question
     
     public ProductQAMessage() {}
     
@@ -114,5 +115,13 @@ public class ProductQAMessage {
     
     public void setRepliesCount(Integer repliesCount) {
         this.repliesCount = repliesCount;
+    }
+    
+    public Boolean getIsReply() {
+        return isReply;
+    }
+    
+    public void setIsReply(Boolean isReply) {
+        this.isReply = isReply;
     }
 }

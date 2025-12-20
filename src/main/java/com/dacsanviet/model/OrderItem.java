@@ -51,6 +51,10 @@ public class OrderItem {
     @Size(max = 100, message = "Category name must not exceed 100 characters")
     private String categoryName; // Snapshot of category name
     
+    @Column(name = "product_image_url", length = 500)
+    @Size(max = 500, message = "Product image URL must not exceed 500 characters")
+    private String productImageUrl; // Snapshot of product image
+    
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -69,6 +73,7 @@ public class OrderItem {
         if (product != null) {
             this.productName = product.getName();
             this.productDescription = product.getDescription();
+            this.productImageUrl = product.getImageUrl();
             if (product.getCategory() != null) {
                 this.categoryName = product.getCategory().getName();
             }
@@ -118,6 +123,9 @@ public class OrderItem {
     public String getCategoryName() { return categoryName; }
     public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
     
+    public String getProductImageUrl() { return productImageUrl; }
+    public void setProductImageUrl(String productImageUrl) { this.productImageUrl = productImageUrl; }
+    
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     
@@ -129,6 +137,7 @@ public class OrderItem {
         if (product != null) {
             this.productName = product.getName();
             this.productDescription = product.getDescription();
+            this.productImageUrl = product.getImageUrl();
             if (product.getCategory() != null) {
                 this.categoryName = product.getCategory().getName();
             }

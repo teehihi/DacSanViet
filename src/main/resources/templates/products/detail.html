@@ -16,7 +16,11 @@
     <div th:replace="~{fragments/header :: header}"></div>
     <div th:replace="~{fragments/header :: mobile-menu}"></div>
     
-    <div class="container py-5" th:if="${product != null}">
+    <!-- WebSocket Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    
+    <div class="container-fluid px-3 px-md-5 py-5" th:if="${product != null}">
         <nav aria-label="breadcrumb" class="mb-4">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a th:href="@{/}" class="text-teal"><i class="bi bi-house me-1"></i>Trang Chủ</a></li>
@@ -84,7 +88,7 @@
                             <i class="bi bi-star-fill"></i>
                             <i class="bi bi-star-half"></i>
                         </div>
-                        <span class="rating-count">(4.5/5 - 128 Reviews)</span>
+                        <span class="rating-count">(4.8/5 - 128 Reviews)</span>
                         <span class="stock-badge" th:if="${product.stockQuantity > 0}">Còn hàng</span>
                     </div>
                     
@@ -114,7 +118,11 @@
                     </div>
                     
                     <div class="action-buttons-modern" th:if="${product.stockQuantity > 0}">
-                        <button class="btn-add-cart-modern" th:data-product-id="${product.id}">
+                        <button class="btn-add-cart-modern" 
+                                th:data-product-id="${product.id}"
+                                th:data-product-name="${product.name}"
+                                th:data-product-price="${product.price}"
+                                th:data-product-image="${product.imageUrl}">
                             <i class="bi bi-cart-plus me-2"></i>Thêm Vào Giỏ
                         </button>
                         <button class="btn-wishlist-modern">
@@ -130,7 +138,7 @@
                             <span class="shipping-title">Giao Nhanh Miễn Phí 5H</span>
                         </div>
                         <div class="shipping-description">
-                            <p>Bạn muốn nhận hàng trước <span class="highlight-time">10h</span> ngày mai. Đặt hàng trước <span class="highlight-time">24h</span> và chọn giao nhanh <span class="highlight-time">5H</span> ở bước thanh toán. <a href="#" class="shipping-link">Xem thêm</a></p>
+                            <p>Bạn muốn nhận hàng trước <span class="highlight-time">10h</span> ngày mai. Đặt hàng trước <span class="highlight-time">24h</span> và chọn giao nhanh <span class="highlight-time">5H</span> ở bước thanh toán. <a href="/shipping-policy" target="_blank" class="shipping-link">Xem thêm</a></p>
                         </div>
                     </div>
                 </div>
@@ -164,7 +172,9 @@
                              onerror="this.src='https://via.placeholder.com/50'">
                         <div>
                             <strong>Giao Hàng Miễn Phí</strong>
-                            <small>(Áp dụng cho đơn từ 300k trên toàn quốc, nội thành Hồ Chí Minh miễn phí Ship cho đơn từ 90k)</small>
+                            <small>(Áp dụng cho đơn từ 300k trên toàn quốc, nội thành Hồ Chí Minh miễn phí Ship cho đơn từ 90k) 
+                                <a href="/shipping-policy" target="_blank" class="text-decoration-none">Xem chi tiết</a>
+                            </small>
                         </div>
                     </div>
                     <div class="sidebar-item">
@@ -299,7 +309,7 @@
                             <i class="bi bi-star-fill"></i>
                             <i class="bi bi-star-half"></i>
                         </div>
-                        <div class="review-count">Based on 128 reviews</div>
+                        <div class="review-count">Dựa trên 128 đánh giá</div>
                     </div>
                     
                     <div class="review-bars-compact">
@@ -346,7 +356,7 @@
                     </div>
                     
                     <button class="btn-write-review">
-                        <i class="bi bi-pencil-square me-2"></i>Write a Review
+                        <i class="bi bi-pencil-square me-2"></i>Viết đánh giá
                     </button>
                 </div>
                 
@@ -362,7 +372,7 @@
                                         <i class="bi bi-patch-check-fill"></i> Verified Buyer
                                     </div>
                                 </div>
-                                <div class="review-time">2 days ago</div>
+                                <div class="review-time">2 ngày trước</div>
                             </div>
                             <div class="review-stars-row">
                                 <i class="bi bi-star-fill"></i>
@@ -371,8 +381,8 @@
                                 <i class="bi bi-star-fill"></i>
                                 <i class="bi bi-star-fill"></i>
                             </div>
-                            <h6 class="review-title">Authentic Flavor!</h6>
-                            <p class="review-text">Delicious! Tastes just like the ones I had in my childhood hometown in Tien Giang. Very crispy and not too sweet.</p>
+                            <h6 class="review-title">Hương vị đích thực!</h6>
+                            <p class="review-text">Ngon tuyệt! Hương vị giống hệt như những chiếc bánh tôi từng ăn hồi nhỏ ở quê nhà Tiền Giang. Giòn tan và không quá ngọt.</p>
                             <div class="review-photos">
                                 <img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=80&q=80" alt="Review photo">
                                 <img src="https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=80&q=80" alt="Review photo">
@@ -386,7 +396,7 @@
                                     <div class="reviewer-name">Minh Tran</div>
                                     <div class="reviewer-badge-simple">Reviewer</div>
                                 </div>
-                                <div class="review-time">1 week ago</div>
+                                <div class="review-time">1 tuần trước</div>
                             </div>
                             <div class="review-stars-row">
                                 <i class="bi bi-star-fill"></i>
@@ -395,12 +405,12 @@
                                 <i class="bi bi-star-fill"></i>
                                 <i class="bi bi-star-fill"></i>
                             </div>
-                            <p class="review-text">Beautiful packaging, making it perfect for gifts. The jackfruit quality is top-notch.</p>
+                            <p class="review-text">Bao bì đẹp mắt, rất thích hợp để làm quà tặng. Chất lượng mít thì tuyệt hảo.</p>
                         </div>
                     </div>
                     
                     <button class="btn-load-more">
-                        <i class="bi bi-chevron-down me-2"></i>Load more reviews
+                        <i class="bi bi-chevron-down me-2"></i>Xem thêm
                     </button>
                 </div>
             </div>
@@ -413,7 +423,7 @@
             <div class="qa-container">
                 <!-- Question Form -->
                 <div class="qa-form-card mb-4">
-                    <div class="row g-3 mb-3">
+                    <div class="row g-3 mb-3" th:if="${#authorization.expression('!isAuthenticated()')}">
                         <div class="col-md-6">
                             <input type="text" class="form-control" id="userNameInput" placeholder="Tên của bạn *" required>
                         </div>
@@ -422,7 +432,11 @@
                         </div>
                     </div>
                     <div class="d-flex align-items-start gap-3">
-                        <img src="https://ui-avatars.com/api/?name=User&background=4ec2b6&color=fff" 
+                        <img th:if="${#authorization.expression('isAuthenticated()')}"
+                             th:src="@{https://ui-avatars.com/api/?name={name}&background=4ec2b6&color=fff(name=${#authentication.principal.username})}" 
+                             class="qa-avatar" alt="Avatar" id="userAvatar">
+                        <img th:if="${#authorization.expression('!isAuthenticated()')}"
+                             src="https://ui-avatars.com/api/?name=User&background=4ec2b6&color=fff" 
                              class="qa-avatar" alt="Avatar" id="userAvatar">
                         <div class="flex-grow-1">
                             <textarea class="form-control qa-input" 
@@ -668,20 +682,478 @@
             }
         }
         
-        // Simple Q&A function
-        function sendQuestion() {
-            const input = document.getElementById('questionInput');
-            const nameInput = document.getElementById('userNameInput');
-            const emailInput = document.getElementById('userEmailInput');
+        // WebSocket Q&A Implementation
+        let stompClient = null;
+        let productId = parseInt('[[${product.id}]]') || 0;
+        let isAuthenticated = [[${#authorization.expression('isAuthenticated()')}]] || false;
+        let currentUserName = '[[${#authorization.expression("isAuthenticated()") ? #authentication.name : ""}]]' || '';
+        let currentUserEmail = '';
+        
+        // Get user email from authenticated user
+        if (isAuthenticated) {
+            // Try to get email from principal
+            try {
+                currentUserEmail = '[[${#authorization.expression("isAuthenticated()") ? #authentication.principal.email : ""}]]' || '';
+            } catch(e) {
+                console.log('Could not get user email, using username as fallback');
+                currentUserEmail = currentUserName + '@example.com';
+            }
+        }
+        
+        console.log('User info:', {isAuthenticated, currentUserName, currentUserEmail, productId});
+        
+        // Load saved user info from localStorage
+        function loadSavedUserInfo() {
+            if (!isAuthenticated) {
+                const savedName = localStorage.getItem('qaUserName');
+                const savedEmail = localStorage.getItem('qaUserEmail');
+                
+                const nameInput = document.getElementById('userNameInput');
+                const emailInput = document.getElementById('userEmailInput');
+                
+                if (savedName && nameInput) {
+                    nameInput.value = savedName;
+                    updateAvatar(savedName);
+                }
+                if (savedEmail && emailInput) {
+                    emailInput.value = savedEmail;
+                }
+            }
+        }
+        
+        // Save user info to localStorage
+        function saveUserInfo(name, email) {
+            if (!isAuthenticated) {
+                localStorage.setItem('qaUserName', name);
+                localStorage.setItem('qaUserEmail', email);
+            }
+        }
+        
+        // Update avatar
+        function updateAvatar(name) {
+            const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=4ec2b6&color=fff`;
+            const avatar = document.getElementById('userAvatar');
+            if (avatar) {
+                avatar.src = avatarUrl;
+            }
+        }
+        
+        function connectWebSocket() {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
             
-            if (!nameInput.value.trim() || !emailInput.value.trim() || !input.value.trim()) {
-                alert('Vui lòng điền đầy đủ thông tin');
+            stompClient.connect({}, function(frame) {
+                console.log('Connected to WebSocket:', frame);
+                
+                // Subscribe to product Q&A topic
+                stompClient.subscribe('/topic/product/' + productId + '/qa', function(message) {
+                    const qaMessage = JSON.parse(message.body);
+                    console.log('Received WebSocket message:', qaMessage);
+                    
+                    // Check if it's a reply or a new question
+                    if (qaMessage.isReply && qaMessage.parentId) {
+                        console.log('This is a reply, calling displayReply');
+                        displayReply(qaMessage, qaMessage.parentId);
+                    } else {
+                        console.log('This is a new question, calling displayQuestion');
+                        displayQuestion(qaMessage);
+                    }
+                });
+                
+                // Subscribe to like updates
+                stompClient.subscribe('/topic/product/' + productId + '/qa/like', function(message) {
+                    const likeUpdate = JSON.parse(message.body);
+                    updateLikeCount(likeUpdate.id, likeUpdate.likesCount);
+                });
+                
+                // Load existing Q&A
+                loadExistingQA();
+            }, function(error) {
+                console.error('WebSocket connection error:', error);
+                showNotification('Không thể kết nối đến hệ thống Q&A. Vui lòng thử lại sau.', 'error');
+            });
+        }
+        
+        function loadExistingQA() {
+            console.log('Loading Q&A for product:', productId);
+            fetch('/api/products/' + productId + '/qa')
+                .then(response => response.json())
+                .then(qaList => {
+                    console.log('Loaded Q&A:', qaList);
+                    const qaListElement = document.getElementById('qaList');
+                    qaListElement.innerHTML = '';
+                    
+                    if (qaList.length === 0) {
+                        qaListElement.innerHTML = `
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-chat-square-text fs-1"></i>
+                                <p class="mt-2">Chưa có câu hỏi nào. Hãy là người đầu tiên đặt câu hỏi!</p>
+                            </div>
+                        `;
+                    } else {
+                        qaList.forEach(qa => {
+                            // Only display Q&A for current product
+                            if (qa.productId === productId) {
+                                displayQuestion(qa);
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading Q&A:', error);
+                });
+        }
+        
+        function sendQuestion() {
+            console.log('sendQuestion called');
+            console.log('isAuthenticated:', isAuthenticated);
+            console.log('currentUserName:', currentUserName);
+            console.log('currentUserEmail:', currentUserEmail);
+            
+            const input = document.getElementById('questionInput');
+            let userName, userEmail;
+            
+            if (isAuthenticated) {
+                userName = currentUserName;
+                userEmail = currentUserEmail;
+                console.log('Using authenticated user:', userName, userEmail);
+            } else {
+                const nameInput = document.getElementById('userNameInput');
+                const emailInput = document.getElementById('userEmailInput');
+                
+                console.log('nameInput:', nameInput);
+                console.log('emailInput:', emailInput);
+                
+                if (!nameInput || !emailInput || !nameInput.value.trim() || !emailInput.value.trim()) {
+                    showNotification('Vui lòng điền đầy đủ thông tin', 'warning');
+                    return;
+                }
+                
+                userName = nameInput.value.trim();
+                userEmail = emailInput.value.trim();
+                
+                console.log('Using guest user:', userName, userEmail);
+                
+                // Save to localStorage
+                saveUserInfo(userName, userEmail);
+            }
+            
+            if (!input || !input.value.trim()) {
+                showNotification('Vui lòng nhập câu hỏi', 'warning');
                 return;
             }
             
-            alert('Câu hỏi đã được gửi! (Chức năng này cần backend để hoạt động)');
+            if (!stompClient || !stompClient.connected) {
+                showNotification('Đang kết nối lại...', 'info');
+                connectWebSocket();
+                setTimeout(() => sendQuestion(), 1000);
+                return;
+            }
+            
+            const message = {
+                productId: productId,
+                userName: userName,
+                userEmail: userEmail,
+                question: input.value.trim(),
+                isReply: false,
+                parentId: null
+            };
+            
+            console.log('Sending message:', message);
+            stompClient.send('/app/product/qa', {}, JSON.stringify(message));
+            
             input.value = '';
+            showNotification('Câu hỏi đã được gửi!', 'success');
         }
+        
+        function displayQuestion(qa) {
+            // Only display if it's for the current product
+            if (qa.productId !== productId) {
+                console.log('Skipping Q&A for different product:', qa.productId, 'current:', productId);
+                return;
+            }
+            
+            const qaListElement = document.getElementById('qaList');
+            
+            // Remove empty state if exists
+            const emptyState = qaListElement.querySelector('.text-center.text-muted');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const qaItem = document.createElement('div');
+            qaItem.className = 'qa-item';
+            qaItem.setAttribute('data-qa-id', qa.id);
+            
+            const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(qa.userName)}&background=4ec2b6&color=fff`;
+            const timeAgo = qa.timestamp ? formatTimeAgo(qa.timestamp) : 'Vừa xong';
+            
+            qaItem.innerHTML = `
+                <div class="qa-item-header">
+                    <img src="${avatarUrl}" class="qa-avatar" alt="${qa.userName}">
+                    <div class="qa-item-content">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="qa-item-author">${qa.userName}</span>
+                                <span class="qa-item-time">${timeAgo}</span>
+                            </div>
+                            <div class="qa-actions">
+                                <button class="qa-action-btn like-btn" onclick="toggleLike(${qa.id})">
+                                    <i class="bi bi-hand-thumbs-up"></i>
+                                    <span class="like-count">${qa.likesCount || 0}</span>
+                                </button>
+                                <button class="qa-action-btn reply-btn" onclick="toggleReplyForm(${qa.id})">
+                                    <i class="bi bi-reply"></i>
+                                    Trả lời
+                                </button>
+                            </div>
+                        </div>
+                        <p class="qa-item-question">${qa.question}</p>
+                        ${qa.answer ? `
+                            <div class="qa-item-answer">
+                                <div class="qa-item-answer-header">
+                                    <span class="qa-shop-badge">SHOP</span>
+                                    <span class="qa-item-time">${qa.answerTimestamp ? formatTimeAgo(qa.answerTimestamp) : ''}</span>
+                                </div>
+                                <p class="qa-item-answer-text">${qa.answer}</p>
+                            </div>
+                        ` : ''}
+                        <div class="qa-reply-form" id="replyForm${qa.id}" style="display: none;">
+                            <div class="d-flex align-items-start gap-2 mt-3">
+                                <img src="https://ui-avatars.com/api/?name=User&background=4ec2b6&color=fff" 
+                                     class="qa-avatar-small" alt="Avatar">
+                                <div class="flex-grow-1">
+                                    ${!isAuthenticated ? `
+                                        <input type="text" class="form-control form-control-sm mb-2" 
+                                               id="replyName${qa.id}" placeholder="Tên của bạn *">
+                                        <input type="email" class="form-control form-control-sm mb-2" 
+                                               id="replyEmail${qa.id}" placeholder="Email của bạn *">
+                                    ` : ''}
+                                    <textarea class="form-control form-control-sm mb-2" 
+                                              id="replyText${qa.id}" 
+                                              rows="2" 
+                                              placeholder="Nhập câu trả lời..."></textarea>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-primary btn-sm" onclick="sendReply(${qa.id})">
+                                            <i class="bi bi-send me-1"></i>Gửi
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm" onclick="toggleReplyForm(${qa.id})">
+                                            Hủy
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="qa-replies-container" id="replies${qa.id}"></div>
+                    </div>
+                </div>
+            `;
+            
+            qaListElement.insertBefore(qaItem, qaListElement.firstChild);
+            
+            // Load replies if any
+            if (qa.id) {
+                loadReplies(qa.id);
+            }
+        }
+        
+        function toggleReplyForm(qaId) {
+            const replyForm = document.getElementById('replyForm' + qaId);
+            if (replyForm) {
+                const isHidden = replyForm.style.display === 'none';
+                replyForm.style.display = isHidden ? 'block' : 'none';
+                
+                // Load saved user info if not authenticated
+                if (isHidden && !isAuthenticated) {
+                    const savedName = localStorage.getItem('qaUserName');
+                    const savedEmail = localStorage.getItem('qaUserEmail');
+                    
+                    const nameInput = document.getElementById('replyName' + qaId);
+                    const emailInput = document.getElementById('replyEmail' + qaId);
+                    
+                    if (savedName && nameInput) nameInput.value = savedName;
+                    if (savedEmail && emailInput) emailInput.value = savedEmail;
+                }
+            }
+        }
+        
+        function sendReply(parentId) {
+            let userName, userEmail;
+            
+            if (isAuthenticated) {
+                userName = currentUserName;
+                userEmail = currentUserEmail;
+            } else {
+                const nameInput = document.getElementById('replyName' + parentId);
+                const emailInput = document.getElementById('replyEmail' + parentId);
+                
+                if (!nameInput || !emailInput || !nameInput.value.trim() || !emailInput.value.trim()) {
+                    showNotification('Vui lòng điền đầy đủ thông tin', 'warning');
+                    return;
+                }
+                
+                userName = nameInput.value.trim();
+                userEmail = emailInput.value.trim();
+                
+                // Save to localStorage
+                saveUserInfo(userName, userEmail);
+            }
+            
+            const textInput = document.getElementById('replyText' + parentId);
+            
+            if (!textInput || !textInput.value.trim()) {
+                showNotification('Vui lòng nhập câu trả lời', 'warning');
+                return;
+            }
+            
+            if (!stompClient || !stompClient.connected) {
+                showNotification('Đang kết nối lại...', 'info');
+                connectWebSocket();
+                setTimeout(() => sendReply(parentId), 1000);
+                return;
+            }
+            
+            const message = {
+                productId: productId,
+                userName: userName,
+                userEmail: userEmail,
+                question: textInput.value.trim(),
+                isReply: true,
+                parentId: parentId
+            };
+            
+            stompClient.send('/app/product/qa', {}, JSON.stringify(message));
+            
+            // Clear form
+            if (!isAuthenticated) {
+                const nameInput = document.getElementById('replyName' + parentId);
+                const emailInput = document.getElementById('replyEmail' + parentId);
+                if (nameInput) nameInput.value = '';
+                if (emailInput) emailInput.value = '';
+            }
+            textInput.value = '';
+            toggleReplyForm(parentId);
+            
+            showNotification('Câu trả lời đã được gửi!', 'success');
+        }
+        
+        function loadReplies(questionId) {
+            fetch('/api/products/qa/' + questionId + '/replies')
+                .then(response => response.json())
+                .then(replies => {
+                    const repliesContainer = document.getElementById('replies' + questionId);
+                    if (repliesContainer && replies.length > 0) {
+                        repliesContainer.innerHTML = '';
+                        replies.forEach(reply => {
+                            displayReply(reply, questionId);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading replies:', error);
+                });
+        }
+        
+        function displayReply(reply, parentId) {
+            console.log('displayReply called:', reply, 'parentId:', parentId);
+            const repliesContainer = document.getElementById('replies' + parentId);
+            if (!repliesContainer) {
+                console.error('Replies container not found for parentId:', parentId);
+                return;
+            }
+            
+            // Check if reply already exists
+            const existingReply = repliesContainer.querySelector(`[data-reply-id="${reply.id}"]`);
+            if (existingReply) {
+                console.log('Reply already exists, skipping');
+                return;
+            }
+            
+            const replyItem = document.createElement('div');
+            replyItem.className = 'qa-reply-item';
+            replyItem.setAttribute('data-reply-id', reply.id);
+            
+            const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(reply.userName)}&background=17a2b8&color=fff`;
+            const timeAgo = reply.timestamp ? formatTimeAgo(reply.timestamp) : 'Vừa xong';
+            
+            replyItem.innerHTML = `
+                <div class="d-flex align-items-start gap-2">
+                    <img src="${avatarUrl}" class="qa-avatar-small" alt="${reply.userName}">
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="qa-item-author">${reply.userName}</span>
+                                <span class="qa-item-time">${timeAgo}</span>
+                            </div>
+                        </div>
+                        <p class="qa-item-question mb-0">${reply.question}</p>
+                    </div>
+                </div>
+            `;
+            
+            repliesContainer.appendChild(replyItem);
+            console.log('Reply added to container');
+        }
+        
+        function toggleLike(qaId) {
+            const userIdentifier = getUserIdentifier();
+            
+            fetch(`/api/products/qa/${qaId}/like?userIdentifier=${userIdentifier}`)
+                .then(response => response.json())
+                .then(likesCount => {
+                    // Update will come via WebSocket
+                    console.log('Like toggled, new count:', likesCount);
+                })
+                .catch(error => {
+                    console.error('Error toggling like:', error);
+                    showNotification('Có lỗi xảy ra', 'error');
+                });
+        }
+        
+        function updateLikeCount(qaId, likesCount) {
+            const qaItem = document.querySelector(`[data-qa-id="${qaId}"]`);
+            if (qaItem) {
+                const likeCountElement = qaItem.querySelector('.like-count');
+                if (likeCountElement) {
+                    likeCountElement.textContent = likesCount;
+                }
+            }
+        }
+        
+        function getUserIdentifier() {
+            let identifier = localStorage.getItem('userIdentifier');
+            if (!identifier) {
+                identifier = 'user_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+                localStorage.setItem('userIdentifier', identifier);
+            }
+            return identifier;
+        }
+        
+        function formatTimeAgo(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            
+            if (seconds < 60) return 'Vừa xong';
+            if (seconds < 3600) return Math.floor(seconds / 60) + ' phút trước';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + ' giờ trước';
+            if (seconds < 604800) return Math.floor(seconds / 86400) + ' ngày trước';
+            return date.toLocaleDateString('vi-VN');
+        }
+        
+        // Update avatar when name changes
+        const nameInput = document.getElementById('userNameInput');
+        if (nameInput) {
+            nameInput.addEventListener('input', function() {
+                updateAvatar(this.value);
+            });
+        }
+        
+        // Connect WebSocket on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavedUserInfo();
+            connectWebSocket();
+        });
         
         // Add to cart function for main product
         document.addEventListener('DOMContentLoaded', function() {
@@ -690,6 +1162,9 @@
             if (addToCartBtn) {
                 addToCartBtn.addEventListener('click', function() {
                     const productId = this.getAttribute('data-product-id');
+                    const productName = this.getAttribute('data-product-name');
+                    const productPrice = parseFloat(this.getAttribute('data-product-price'));
+                    const productImage = this.getAttribute('data-product-image');
                     const quantityInput = document.getElementById('quantity');
                     const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
                     
@@ -704,50 +1179,44 @@
                     this.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Đang thêm...';
                     this.disabled = true;
                     
-                    // Call API to add to cart
-                    fetch('/cart/add', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({
-                            productId: parseInt(productId),
-                            quantity: quantity
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Success state
-                            this.innerHTML = '<i class="bi bi-check-circle me-2"></i>Đã thêm!';
-                            this.classList.add('btn-success');
-                            
-                            // Show success notification
-                            showNotification(data.message || 'Đã thêm sản phẩm vào giỏ hàng!', 'success');
-                            
-                            // Update cart badge if exists
-                            updateCartBadge(data.cartItemCount);
-                            
-                            // Reset button after 2 seconds
-                            setTimeout(() => {
+                    // Wait for CartManager to be available
+                    const tryAddToCart = () => {
+                        if (typeof window.CartManager !== 'undefined') {
+                            try {
+                                window.CartManager.addToCart({
+                                    productId: parseInt(productId),
+                                    productName: productName,
+                                    price: productPrice,
+                                    quantity: quantity,
+                                    imageUrl: productImage
+                                });
+                                
+                                // Success state
+                                this.innerHTML = '<i class="bi bi-check-circle me-2"></i>Đã thêm!';
+                                this.classList.add('btn-success');
+                                
+                                // Show success notification
+                                showNotification('Đã thêm sản phẩm vào giỏ hàng!', 'success');
+                                
+                                // Reset button after 2 seconds
+                                setTimeout(() => {
+                                    this.innerHTML = originalContent;
+                                    this.classList.remove('btn-success');
+                                    this.disabled = false;
+                                }, 2000);
+                            } catch (error) {
+                                console.error('Error:', error);
                                 this.innerHTML = originalContent;
-                                this.classList.remove('btn-success');
                                 this.disabled = false;
-                            }, 2000);
+                                showNotification('Có lỗi xảy ra khi thêm sản phẩm', 'error');
+                            }
                         } else {
-                            // Error state
-                            this.innerHTML = originalContent;
-                            this.disabled = false;
-                            showNotification(data.message || 'Có lỗi xảy ra khi thêm sản phẩm', 'error');
+                            // Retry after 100ms
+                            setTimeout(tryAddToCart.bind(this), 100);
                         }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        this.innerHTML = originalContent;
-                        this.disabled = false;
-                        showNotification('Có lỗi xảy ra khi thêm sản phẩm', 'error');
-                    });
+                    };
+                    
+                    tryAddToCart.call(this);
                 });
             }
         });
@@ -921,8 +1390,84 @@
         }
     </style>
     
+    <!-- Related Products Auto Slider Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const slider = document.getElementById('relatedProductsSlider');
+            if (!slider) return;
+            
+            const items = Array.from(slider.querySelectorAll('.related-product-item'));
+            if (items.length === 0 || items.length <= 4) return; // No need to slide if 4 or fewer items
+            
+            // Clone items for infinite loop
+            items.forEach(item => {
+                const clone = item.cloneNode(true);
+                // Re-attach event listeners to cloned buttons
+                const clonedButton = clone.querySelector('.add-to-cart-btn');
+                if (clonedButton) {
+                    clonedButton.onclick = function() {
+                        addToCartFromRelated(this);
+                    };
+                }
+                slider.appendChild(clone);
+            });
+            
+            let scrollPosition = 0;
+            let isHovered = false;
+            let animationId = null;
+            
+            function autoSlide() {
+                if (!isHovered) {
+                    scrollPosition += 0.5; // Scroll speed
+                    
+                    // Reset position for infinite loop
+                    const firstItem = items[0];
+                    if (!firstItem) return;
+                    
+                    const itemWidth = firstItem.offsetWidth;
+                    const gap = 16; // 1rem gap
+                    const totalWidth = (itemWidth + gap) * items.length;
+                    
+                    if (scrollPosition >= totalWidth) {
+                        scrollPosition = 0;
+                    }
+                    
+                    slider.style.transform = `translateX(-${scrollPosition}px)`;
+                }
+                
+                animationId = requestAnimationFrame(autoSlide);
+            }
+            
+            // Start auto slide
+            autoSlide();
+            
+            // Pause on hover
+            slider.addEventListener('mouseenter', function() {
+                isHovered = true;
+            });
+            
+            // Resume on mouse leave
+            slider.addEventListener('mouseleave', function() {
+                isHovered = false;
+            });
+            
+            // Clean up on page unload
+            window.addEventListener('beforeunload', function() {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+            });
+        });
+    </script>
+    
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Cart Scripts - Load in correct order -->
+    <script th:src="@{/js/cart-manager.js(v=1)}"></script>
+    <script th:src="@{/js/cart-sync.js(v=1)}"></script>
+    <script th:src="@{/js/cart-animations-v2.js(v=1)}"></script>
+    <script th:src="@{/js/header.js(v=1)}"></script>
     
     <!-- Footer -->
     <div th:replace="~{fragments/footer :: footer}"></div>

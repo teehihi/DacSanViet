@@ -76,7 +76,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // Public endpoints
                 .requestMatchers("/about", "/contact", "/test", "/test-simple").permitAll()
-                .requestMatchers("/privacy-policy", "/terms-of-service").permitAll()
+                .requestMatchers("/privacy-policy", "/terms-of-service", "/shipping-policy").permitAll()
                 .requestMatchers("/error/**").permitAll()
                 .requestMatchers("/init-data", "/clear-test-data", "/check-conflicts", "/view-database", "/database").permitAll()
                 .requestMatchers("/login", "/register").permitAll()

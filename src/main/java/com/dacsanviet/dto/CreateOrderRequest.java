@@ -7,6 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 /**
  * Request DTO for creating a new order
  */
@@ -26,6 +29,7 @@ public class CreateOrderRequest {
     private String customerPhone;
     
     @Size(max = 100, message = "Email không được quá 100 ký tự")
+    @NotBlank(message = "Email không được để trống")
     private String customerEmail;
     
     @NotBlank(message = "Địa chỉ giao hàng không được để trống")
@@ -37,4 +41,22 @@ public class CreateOrderRequest {
     
     @Size(max = 1000, message = "Ghi chú không được quá 1000 ký tự")
     private String notes;
+    
+    // For guest checkout - cart totals from localStorage
+    private BigDecimal subtotal;
+    private BigDecimal shippingFee;
+    
+    // For guest checkout - cart items from localStorage
+    private List<CartItemRequest> items;
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CartItemRequest {
+        private Long productId;
+        private String productName;
+        private String productImageUrl;
+        private Integer quantity;
+        private BigDecimal unitPrice;
+    }
 }

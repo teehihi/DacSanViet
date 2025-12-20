@@ -33,6 +33,7 @@ public class OrderService {
     private final AddressRepository addressRepository;
     private final ProductRepository productRepository;
     private final NotificationService notificationService;
+    private final EmailService emailService;
     
     @Autowired
     public OrderService(OrderRepository orderRepository,
@@ -41,7 +42,8 @@ public class OrderService {
                        UserRepository userRepository,
                        AddressRepository addressRepository,
                        ProductRepository productRepository,
-                       NotificationService notificationService) {
+                       NotificationService notificationService,
+                       EmailService emailService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.cartItemRepository = cartItemRepository;
@@ -49,6 +51,7 @@ public class OrderService {
         this.addressRepository = addressRepository;
         this.productRepository = productRepository;
         this.notificationService = notificationService;
+        this.emailService = emailService;
     }
     
     /**
@@ -409,9 +412,18 @@ public class OrderService {
         OrderDao dto = new OrderDao();
         dto.setId(order.getId());
         dto.setOrderNumber(order.getOrderNumber());
-        dto.setUserId(order.getUser().getId());
-        dto.setUserFullName(order.getUser().getFullName());
-        dto.setUserEmail(order.getUser().getEmail());
+        
+        // Handle null user for guest orders
+        if (order.getUser() != null) {
+            dto.setUserId(order.getUser().getId());
+            dto.setUserFullName(order.getUser().getFullName());
+            dto.setUserEmail(order.getUser().getEmail());
+        } else {
+            dto.setUserId(null);
+            dto.setUserFullName(order.getCustomerName());
+            dto.setUserEmail(order.getCustomerEmail());
+        }
+        
         dto.setTotalAmount(order.getTotalAmount());
         dto.setShippingFee(order.getShippingFee());
         dto.setTaxAmount(order.getTaxAmount());
@@ -453,6 +465,7 @@ public class OrderService {
         dto.setProductName(orderItem.getProductName());
         dto.setProductDescription(orderItem.getProductDescription());
         dto.setCategoryName(orderItem.getCategoryName());
+        dto.setProductImageUrl(orderItem.getProductImageUrl());
         dto.setQuantity(orderItem.getQuantity());
         dto.setUnitPrice(orderItem.getUnitPrice());
         dto.setCreatedAt(orderItem.getCreatedAt());
@@ -771,34 +784,48 @@ public class OrderService {
     }
     
     /**
-     * Create order from cart with customer information
+     * Create order from cart with customer information - supports guest checkout
      */
     public OrderDao createOrderFromCart(CreateOrderRequest request) {
-        User user = getUserById(request.getUserId());
-        
-        // Debug logging
-        System.out.println("Creating order with payment method: " + request.getPaymentMethod());
-        
         // Validate COD order requirements
         validateCODOrder(request);
         
-        // Get cart items
-        List<CartItem> cartItems = cartItemRepository.findByUserIdOrderByAddedDateDesc(request.getUserId());
-        if (cartItems.isEmpty()) {
-            throw new RuntimeException("Cart is empty");
+        // Debug logging
+        System.out.println("Creating order with payment method: " + request.getPaymentMethod());
+        System.out.println("User ID: " + request.getUserId());
+        
+        User user = null;
+        List<CartItem> cartItems = new ArrayList<>();
+        
+        // Check if this is a guest order or authenticated user order
+        if (request.getUserId() != null) {
+            // Authenticated user - get user and cart from database
+            user = getUserById(request.getUserId());
+            cartItems = cartItemRepository.findByUserIdOrderByAddedDateDesc(request.getUserId());
+            
+            if (cartItems.isEmpty()) {
+                throw new RuntimeException("Cart is empty");
+            }
         }
         
-        // Validate cart items and check inventory
-        validateCartForOrder(cartItems);
-        
-        // Calculate totals
-        BigDecimal subtotal = calculateCartSubtotal(cartItems);
-        BigDecimal shippingFee = BigDecimal.ZERO; // Free shipping for now
+        // Calculate totals (for guest orders, use values from request)
+        BigDecimal subtotal = request.getSubtotal() != null ? request.getSubtotal() : BigDecimal.ZERO;
+        BigDecimal shippingFee = request.getShippingFee() != null ? request.getShippingFee() : BigDecimal.ZERO;
         BigDecimal taxAmount = BigDecimal.ZERO; // No tax for now
         BigDecimal totalAmount = subtotal.add(shippingFee).add(taxAmount);
         
+        // If we have cart items from database, calculate from them
+        if (!cartItems.isEmpty()) {
+            // Validate cart items and check inventory
+            validateCartForOrder(cartItems);
+            subtotal = calculateCartSubtotal(cartItems);
+            totalAmount = subtotal.add(shippingFee).add(taxAmount);
+        }
+        
         // Create order
-        Order order = new Order(user, totalAmount);
+        Order order = new Order();
+        order.setUser(user); // Can be null for guest orders
+        order.setTotalAmount(totalAmount);
         order.setCustomerName(request.getCustomerName());
         order.setCustomerPhone(request.getCustomerPhone());
         order.setCustomerEmail(request.getCustomerEmail());
@@ -821,28 +848,62 @@ public class OrderService {
         
         // Generate order number
         order.setOrderNumber(generateOrderNumber());
+        order.setOrderDate(LocalDateTime.now());
         
         // Save order
         order = orderRepository.save(order);
         
         // Create order items from cart items and update inventory
-        for (CartItem cartItem : cartItems) {
-            OrderItem orderItem = new OrderItem(order, cartItem);
-            orderItemRepository.save(orderItem);
-            order.addOrderItem(orderItem);
+        if (!cartItems.isEmpty()) {
+            // Authenticated user - use cart items from database
+            for (CartItem cartItem : cartItems) {
+                OrderItem orderItem = new OrderItem(order, cartItem);
+                orderItemRepository.save(orderItem);
+                order.addOrderItem(orderItem);
+                
+                // Update product stock
+                Product product = cartItem.getProduct();
+                product.setStockQuantity(product.getStockQuantity() - cartItem.getQuantity());
+                productRepository.save(product);
+            }
             
-            // Update product stock
-            Product product = cartItem.getProduct();
-            product.setStockQuantity(product.getStockQuantity() - cartItem.getQuantity());
-            productRepository.save(product);
+            // Clear cart for authenticated users
+            if (request.getUserId() != null) {
+                cartItemRepository.deleteByUserId(request.getUserId());
+            }
+        } else if (request.getItems() != null && !request.getItems().isEmpty()) {
+            // Guest order - use cart items from request
+            for (CreateOrderRequest.CartItemRequest itemRequest : request.getItems()) {
+                // Get product from database
+                Product product = productRepository.findById(itemRequest.getProductId())
+                        .orElseThrow(() -> new RuntimeException("Product not found: " + itemRequest.getProductId()));
+                
+                // Create order item
+                OrderItem orderItem = new OrderItem();
+                orderItem.setOrder(order);
+                orderItem.setProduct(product);
+                orderItem.setQuantity(itemRequest.getQuantity());
+                orderItem.setUnitPrice(itemRequest.getUnitPrice());
+                orderItem.setProductName(itemRequest.getProductName());
+                orderItem.setProductImageUrl(itemRequest.getProductImageUrl());
+                orderItem.setProductDescription(product.getDescription());
+                if (product.getCategory() != null) {
+                    orderItem.setCategoryName(product.getCategory().getName());
+                }
+                
+                orderItemRepository.save(orderItem);
+                order.addOrderItem(orderItem);
+                
+                // Update product stock
+                product.setStockQuantity(product.getStockQuantity() - itemRequest.getQuantity());
+                productRepository.save(product);
+            }
         }
-        
-        // Clear cart
-        cartItemRepository.deleteByUserId(request.getUserId());
         
         // Send notification
         try {
-            // notificationService.sendOrderConfirmation(order); // TODO: Implement this method
+            // Send order confirmation email
+            emailService.sendOrderConfirmationEmail(convertToOrderDto(order));
             System.out.println("Order created successfully: " + order.getOrderNumber());
         } catch (Exception e) {
             // Log error but don't fail the order

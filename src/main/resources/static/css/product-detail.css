@@ -1548,7 +1548,9 @@ body {
     padding: 12px;
     background: #f8f9fa;
     border-radius: 8px;
-    margin-left: 48px;
+    margin-left: 56px;
+    margin-top: 12px;
+    border-left: 3px solid #4ec2b6;
 }
 
 .qa-avatar-small {
@@ -1561,11 +1563,12 @@ body {
 /* Reply Items */
 .qa-reply-item {
     padding: 12px;
-    margin-left: 48px;
-    border-left: 2px solid #e0e0e0;
+    margin-left: 56px;
+    border-left: 3px solid #e0e0e0;
     background: #f8f9fa;
     border-radius: 0 8px 8px 0;
     margin-bottom: 8px;
+    margin-top: 8px;
 }
 
 .qa-reply-item .qa-avatar {
@@ -1583,7 +1586,7 @@ body {
 }
 
 .qa-replies-container {
-    margin-top: 12px;
+    margin-top: 8px;
 }
 
 /* Form inputs */
@@ -1767,18 +1770,25 @@ body {
 .faq-section,
 .related-products {
     width: 100% !important;
-    max-width: 1200px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
     box-sizing: border-box !important;
 }
 
 /* Ensure container doesn't override */
-.container .product-tabs,
-.container .reviews-section,
-.container .qa-section,
-.container .faq-section,
-.container .related-products {
+.container-fluid .product-tabs,
+.container-fluid .reviews-section,
+.container-fluid .qa-section,
+.container-fluid .faq-section,
+.container-fluid .related-products {
     width: 100% !important;
-    max-width: 1200px !important;
+    max-width: 100% !important;
+}
+
+/* Constrain the product detail wrapper to match container width */
+.product-detail-wrapper {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
 }

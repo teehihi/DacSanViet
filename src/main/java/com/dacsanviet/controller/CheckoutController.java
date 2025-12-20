@@ -31,32 +31,22 @@ public class CheckoutController {
     
     /**
      * Show checkout page - supports both authenticated users and guests
+     * Cart is loaded from localStorage on client side (Yame behavior)
      */
     @GetMapping
     public String showCheckout(Model model, Authentication authentication) {
         try {
-            CartDao cart;
+            // Always use guest checkout flow since cart is in localStorage
+            // Cart will be loaded from localStorage on client side
+            CartDao cart = new CartDao();
             
-            // Check if user is authenticated
+            // Check if user is authenticated for display purposes
             if (authentication != null && authentication.isAuthenticated()) {
                 UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                cart = cartService.getCart(userPrincipal.getId());
-                
-                // Validate cart before checkout
-                if (!cartService.validateCart(userPrincipal.getId())) {
-                    cartService.removeUnavailableItems(userPrincipal.getId());
-                    model.addAttribute("error", "Một số sản phẩm trong giỏ hàng không còn khả dụng và đã được xóa.");
-                    return "redirect:/cart";
-                }
+                model.addAttribute("isAuthenticated", true);
+                model.addAttribute("userId", userPrincipal.getId());
             } else {
-                // Guest checkout - cart will be loaded from localStorage on client side
-                cart = new CartDao();
                 model.addAttribute("isGuest", true);
-            }
-            
-            if (cart.getItems() != null && cart.getItems().isEmpty() && authentication != null) {
-                model.addAttribute("error", "Giỏ hàng trống. Vui lòng thêm sản phẩm trước khi thanh toán.");
-                return "redirect:/cart";
             }
             
             model.addAttribute("cart", cart);
@@ -72,7 +62,7 @@ public class CheckoutController {
     }
     
     /**
-     * Process checkout
+     * Process checkout - supports both authenticated users and guests
      */
     @PostMapping("/process")
     public String processCheckout(
@@ -82,28 +72,31 @@ public class CheckoutController {
             Model model,
             RedirectAttributes redirectAttributes) {
         
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return "redirect:/login";
-        }
-        
         try {
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            
+            // Validate form
             if (bindingResult.hasErrors()) {
-                CartDao cart = cartService.getCart(userPrincipal.getId());
-                model.addAttribute("cart", cart);
+                model.addAttribute("orderRequest", orderRequest);
                 model.addAttribute("pageTitle", "Thanh Toán");
                 return "checkout/simple-checkout";
             }
             
-            // Set user ID for the order
-            orderRequest.setUserId(userPrincipal.getId());
+            // Check if user is authenticated
+            Long userId = null;
+            if (authentication != null && authentication.isAuthenticated()) {
+                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+                userId = userPrincipal.getId();
+            }
+            
+            // Set user ID (null for guest orders)
+            orderRequest.setUserId(userId);
             
             // Create order
             OrderDao order = orderService.createOrderFromCart(orderRequest);
             
-            // Clear cart after successful order
-            cartService.clearCart(userPrincipal.getId());
+            // Clear cart after successful order (for authenticated users)
+            if (userId != null) {
+                cartService.clearCart(userId);
+            }
             
             // Set appropriate success message based on payment method
             String successMessage;
@@ -116,11 +109,15 @@ public class CheckoutController {
             
             redirectAttributes.addFlashAttribute("message", successMessage);
             
+            // For guest orders, redirect to a guest-friendly success page
+            if (userId == null) {
+                redirectAttributes.addFlashAttribute("orderNumber", order.getOrderNumber());
+                return "redirect:/checkout/success?orderNumber=" + order.getOrderNumber();
+            }
+            
             return "redirect:/orders/" + order.getId();
             
         } catch (Exception e) {
-            CartDao cart = cartService.getCart(((UserPrincipal) authentication.getPrincipal()).getId());
-            model.addAttribute("cart", cart);
             model.addAttribute("error", "Lỗi đặt hàng: " + e.getMessage());
             model.addAttribute("pageTitle", "Thanh Toán");
             return "checkout/simple-checkout";

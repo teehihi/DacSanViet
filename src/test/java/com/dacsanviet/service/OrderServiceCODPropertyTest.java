@@ -34,6 +34,7 @@ public class OrderServiceCODPropertyTest {
     private AddressRepository addressRepository;
     private ProductRepository productRepository;
     private NotificationService notificationService;
+    private EmailService emailService;
     private OrderService orderService;
 
     private void setupMocks() {
@@ -44,6 +45,7 @@ public class OrderServiceCODPropertyTest {
         addressRepository = mock(AddressRepository.class);
         productRepository = mock(ProductRepository.class);
         notificationService = mock(NotificationService.class);
+        emailService = mock(EmailService.class);
         
         orderService = new OrderService(
             orderRepository,
@@ -52,7 +54,8 @@ public class OrderServiceCODPropertyTest {
             userRepository,
             addressRepository,
             productRepository,
-            notificationService
+            notificationService,
+            emailService
         );
     }
 

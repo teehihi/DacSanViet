@@ -14,6 +14,7 @@ public class OrderItemDao {
     private String productName;
     private String productDescription;
     private String categoryName;
+    private String productImageUrl;
     private Integer quantity;
     private BigDecimal unitPrice;
     private LocalDateTime createdAt;
@@ -77,6 +78,14 @@ public class OrderItemDao {
     
     public void setCategoryName(String categoryName) {
         this.categoryName = categoryName;
+    }
+    
+    public String getProductImageUrl() {
+        return productImageUrl;
+    }
+    
+    public void setProductImageUrl(String productImageUrl) {
+        this.productImageUrl = productImageUrl;
     }
     
     public Integer getQuantity() {

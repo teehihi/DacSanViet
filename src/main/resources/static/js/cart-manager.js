@@ -69,6 +69,20 @@ const CartManager = {
     },
     
     /**
+     * Add to cart - Alias for addItem with object parameter
+     * Accepts: { productId, productName, price, quantity, imageUrl }
+     */
+    addToCart(item) {
+        return this.addItem(
+            item.productId,
+            item.productName,
+            item.price,
+            item.quantity,
+            item.imageUrl
+        );
+    },
+    
+    /**
      * Update item quantity
      */
     updateItem(productId, quantity) {

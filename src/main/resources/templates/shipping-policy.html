@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chính Sách Vận Chuyển - Đặc Sản Việt</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/header.css(v=1)}">
+    <link rel="stylesheet" th:href="@{/css/modern-ecommerce.css(v=1)}">
+    
+    <style>
+        :root {
+            --primary-color: #D2691E;
+            --primary-dark: #8B4513;
+        }
+        
+        body {
+            background: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+            padding-top: 80px;
+        }
+        
+        .policy-container {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin: 2rem 0;
+        }
+        
+        .policy-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .policy-section {
+            margin-bottom: 2.5rem;
+        }
+        
+        .policy-section h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .policy-section h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .shipping-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+        
+        .shipping-table th,
+        .shipping-table td {
+            padding: 1rem;
+            text-align: left;
+            border: 1px solid #dee2e6;
+        }
+        
+        .shipping-table th {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .shipping-table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .highlight-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+        }
+        
+        .info-box {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+        }
+        
+        .text-teal {
+            color: #4ec2b6 !important;
+        }
+        
+        ul {
+            padding-left: 1.5rem;
+        }
+        
+        ul li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <div th:replace="~{fragments/header :: mobile-menu}"></div>
+    
+    <!-- Breadcrumb -->
+    <div class="container mt-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/" class="text-teal"><i class="fas fa-home me-1"></i>Trang Chủ</a></li>
+                <li class="breadcrumb-item active">Chính Sách Vận Chuyển</li>
+            </ol>
+        </nav>
+    </div>
+    
+    <!-- Policy Content -->
+    <div class="container mb-5">
+        <div class="policy-container">
+            <h1 class="policy-title">
+                <i class="fas fa-truck me-2"></i>
+                Chính Sách Vận Chuyển
+            </h1>
+            <p class="text-muted">Cập nhật lần cuối: Tháng 12, 2024</p>
+            
+            <!-- Section 1: Phương thức giao hàng -->
+            <div class="policy-section">
+                <h3><i class="fas fa-box"></i> Phương Thức Giao Hàng</h3>
+                
+                <h4>1. Hoả Tốc - Giao Nhanh Miễn Phí 5H</h4>
+                <div class="success-box">
+                    <p class="mb-2"><strong><i class="fas fa-bolt text-warning me-1"></i> Chỉ áp dụng tại TP. Hồ Chí Minh</strong></p>
+                    <p class="mb-0">
+                        Giao hàng trong vòng <strong>5 giờ</strong> hoàn toàn <strong>miễn phí</strong>. 
+                        Đặt hàng trước <strong>15:00</strong> để nhận hàng trong ngày. 
+                        Đặt hàng sau 15:00 sẽ được giao từ <strong>9:00 sáng</strong> ngày hôm sau.
+                    </p>
+                </div>
+                
+                <h4>2. Giao Hàng Miễn Phí</h4>
+                <div class="success-box">
+                    <p class="mb-2"><strong><i class="fas fa-gift text-success me-1"></i> Điều kiện miễn phí vận chuyển:</strong></p>
+                    <p class="mb-0">
+                        <strong>Toàn quốc:</strong> Miễn phí vận chuyển cho đơn hàng từ <strong>300,000₫</strong> trở lên.<br>
+                        <strong>Nội thành TP.HCM:</strong> Miễn phí vận chuyển cho đơn hàng từ <strong>90,000₫</strong> trở lên.
+                    </p>
+                </div>
+                
+                <h4>3. Giao Hàng Tiêu Chuẩn</h4>
+                <p>Áp dụng khi đơn hàng không đủ điều kiện miễn phí. Phí vận chuyển được tính theo khối lượng và khu vực giao hàng. Thời gian giao hàng từ 2-7 ngày tùy theo khu vực.</p>
+            </div>
+            
+            <!-- Section 2: Bảng giá vận chuyển -->
+            <div class="policy-section">
+                <h3><i class="fas fa-calculator"></i> Bảng Giá Vận Chuyển</h3>
+                
+                <table class="shipping-table">
+                    <thead>
+                        <tr>
+                            <th>Khối Lượng</th>
+                            <th>Nội Thành HCM</th>
+                            <th>Ngoại Thành HCM</th>
+                            <th>Tỉnh Khác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>≤ 500g</td>
+                            <td>15,000₫</td>
+                            <td>20,000₫</td>
+                            <td>25,000₫</td>
+                        </tr>
+                        <tr>
+                            <td>≤ 1kg</td>
+                            <td>20,000₫</td>
+                            <td>25,000₫</td>
+                            <td>35,000₫</td>
+                        </tr>
+                        <tr>
+                            <td>≤ 2kg</td>
+                            <td>30,000₫</td>
+                            <td>35,000₫</td>
+                            <td>50,000₫</td>
+                        </tr>
+                        <tr>
+                            <td>> 2kg</td>
+                            <td>+5,000₫/500g</td>
+                            <td>+6,000₫/500g</td>
+                            <td>+8,000₫/500g</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="info-box">
+                    <strong><i class="fas fa-info-circle me-1"></i> Phân loại khu vực:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li><strong>Nội thành TP.HCM:</strong> 16 quận (Q1, Q3, Q4, Q5, Q6, Q7, Q8, Q10, Q11, Phú Nhuận, Bình Thạnh, Gò Vấp, Tân Bình, Tân Phú, Bình Tân, Thủ Đức)</li>
+                        <li><strong>Ngoại thành TP.HCM:</strong> 5 huyện vùng ven (Củ Chi, Hóc Môn, Bình Chánh, Nhà Bè, Cần Giờ)</li>
+                        <li><strong>Tỉnh khác:</strong> Các tỉnh thành ngoài TP.HCM</li>
+                    </ul>
+                </div>
+                
+                <h4>Ví dụ tính phí:</h4>
+                <ul>
+                    <li>Đơn hàng <strong>2.5kg</strong> giao nội thành HCM: 30,000₫ + 5,000₫ = <strong>35,000₫</strong></li>
+                    <li>Đơn hàng <strong>3kg</strong> giao ngoại thành HCM: 35,000₫ + (2 × 6,000₫) = <strong>47,000₫</strong></li>
+                    <li>Đơn hàng <strong>3kg</strong> giao tỉnh khác: 50,000₫ + (2 × 8,000₫) = <strong>66,000₫</strong></li>
+                </ul>
+            </div>
+            
+            <!-- Section 3: Thời gian giao hàng -->
+            <div class="policy-section">
+                <h3><i class="fas fa-clock"></i> Thời Gian Giao Hàng</h3>
+                <ul>
+                    <li><strong>Hoả tốc 5H (HCM):</strong> 5 giờ kể từ khi đặt hàng (trước 15:00)</li>
+                    <li><strong>Nội thành TP.HCM:</strong> 1-2 ngày làm việc</li>
+                    <li><strong>Ngoại thành TP.HCM:</strong> 2-3 ngày làm việc</li>
+                    <li><strong>Các tỉnh lân cận:</strong> 2-4 ngày làm việc</li>
+                    <li><strong>Các tỉnh xa:</strong> 3-7 ngày làm việc</li>
+                </ul>
+                
+                <div class="highlight-box">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    <strong>Lưu ý:</strong> Thời gian giao hàng có thể thay đổi tùy theo điều kiện thực tế như thời tiết, giao thông, hoặc các ngày lễ, Tết.
+                </div>
+            </div>
+            
+            <!-- Section 4: Kiểm tra đơn hàng -->
+            <div class="policy-section">
+                <h3><i class="fas fa-check-circle"></i> Kiểm Tra Đơn Hàng</h3>
+                <ul>
+                    <li>Quý khách được quyền <strong>kiểm tra hàng</strong> trước khi thanh toán (với đơn COD)</li>
+                    <li>Vui lòng kiểm tra kỹ số lượng, chủng loại, tình trạng sản phẩm</li>
+                    <li>Nếu phát hiện sai sót, vui lòng <strong>từ chối nhận hàng</strong> và liên hệ ngay với chúng tôi</li>
+                    <li>Sau khi nhận hàng và thanh toán, chúng tôi không chịu trách nhiệm về các khiếu nại liên quan đến số lượng, chủng loại</li>
+                </ul>
+            </div>
+            
+            <!-- Section 5: Liên hệ -->
+            <div class="policy-section">
+                <h3><i class="fas fa-phone"></i> Liên Hệ Hỗ Trợ</h3>
+                <p>Nếu bạn có bất kỳ thắc mắc nào về chính sách vận chuyển, vui lòng liên hệ:</p>
+                <ul>
+                    <li><strong>Hotline:</strong> (028) 3896 8641 (8:00 - 22:00 hàng ngày)</li>
+                    <li><strong>Email:</strong> dacsanviethotro@gmail.com</li>
+                    <li><strong>Địa chỉ:</strong> 01 Võ Văn Ngân, Phường Thủ Đức, TP Hồ Chí Minh</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
