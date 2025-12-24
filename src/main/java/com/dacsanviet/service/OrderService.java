@@ -298,7 +298,6 @@ public class OrderService {
 		// Update order status and payment status
 		order.setStatus(OrderStatus.DELIVERED);
 		order.setPaymentStatus(PaymentStatus.COMPLETED);
-		order.setDeliveryConfirmedAt(LocalDateTime.now());
 
 		order = orderRepository.save(order);
 
@@ -422,7 +421,6 @@ public class OrderService {
 
 		dto.setTotalAmount(order.getTotalAmount());
 		dto.setShippingFee(order.getShippingFee());
-		dto.setTaxAmount(order.getTaxAmount());
 		dto.setStatus(order.getStatus());
 		dto.setOrderDate(order.getOrderDate());
 		dto.setShippedDate(order.getShippedDate());
@@ -430,7 +428,8 @@ public class OrderService {
 		dto.setTrackingNumber(order.getTrackingNumber());
 		dto.setPaymentMethod(order.getPaymentMethod());
 		dto.setPaymentStatus(order.getPaymentStatus());
-		dto.setDeliveryConfirmedAt(order.getDeliveryConfirmedAt());
+		dto.setShippingMethod(order.getShippingMethod());
+		dto.setShippingCarrier(order.getShippingCarrier());
 		dto.setCustomerName(order.getCustomerName());
 		dto.setCustomerPhone(order.getCustomerPhone());
 		dto.setCustomerEmail(order.getCustomerEmail());
@@ -438,11 +437,6 @@ public class OrderService {
 		dto.setNotes(order.getNotes());
 		dto.setCreatedAt(order.getCreatedAt());
 		dto.setUpdatedAt(order.getUpdatedAt());
-
-		// Convert shipping address
-		if (order.getShippingAddress() != null) {
-			dto.setShippingAddress(convertToAddressDto(order.getShippingAddress()));
-		}
 
 		// Convert order items
 		List<OrderItemDao> orderItemDtos = order.getOrderItems().stream().map(this::convertToOrderItemDto)
@@ -769,7 +763,7 @@ public class OrderService {
 
 	private UserDao convertToUserDto(User user) {
 		return new UserDao(user.getId(), user.getUsername(), user.getEmail(), user.getFullName(), user.getPhoneNumber(),
-				user.getAdmin(), user.getIsActive(), user.getCreatedAt(), user.getUpdatedAt());
+				user.getRole(), user.getIsActive(), user.getCreatedAt(), user.getUpdatedAt());
 	}
 
 	/**
@@ -822,7 +816,6 @@ public class OrderService {
 		order.setCustomerEmail(request.getCustomerEmail());
 		order.setShippingAddressText(request.getShippingAddress());
 		order.setShippingFee(shippingFee);
-		order.setTaxAmount(taxAmount);
 		order.setPaymentMethod(request.getPaymentMethod());
 		order.setNotes(request.getNotes());
 
@@ -973,10 +966,10 @@ public class OrderService {
 			return false;
 		}
 	}
-	
+
 	/**
-	 * Convert Order to OrderDao (alias for convertToOrderDto)
-	 * Used by admin controllers
+	 * Convert Order to OrderDao (alias for convertToOrderDto) Used by admin
+	 * controllers
 	 */
 	public OrderDao convertToDao(Order order) {
 		return convertToOrderDto(order);

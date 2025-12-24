@@ -193,7 +193,7 @@
                                     <li><a class="dropdown-item py-2" th:href="@{/cart}">
                                         <i class="fas fa-shopping-cart me-2 text-warning"></i>Giỏ hàng
                                     </a></li>
-                                    <li sec:authorize="hasRole('ADMIN')">
+                                    <li sec:authorize="hasAnyRole('ADMIN', 'STAFF')">
                                         <a class="dropdown-item py-2" th:href="@{/admin/dashboard}">
                                             <i class="fas fa-tachometer-alt me-2 text-info"></i>Quản trị hệ thống
                                         </a>

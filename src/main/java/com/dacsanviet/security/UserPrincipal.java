@@ -32,10 +32,24 @@ public class UserPrincipal implements UserDetails {
     
     public static UserPrincipal create(User user) {
         Collection<GrantedAuthority> authorities = new java.util.ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_" + (user.getAdmin() ? "ADMIN" : "USER")));
         
-        if (Boolean.TRUE.equals(user.getAdmin())) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        // Add role-based authorities with hierarchical permissions
+        switch (user.getRole()) {
+            case ADMIN:
+                // ADMIN has all roles
+                authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                authorities.add(new SimpleGrantedAuthority("ROLE_STAFF"));
+                authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+                break;
+            case STAFF:
+                // STAFF has STAFF and USER roles
+                authorities.add(new SimpleGrantedAuthority("ROLE_STAFF"));
+                authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+                break;
+            case USER:
+                // USER has only USER role
+                authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+                break;
         }
         
         return new UserPrincipal(

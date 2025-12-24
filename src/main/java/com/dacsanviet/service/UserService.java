@@ -4,7 +4,7 @@ import com.dacsanviet.dto.CreateUserRequest;
 import com.dacsanviet.dto.RegisterRequest;
 import com.dacsanviet.dto.UpdateUserRequest;
 import com.dacsanviet.dao.UserDao;
-// Removed Role import - using admin boolean instead
+import com.dacsanviet.model.Role;
 import com.dacsanviet.model.User;
 import com.dacsanviet.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +65,7 @@ public class UserService {
             user.setPhoneNumber(null);
         }
         
-        user.setAdmin(false);
+        user.setRole(Role.USER);
         user.setIsActive(true);
         
         User savedUser = userRepository.save(user);
@@ -208,7 +208,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFullName(request.getFullName());
         user.setPhoneNumber(request.getPhoneNumber());
-        user.setAdmin(request.getAdmin() != null ? request.getAdmin() : false);
+        user.setRole(request.getRole() != null ? request.getRole() : Role.USER);
         user.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
         
         User savedUser = userRepository.save(user);
@@ -245,7 +245,7 @@ public class UserService {
         
         user.setFullName(request.getFullName());
         user.setPhoneNumber(request.getPhoneNumber());
-        user.setAdmin(request.getAdmin() != null ? request.getAdmin() : false);
+        user.setRole(request.getRole() != null ? request.getRole() : Role.USER);
         user.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
         
         User updatedUser = userRepository.save(user);
@@ -293,7 +293,7 @@ public class UserService {
             user.getEmail(),
             user.getFullName(),
             user.getPhoneNumber(),
-            user.getAdmin(),
+            user.getRole(),
             user.getIsActive(),
             user.getCreatedAt(),
             user.getUpdatedAt()

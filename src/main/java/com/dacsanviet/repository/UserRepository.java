@@ -1,6 +1,6 @@
 package com.dacsanviet.repository;
 
-// Removed Role import - using admin boolean instead
+import com.dacsanviet.model.Role;
 import com.dacsanviet.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -53,9 +53,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     
     /**
-     * Find users by admin status
+     * Find users by role
      */
-    List<User> findByAdmin(Boolean admin);
+    List<User> findByRole(Role role);
     
     /**
      * Find active users
@@ -63,9 +63,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByIsActiveTrue();
     
     /**
-     * Find users by admin and active status
+     * Find users by role and active status
      */
-    List<User> findByAdminAndIsActive(Boolean admin, Boolean isActive);
+    List<User> findByRoleAndIsActive(Role role, Boolean isActive);
     
     /**
      * Find users created within date range
@@ -90,10 +90,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findUsersWithOrders();
     
     /**
-     * Count users by admin status
+     * Count users by role
      */
-    @Query("SELECT COUNT(u) FROM User u WHERE u.admin = :admin")
-    Long countByAdmin(@Param("admin") Boolean admin);
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role")
+    Long countByRole(@Param("role") Role role);
     
     /**
      * Find users who registered in the last N days
@@ -122,12 +122,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
            " LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            " LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            " LOWER(u.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) AND " +
-           "(:admin IS NULL OR u.admin = :admin) AND " +
+           "(:role IS NULL OR u.role = :role) AND " +
            "(:isActive IS NULL OR u.isActive = :isActive) AND " +
            "(:registeredAfter IS NULL OR u.createdAt >= :registeredAfter) AND " +
            "(:registeredBefore IS NULL OR u.createdAt <= :registeredBefore)")
     Page<User> searchCustomersAdvanced(@Param("searchTerm") String searchTerm,
-                                      @Param("admin") Boolean admin,
+                                      @Param("role") Role role,
                                       @Param("isActive") Boolean isActive,
                                       @Param("registeredAfter") LocalDateTime registeredAfter,
                                       @Param("registeredBefore") LocalDateTime registeredBefore,
@@ -137,4 +137,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * Count users by created at between
      */
     Long countByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+    
+    /**
+     * Find users by username, email, or full name containing (case insensitive)
+     */
+    Page<User> findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrFullNameContainingIgnoreCase(
+        String username, String email, String fullName, Pageable pageable);
 }

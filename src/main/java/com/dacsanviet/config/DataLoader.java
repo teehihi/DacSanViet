@@ -2,6 +2,7 @@ package com.dacsanviet.config;
 
 import com.dacsanviet.model.Category;
 import com.dacsanviet.model.Product;
+import com.dacsanviet.model.Role;
 import com.dacsanviet.model.User;
 import com.dacsanviet.repository.CategoryRepository;
 import com.dacsanviet.repository.ProductRepository;
@@ -44,7 +45,7 @@ public class DataLoader implements CommandLineRunner {
             admin.setEmail("admin@dacsanviet.com");
             admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setFullName("Administrator");
-            admin.setAdmin(true);
+            admin.setRole(Role.ADMIN);
             admin.setIsActive(true);
             
             userRepository.save(admin);
@@ -58,7 +59,7 @@ public class DataLoader implements CommandLineRunner {
             user.setEmail("user@dacsanviet.com");
             user.setPassword(passwordEncoder.encode("user123"));
             user.setFullName("Test User");
-            user.setAdmin(false);
+            user.setRole(Role.USER);
             user.setIsActive(true);
             
             userRepository.save(user);

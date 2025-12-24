@@ -16,7 +16,7 @@ import java.util.Map;
  */
 @Controller
 @RequestMapping("/admin")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
 public class AdminDashboardController {
 
     @Autowired
@@ -67,12 +67,36 @@ public class AdminDashboardController {
     }
 
     /**
-     * Get Recent Orders (AJAX)
+     * Get Recent Orders (AJAX) - with pagination
      */
     @GetMapping("/dashboard/recent-orders")
     @ResponseBody
-    public ResponseEntity<?> getRecentOrders(@RequestParam(defaultValue = "10") int limit) {
-        return ResponseEntity.ok(dashboardService.getRecentOrders(limit));
+    public ResponseEntity<?> getRecentOrders(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        
+        // Get recent orders with pagination info
+        java.util.List<com.dacsanviet.dao.OrderDao> orders = dashboardService.getRecentOrders(size * 10); // Get more for pagination
+        
+        // Calculate pagination
+        int totalOrders = orders.size();
+        int totalPages = (int) Math.ceil((double) totalOrders / size);
+        int start = page * size;
+        int end = Math.min(start + size, totalOrders);
+        
+        // Get page subset
+        java.util.List<com.dacsanviet.dao.OrderDao> pageOrders = 
+            start < totalOrders ? orders.subList(start, end) : new java.util.ArrayList<>();
+        
+        // Build response
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("content", pageOrders);
+        response.put("currentPage", page);
+        response.put("totalPages", totalPages);
+        response.put("totalElements", totalOrders);
+        response.put("size", size);
+        
+        return ResponseEntity.ok(response);
     }
 
     /**

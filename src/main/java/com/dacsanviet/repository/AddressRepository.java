@@ -113,24 +113,27 @@ public interface AddressRepository extends JpaRepository<Address, Long> {
     @Query("DELETE FROM Address a WHERE a.user.id = :userId")
     void deleteByUserId(@Param("userId") Long userId);
     
-    /**
-     * Find addresses used in orders
-     */
-    @Query("SELECT DISTINCT a FROM Address a JOIN a.orders o")
-    List<Address> findAddressesUsedInOrders();
+    // Note: The following queries are disabled because Order no longer has shippingAddress relationship
+    // Orders now use shipping_address_text field instead
     
     /**
-     * Find addresses used in orders for specific user
+     * Find addresses used in orders - DISABLED (Order simplified to use text address)
      */
-    @Query("SELECT DISTINCT a FROM Address a JOIN a.orders o WHERE a.user.id = :userId")
-    List<Address> findAddressesUsedInOrdersByUserId(@Param("userId") Long userId);
+    // @Query("SELECT DISTINCT a FROM Address a JOIN a.orders o")
+    // List<Address> findAddressesUsedInOrders();
     
     /**
-     * Find unused addresses (not used in any orders)
+     * Find addresses used in orders for specific user - DISABLED (Order simplified to use text address)
      */
-    @Query("SELECT a FROM Address a WHERE a.id NOT IN " +
-           "(SELECT DISTINCT o.shippingAddress.id FROM Order o WHERE o.shippingAddress IS NOT NULL)")
-    List<Address> findUnusedAddresses();
+    // @Query("SELECT DISTINCT a FROM Address a JOIN a.orders o WHERE a.user.id = :userId")
+    // List<Address> findAddressesUsedInOrdersByUserId(@Param("userId") Long userId);
+    
+    /**
+     * Find unused addresses - DISABLED (Order simplified to use text address)
+     */
+    // @Query("SELECT a FROM Address a WHERE a.id NOT IN " +
+    //        "(SELECT DISTINCT o.shippingAddress.id FROM Order o WHERE o.shippingAddress IS NOT NULL)")
+    // List<Address> findUnusedAddresses();
     
     /**
      * Find addresses by region (city and province)

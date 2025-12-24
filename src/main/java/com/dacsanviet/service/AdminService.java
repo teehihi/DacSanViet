@@ -3,6 +3,7 @@ package com.dacsanviet.service;
 import com.dacsanviet.dao.*;
 import com.dacsanviet.dto.UpdateOrderStatusRequest;
 import com.dacsanviet.model.*;
+import com.dacsanviet.model.Role;
 import com.dacsanviet.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -194,11 +195,11 @@ public class AdminService {
      * Search customers with advanced filters
      * Requirements: 5.3 - Search for specific orders and customers
      */
-    public Page<UserDao> searchCustomersAdvanced(String searchTerm, Boolean admin, Boolean isActive, 
+    public Page<UserDao> searchCustomersAdvanced(String searchTerm, Role role, Boolean isActive, 
                                                LocalDateTime registeredAfter, LocalDateTime registeredBefore,
                                                Pageable pageable) {
         Page<User> customers = userRepository.searchCustomersAdvanced(
-            searchTerm, admin, isActive, registeredAfter, registeredBefore, pageable);
+            searchTerm, role, isActive, registeredAfter, registeredBefore, pageable);
         
         return customers.map(this::convertToUserDto);
     }
@@ -609,7 +610,7 @@ public class AdminService {
             user.getEmail(),
             user.getFullName(),
             user.getPhoneNumber(),
-            user.getAdmin(),
+            user.getRole(),
             user.getIsActive(),
             user.getCreatedAt(),
             user.getUpdatedAt()

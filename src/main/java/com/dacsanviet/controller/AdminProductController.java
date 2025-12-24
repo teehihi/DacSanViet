@@ -28,7 +28,7 @@ import java.util.*;
 
 @Controller
 @RequestMapping("/admin/products")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
 public class AdminProductController {
 
     @Autowired
@@ -226,9 +226,10 @@ public class AdminProductController {
     }
 
     /**
-     * Delete product image
+     * Delete product image (ADMIN only)
      */
     @DeleteMapping("/images/{imageId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseBody
     public ResponseEntity<?> deleteImage(@PathVariable Long imageId) {
         try {

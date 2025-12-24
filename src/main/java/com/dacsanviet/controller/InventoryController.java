@@ -19,7 +19,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/inventory")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
 public class InventoryController {
     
     private final InventoryService inventoryService;
@@ -126,19 +126,23 @@ public class InventoryController {
     }
     
     /**
-     * Get all products with stock information
+     * Get all products with stock information (with filters)
      */
     @GetMapping("/products")
-    public ResponseEntity<Page<ProductDao>> getAllProductsWithStock(@RequestParam(defaultValue = "0") int page,
-                                                                   @RequestParam(defaultValue = "10") int size,
-                                                                   @RequestParam(defaultValue = "name") String sortBy,
-                                                                   @RequestParam(defaultValue = "asc") String sortDir) {
+    public ResponseEntity<Page<ProductDao>> getAllProductsWithStock(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String status) {
         try {
             Sort sort = sortDir.equalsIgnoreCase("desc") ? 
                     Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
             Pageable pageable = PageRequest.of(page, size, sort);
             
-            Page<ProductDao> products = inventoryService.getAllProductsWithStock(pageable);
+            Page<ProductDao> products = inventoryService.getAllProductsWithStock(pageable, search, categoryId, status);
             return ResponseEntity.ok(products);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();

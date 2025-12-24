@@ -1,9 +1,20 @@
 package com.dacsanviet.model;
 
 /**
- * User role enumeration (temporary for test compatibility)
+ * User Role Enum
  */
 public enum Role {
-    USER,
-    ADMIN
+    USER("Khách hàng"),
+    STAFF("Nhân viên"),
+    ADMIN("Quản trị viên");
+    
+    private final String displayName;
+    
+    Role(String displayName) {
+        this.displayName = displayName;
+    }
+    
+    public String getDisplayName() {
+        return displayName;
+    }
 }

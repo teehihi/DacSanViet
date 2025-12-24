@@ -5,11 +5,13 @@ import com.dacsanviet.dao.ProductDao;
 import com.dacsanviet.model.Order;
 import com.dacsanviet.model.OrderStatus;
 import com.dacsanviet.model.Product;
+import com.dacsanviet.repository.OrderItemRepository;
 import com.dacsanviet.repository.OrderRepository;
 import com.dacsanviet.repository.ProductRepository;
 import com.dacsanviet.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -34,6 +36,9 @@ public class DashboardService {
 
     @Autowired
     private OrderService orderService;
+    
+    @Autowired
+    private OrderItemRepository orderItemRepository;
 
     /**
      * Get Dashboard Statistics
@@ -127,19 +132,27 @@ public class DashboardService {
      */
     public List<Map<String, Object>> getTopSellingProducts(int limit) {
         try {
-            List<Product> products = productRepository.findAll();
+            // Use PageRequest to limit results
+            org.springframework.data.domain.PageRequest pageRequest = 
+                org.springframework.data.domain.PageRequest.of(0, limit);
             
-            return products.stream()
-                .sorted((p1, p2) -> Integer.compare(
-                    p2.getStockQuantity(), p1.getStockQuantity()))
-                .limit(limit)
-                .map(product -> {
+            org.springframework.data.domain.Page<Object[]> results = 
+                orderItemRepository.findBestSellingProducts(pageRequest);
+            
+            return results.getContent().stream()
+                .map(row -> {
+                    Product product = (Product) row[0];
+                    Long totalSold = ((Number) row[1]).longValue();
+                    Long orderCount = ((Number) row[2]).longValue();
+                    
                     Map<String, Object> productData = new HashMap<>();
                     productData.put("id", product.getId());
                     productData.put("name", product.getName());
                     productData.put("imageUrl", product.getImageUrl() != null ? product.getImageUrl() : "/images/placeholder.jpg");
                     productData.put("price", product.getPrice());
                     productData.put("stock", product.getStockQuantity());
+                    productData.put("totalSold", totalSold);
+                    productData.put("orderCount", orderCount);
                     
                     String categoryName = "N/A";
                     try {
@@ -162,19 +175,27 @@ public class DashboardService {
     }
 
     /**
-     * Get Recent Orders
+     * Get Recent Orders (last 3 days only)
      */
+    @Transactional(readOnly = true)
     public List<OrderDao> getRecentOrders(int limit) {
         try {
-            List<Order> orders = orderRepository.findTop10ByOrderByOrderDateDesc();
+            // Get orders from last 3 days
+            LocalDateTime threeDaysAgo = LocalDateTime.now().minusDays(3);
+            List<Order> orders = orderRepository.findRecentOrders(threeDaysAgo);
             
             return orders.stream()
                 .limit(limit)
                 .map(order -> {
                     try {
+                        // Force load orderItems to avoid LazyInitializationException
+                        if (order.getOrderItems() != null) {
+                            order.getOrderItems().size();
+                        }
                         return orderService.convertToDao(order);
                     } catch (Exception e) {
                         System.err.println("Error converting order " + order.getId() + ": " + e.getMessage());
+                        e.printStackTrace();
                         return null;
                     }
                 })

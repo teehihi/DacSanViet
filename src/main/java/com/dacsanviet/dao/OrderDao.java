@@ -22,17 +22,16 @@ public class OrderDao {
     private String userEmail;
     private BigDecimal totalAmount;
     private BigDecimal shippingFee;
-    private BigDecimal taxAmount;
     private OrderStatus status;
     private List<OrderItemDao> orderItems = new ArrayList<>();
-    private AddressDao shippingAddress;
     private LocalDateTime orderDate;
     private LocalDateTime shippedDate;
     private LocalDateTime deliveredDate;
     private String trackingNumber;
     private String paymentMethod;
     private PaymentStatus paymentStatus;
-    private LocalDateTime deliveryConfirmedAt;
+    private String shippingMethod;
+    private String shippingCarrier;
     private String customerName;
     private String customerPhone;
     private String customerEmail;
@@ -67,8 +66,7 @@ public class OrderDao {
     public BigDecimal calculateGrandTotal() {
         BigDecimal subtotal = calculateSubtotal();
         BigDecimal shipping = shippingFee != null ? shippingFee : BigDecimal.ZERO;
-        BigDecimal tax = taxAmount != null ? taxAmount : BigDecimal.ZERO;
-        return subtotal.add(shipping).add(tax);
+        return subtotal.add(shipping);
     }
     
     public Integer getTotalItems() {

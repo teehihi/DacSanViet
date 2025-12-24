@@ -53,8 +53,9 @@ public class User {
     @Size(max = 20, message = "Phone number must not exceed 20 characters")
     private String phoneNumber;
     
-    @Column(name = "is_admin")
-    private Boolean admin = false;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 20)
+    private Role role = Role.USER;
     
     @Column(name = "is_active")
     private Boolean isActive = true;
@@ -81,14 +82,35 @@ public class User {
         this.username = username;
         this.email = email;
         this.password = password;
-        this.admin = false;
+        this.role = Role.USER;
         this.isActive = true;
         this.addresses = new ArrayList<>();
         this.orders = new ArrayList<>();
         this.cartItems = new ArrayList<>();
     }
     
-    // Helper methods
+    // Helper methods for role checking
+    public boolean isAdmin() {
+        return this.role == Role.ADMIN;
+    }
+    
+    public boolean isStaff() {
+        return this.role == Role.STAFF;
+    }
+    
+    public boolean isUser() {
+        return this.role == Role.USER;
+    }
+    
+    public boolean hasAdminAccess() {
+        return this.role == Role.ADMIN || this.role == Role.STAFF;
+    }
+    
+    public boolean canDelete() {
+        return this.role == Role.ADMIN;
+    }
+    
+    // Helper methods for relationships
     public void addAddress(Address address) {
         addresses.add(address);
         address.setUser(this);

@@ -69,9 +69,6 @@ public class Address {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
     
-    @OneToMany(mappedBy = "shippingAddress", fetch = FetchType.LAZY)
-    private List<Order> orders = new ArrayList<>();
-    
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -96,7 +93,7 @@ public class Address {
     // All args constructor
     public Address(Long id, String fullName, String phoneNumber, String addressLine1, String addressLine2,
                    String city, String province, String postalCode, String country, Boolean isDefault,
-                   User user, List<Order> orders, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                   User user, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.fullName = fullName;
         this.phoneNumber = phoneNumber;
@@ -108,7 +105,6 @@ public class Address {
         this.country = country;
         this.isDefault = isDefault;
         this.user = user;
-        this.orders = orders;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -146,9 +142,6 @@ public class Address {
     
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
-    
-    public List<Order> getOrders() { return orders; }
-    public void setOrders(List<Order> orders) { this.orders = orders; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

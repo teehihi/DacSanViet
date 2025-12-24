@@ -200,4 +200,70 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      */
     @Query("SELECT COUNT(p) FROM Product p WHERE p.isActive = true AND p.stockQuantity = 0")
     Long countOutOfStockProducts();
+    
+    /**
+     * Find products by category and stock status (in stock)
+     */
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.category.id = :categoryId AND p.stockQuantity > 0")
+    Page<Product> findByCategoryIdAndInStock(@Param("categoryId") Long categoryId, Pageable pageable);
+    
+    /**
+     * Find products by category and stock status (low stock)
+     */
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.category.id = :categoryId AND p.stockQuantity <= :threshold AND p.stockQuantity > 0")
+    Page<Product> findByCategoryIdAndLowStock(@Param("categoryId") Long categoryId, @Param("threshold") Integer threshold, Pageable pageable);
+    
+    /**
+     * Find products by category and stock status (out of stock)
+     */
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.category.id = :categoryId AND p.stockQuantity = 0")
+    Page<Product> findByCategoryIdAndOutOfStock(@Param("categoryId") Long categoryId, Pageable pageable);
+    
+    /**
+     * Search products with stock status filter (in stock)
+     */
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.stockQuantity > 0 AND " +
+           "(LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+    Page<Product> searchProductsInStock(@Param("searchTerm") String searchTerm, Pageable pageable);
+    
+    /**
+     * Search products with stock status filter (low stock)
+     */
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.stockQuantity <= :threshold AND p.stockQuantity > 0 AND " +
+           "(LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+    Page<Product> searchProductsLowStock(@Param("searchTerm") String searchTerm, @Param("threshold") Integer threshold, Pageable pageable);
+    
+    /**
+     * Search products with stock status filter (out of stock)
+     */
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.stockQuantity = 0 AND " +
+           "(LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+    Page<Product> searchProductsOutOfStock(@Param("searchTerm") String searchTerm, Pageable pageable);
+    
+    /**
+     * Search products in category with stock status filter (in stock)
+     */
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.category.id = :categoryId AND p.stockQuantity > 0 AND " +
+           "(LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+    Page<Product> searchProductsInCategoryAndInStock(@Param("searchTerm") String searchTerm, @Param("categoryId") Long categoryId, Pageable pageable);
+    
+    /**
+     * Search products in category with stock status filter (low stock)
+     */
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.category.id = :categoryId AND p.stockQuantity <= :threshold AND p.stockQuantity > 0 AND " +
+           "(LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+    Page<Product> searchProductsInCategoryAndLowStock(@Param("searchTerm") String searchTerm, @Param("categoryId") Long categoryId, @Param("threshold") Integer threshold, Pageable pageable);
+    
+    /**
+     * Search products in category with stock status filter (out of stock)
+     */
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.category.id = :categoryId AND p.stockQuantity = 0 AND " +
+           "(LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+    Page<Product> searchProductsInCategoryAndOutOfStock(@Param("searchTerm") String searchTerm, @Param("categoryId") Long categoryId, Pageable pageable);
 }

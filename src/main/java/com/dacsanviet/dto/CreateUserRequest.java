@@ -1,5 +1,6 @@
 package com.dacsanviet.dto;
 
+import com.dacsanviet.model.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -33,7 +34,7 @@ public class CreateUserRequest {
     @Size(max = 20, message = "Số điện thoại không được quá 20 ký tự")
     private String phoneNumber;
     
-    private Boolean admin = false;
+    private Role role;
     
     private Boolean isActive = true;
 }

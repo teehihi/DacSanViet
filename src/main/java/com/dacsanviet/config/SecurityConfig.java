@@ -105,18 +105,22 @@ public class SecurityConfig {
                 .requestMatchers("/api/payment/**").permitAll()
                 
                 // User-specific endpoints
-                .requestMatchers("/profile/**", "/orders/**").hasAnyRole("USER", "ADMIN")
-                .requestMatchers("/api/profile/**", "/api/orders/**").hasAnyRole("USER", "ADMIN")
+                .requestMatchers("/profile/**", "/orders/**").hasAnyRole("USER", "ADMIN", "STAFF")
+                .requestMatchers("/api/profile/**", "/api/orders/**").hasAnyRole("USER", "ADMIN", "STAFF")
                 
-                // Admin endpoints
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
+                // Admin DELETE operations (ADMIN only) - must be before general admin rules
                 .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/admin/users/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/admin/products/**").hasRole("ADMIN")
+                
+                // Admin endpoints (ADMIN and STAFF)
+                .requestMatchers("/admin/**").hasAnyRole("ADMIN", "STAFF")
+                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "STAFF")
+                .requestMatchers(HttpMethod.POST, "/api/products/**").hasAnyRole("ADMIN", "STAFF")
+                .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAnyRole("ADMIN", "STAFF")
+                .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAnyRole("ADMIN", "STAFF")
+                .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasAnyRole("ADMIN", "STAFF")
                 
                 // WebSocket endpoints
                 .requestMatchers("/ws/**").permitAll()

@@ -165,6 +165,81 @@ public class InventoryService {
     }
     
     /**
+     * Get all products with stock information (with filters)
+     */
+    @Transactional(readOnly = true)
+    public Page<ProductDao> getAllProductsWithStock(Pageable pageable, String search, Long categoryId, String status) {
+        Page<Product> products;
+        
+        boolean hasSearch = search != null && !search.trim().isEmpty();
+        boolean hasCategory = categoryId != null;
+        boolean hasStatus = status != null && !status.isEmpty();
+        
+        // Combine filters with proper query methods
+        if (hasSearch && hasCategory && hasStatus) {
+            // All 3 filters: search + category + status
+            String searchTerm = search.trim();
+            if ("in_stock".equals(status)) {
+                products = productRepository.searchProductsInCategoryAndInStock(searchTerm, categoryId, pageable);
+            } else if ("low_stock".equals(status)) {
+                products = productRepository.searchProductsInCategoryAndLowStock(searchTerm, categoryId, LOW_STOCK_THRESHOLD, pageable);
+            } else if ("out_of_stock".equals(status)) {
+                products = productRepository.searchProductsInCategoryAndOutOfStock(searchTerm, categoryId, pageable);
+            } else {
+                products = productRepository.searchProductsInCategory(searchTerm, categoryId, pageable);
+            }
+        } else if (hasSearch && hasCategory) {
+            // Search + Category
+            products = productRepository.searchProductsInCategory(search.trim(), categoryId, pageable);
+        } else if (hasSearch && hasStatus) {
+            // Search + Status
+            String searchTerm = search.trim();
+            if ("in_stock".equals(status)) {
+                products = productRepository.searchProductsInStock(searchTerm, pageable);
+            } else if ("low_stock".equals(status)) {
+                products = productRepository.searchProductsLowStock(searchTerm, LOW_STOCK_THRESHOLD, pageable);
+            } else if ("out_of_stock".equals(status)) {
+                products = productRepository.searchProductsOutOfStock(searchTerm, pageable);
+            } else {
+                products = productRepository.searchProducts(searchTerm, pageable);
+            }
+        } else if (hasCategory && hasStatus) {
+            // Category + Status
+            if ("in_stock".equals(status)) {
+                products = productRepository.findByCategoryIdAndInStock(categoryId, pageable);
+            } else if ("low_stock".equals(status)) {
+                products = productRepository.findByCategoryIdAndLowStock(categoryId, LOW_STOCK_THRESHOLD, pageable);
+            } else if ("out_of_stock".equals(status)) {
+                products = productRepository.findByCategoryIdAndOutOfStock(categoryId, pageable);
+            } else {
+                products = productRepository.findByCategoryIdAndIsActiveTrue(categoryId, pageable);
+            }
+        } else if (hasSearch) {
+            // Search only
+            products = productRepository.searchProducts(search.trim(), pageable);
+        } else if (hasCategory) {
+            // Category only
+            products = productRepository.findByCategoryIdAndIsActiveTrue(categoryId, pageable);
+        } else if (hasStatus) {
+            // Status only
+            if ("in_stock".equals(status)) {
+                products = productRepository.findInStockProducts(pageable);
+            } else if ("low_stock".equals(status)) {
+                products = productRepository.findByStockQuantityLessThanAndIsActiveTrue(LOW_STOCK_THRESHOLD, pageable);
+            } else if ("out_of_stock".equals(status)) {
+                products = productRepository.findByStockQuantityAndIsActiveTrue(0, pageable);
+            } else {
+                products = productRepository.findAll(pageable);
+            }
+        } else {
+            // No filters
+            products = productRepository.findAll(pageable);
+        }
+        
+        return products.map(this::convertToProductDto);
+    }
+    
+    /**
      * Bulk update stock quantities
      */
     public List<ProductDao> bulkUpdateStock(List<StockUpdateRequest> stockUpdates) {
@@ -251,6 +326,8 @@ public class InventoryService {
             CategoryDao.setName(product.getCategory().getName());
             CategoryDao.setDescription(product.getCategory().getDescription());
             dto.setCategory(CategoryDao);
+            dto.setCategoryId(product.getCategory().getId());
+            dto.setCategoryName(product.getCategory().getName());
         }
         
         return dto;

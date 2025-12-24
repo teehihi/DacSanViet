@@ -178,19 +178,22 @@ async function deleteProduct(id) {
     if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) return;
     
     try {
-        const response = await fetch(`/api/products/${id}`, {
+        const response = await fetch(`/api/admin/products/${id}`, {
             method: 'DELETE'
         });
         
         if (response.ok) {
             loadProducts();
             alert('Đã xóa sản phẩm thành công!');
+        } else if (response.status === 403) {
+            alert('⚠️ Bạn không có quyền xóa sản phẩm!\nChỉ Quản trị viên mới có thể xóa sản phẩm.');
         } else {
-            alert('Lỗi khi xóa sản phẩm');
+            const data = await response.json();
+            alert('Lỗi khi xóa sản phẩm: ' + (data.error || 'Vui lòng thử lại'));
         }
     } catch (error) {
         console.error('Error deleting product:', error);
-        alert('Lỗi khi xóa sản phẩm');
+        alert('Lỗi khi xóa sản phẩm: ' + error.message);
     }
 }
 

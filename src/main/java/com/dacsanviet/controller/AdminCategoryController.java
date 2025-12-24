@@ -23,7 +23,7 @@ import jakarta.validation.Valid;
  */
 @Controller
 @RequestMapping("/admin/categories")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
 public class AdminCategoryController {
     
     @Autowired

@@ -13,9 +13,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,17 +29,20 @@ import com.dacsanviet.dao.OrderDao;
 import com.dacsanviet.dao.UserDao;
 import com.dacsanviet.model.Order;
 import com.dacsanviet.model.OrderStatus;
+import com.dacsanviet.model.PaymentStatus;
+import com.dacsanviet.model.Role;
 import com.dacsanviet.model.User;
 import com.dacsanviet.repository.OrderRepository;
 import com.dacsanviet.repository.UserRepository;
 import com.dacsanviet.service.OrderService;
+import com.dacsanviet.service.ProductService;
 
 /**
  * Admin API Controller for AJAX requests
  */
 @RestController
 @RequestMapping("/api/admin")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
 public class AdminApiController {
 
 	@Autowired
@@ -47,6 +53,12 @@ public class AdminApiController {
 
 	@Autowired
 	private OrderService orderService;
+
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
+	@Autowired
+	private ProductService productService;
 
 	/**
 	 * Get Orders with pagination and filters (AJAX)
@@ -116,7 +128,7 @@ public class AdminApiController {
 	public ResponseEntity<?> getOrder(@PathVariable Long id) {
 		try {
 			Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
-			
+
 			// Force load orderItems to avoid LazyInitializationException
 			if (order.getOrderItems() != null) {
 				order.getOrderItems().size();
@@ -168,14 +180,70 @@ public class AdminApiController {
 	}
 
 	/**
+	 * Update Order Details (AJAX) - for editing order
+	 */
+	@PutMapping("/orders/{id}")
+	public ResponseEntity<?> updateOrder(@PathVariable Long id, @RequestBody Map<String, Object> request) {
+		try {
+			Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
+
+			// Update status if provided
+			if (request.containsKey("status")) {
+				OrderStatus newStatus = OrderStatus.valueOf((String) request.get("status"));
+				order.setStatus(newStatus);
+			}
+
+			// Update payment status if provided
+			if (request.containsKey("paymentStatus")) {
+				PaymentStatus newPaymentStatus = PaymentStatus.valueOf((String) request.get("paymentStatus"));
+				order.setPaymentStatus(newPaymentStatus);
+			}
+
+			// Update shipping carrier if provided
+			if (request.containsKey("shippingCarrier")) {
+				String carrier = (String) request.get("shippingCarrier");
+				order.setShippingCarrier(carrier);
+			}
+
+			// Update tracking number if provided
+			if (request.containsKey("trackingNumber")) {
+				String trackingNumber = (String) request.get("trackingNumber");
+				order.setTrackingNumber(trackingNumber);
+			}
+
+			// Update notes if provided
+			if (request.containsKey("notes")) {
+				String notes = (String) request.get("notes");
+				order.setNotes(notes);
+			}
+
+			orderRepository.save(order);
+
+			return ResponseEntity.ok(Map.of("message", "Order updated successfully"));
+		} catch (Exception e) {
+			return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
+		}
+	}
+
+	/**
 	 * Get Users with pagination (AJAX)
 	 */
 	@GetMapping("/users")
 	public ResponseEntity<Page<UserDao>> getUsers(@RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "10") int size) {
+			@RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String search,
+			@RequestParam(required = false) String status, @RequestParam(required = false) String timeRange) {
 
 		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-		Page<User> users = userRepository.findAll(pageable);
+		Page<User> users;
+
+		// Apply filters
+		if (search != null && !search.trim().isEmpty()) {
+			users = userRepository
+					.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrFullNameContainingIgnoreCase(
+							search.trim(), search.trim(), search.trim(), pageable);
+		} else {
+			users = userRepository.findAll(pageable);
+		}
 
 		Page<UserDao> userDaos = users.map(user -> {
 			UserDao dao = new UserDao();
@@ -190,10 +258,146 @@ public class AdminApiController {
 			long totalOrders = orderRepository.countByUserId(user.getId());
 			dao.setTotalOrders(totalOrders);
 
+			// Calculate total spent
+			BigDecimal totalSpent = orderRepository.sumTotalAmountByUserId(user.getId());
+			dao.setTotalSpent(totalSpent != null ? totalSpent : BigDecimal.ZERO);
+
 			return dao;
 		});
 
 		return ResponseEntity.ok(userDaos);
+	}
+
+	/**
+	 * Create User (AJAX)
+	 */
+	@PostMapping("/users")
+	public ResponseEntity<?> createUser(@RequestBody UserDao userDao) {
+		try {
+			// Check if username or email already exists
+			if (userRepository.existsByUsername(userDao.getUsername())) {
+				return ResponseEntity.status(400).body(Map.of("error", "Tên đăng nhập đã tồn tại"));
+			}
+			if (userRepository.existsByEmail(userDao.getEmail())) {
+				return ResponseEntity.status(400).body(Map.of("error", "Email đã tồn tại"));
+			}
+
+			User user = new User();
+			user.setUsername(userDao.getUsername());
+			user.setEmail(userDao.getEmail());
+			user.setFullName(userDao.getFullName());
+			user.setPhoneNumber(userDao.getPhoneNumber());
+			user.setIsActive(true);
+
+			// Set role from DAO or default to USER
+			if (userDao.getRole() != null) {
+				user.setRole(userDao.getRole());
+			} else {
+				user.setRole(Role.USER);
+			}
+
+			// Hash password using PasswordEncoder (same as registration)
+			if (userDao.getPassword() != null && !userDao.getPassword().isEmpty()) {
+				user.setPassword(passwordEncoder.encode(userDao.getPassword()));
+			}
+
+			user = userRepository.save(user);
+
+			UserDao dao = new UserDao();
+			dao.setId(user.getId());
+			dao.setUsername(user.getUsername());
+			dao.setEmail(user.getEmail());
+			dao.setFullName(user.getFullName());
+			dao.setPhoneNumber(user.getPhoneNumber());
+			dao.setRole(user.getRole());
+			dao.setCreatedAt(user.getCreatedAt());
+
+			return ResponseEntity.ok(dao);
+		} catch (Exception e) {
+			return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
+		}
+	}
+
+	/**
+	 * Get User by ID (AJAX)
+	 */
+	@GetMapping("/users/{id}")
+	public ResponseEntity<?> getUser(@PathVariable Long id) {
+		try {
+			User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+
+			UserDao dao = new UserDao();
+			dao.setId(user.getId());
+			dao.setUsername(user.getUsername());
+			dao.setEmail(user.getEmail());
+			dao.setFullName(user.getFullName());
+			dao.setPhoneNumber(user.getPhoneNumber());
+			dao.setCreatedAt(user.getCreatedAt());
+
+			// Get orders
+			long totalOrders = orderRepository.countByUserId(user.getId());
+			dao.setTotalOrders(totalOrders);
+
+			BigDecimal totalSpent = orderRepository.sumTotalAmountByUserId(user.getId());
+			dao.setTotalSpent(totalSpent != null ? totalSpent : BigDecimal.ZERO);
+
+			return ResponseEntity.ok(dao);
+		} catch (Exception e) {
+			return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+		}
+	}
+
+	/**
+	 * Update User (AJAX)
+	 */
+	@PutMapping("/users/{id}")
+	public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserDao userDao) {
+		try {
+			User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+
+			// Update fields
+			if (userDao.getFullName() != null) {
+				user.setFullName(userDao.getFullName());
+			}
+			if (userDao.getEmail() != null) {
+				user.setEmail(userDao.getEmail());
+			}
+			if (userDao.getPhoneNumber() != null) {
+				user.setPhoneNumber(userDao.getPhoneNumber());
+			}
+
+			user = userRepository.save(user);
+
+			UserDao dao = new UserDao();
+			dao.setId(user.getId());
+			dao.setUsername(user.getUsername());
+			dao.setEmail(user.getEmail());
+			dao.setFullName(user.getFullName());
+			dao.setPhoneNumber(user.getPhoneNumber());
+			dao.setCreatedAt(user.getCreatedAt());
+
+			return ResponseEntity.ok(dao);
+		} catch (Exception e) {
+			return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
+		}
+	}
+
+	/**
+	 * Delete User (AJAX) - Soft delete by deactivating Only ADMIN can delete users
+	 */
+	@DeleteMapping("/users/{id}")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+		try {
+			User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+
+			// Soft delete - just mark as inactive or delete
+			userRepository.delete(user);
+
+			return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
+		} catch (Exception e) {
+			return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
+		}
 	}
 
 	/**
@@ -221,5 +425,19 @@ public class AdminApiController {
 	public ResponseEntity<String> exportAnalytics(@RequestParam String period) {
 		// TODO: Implement report export
 		return ResponseEntity.ok("Analytics export not implemented yet");
+	}
+
+	/**
+	 * Delete Product (AJAX) - Only ADMIN can delete
+	 */
+	@DeleteMapping("/products/{id}")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
+		try {
+			productService.deleteProduct(id);
+			return ResponseEntity.ok(Map.of("message", "Product deleted successfully"));
+		} catch (Exception e) {
+			return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
+		}
 	}
 }

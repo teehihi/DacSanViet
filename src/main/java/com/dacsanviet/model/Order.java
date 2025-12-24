@@ -61,19 +61,12 @@ public class Order {
 	@Column(name = "shipping_fee", precision = 10, scale = 2)
 	private BigDecimal shippingFee = BigDecimal.ZERO;
 
-	@Column(name = "tax_amount", precision = 10, scale = 2)
-	private BigDecimal taxAmount = BigDecimal.ZERO;
-
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private OrderStatus status = OrderStatus.PENDING;
 
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<OrderItem> orderItems = new ArrayList<>();
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "shipping_address_id")
-	private Address shippingAddress;
 
 	@Column(name = "order_date", nullable = false)
 	private LocalDateTime orderDate;
@@ -95,9 +88,14 @@ public class Order {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "payment_status")
 	private PaymentStatus paymentStatus = PaymentStatus.PENDING;
-
-	@Column(name = "delivery_confirmed_at")
-	private LocalDateTime deliveryConfirmedAt;
+	
+	@Column(name = "shipping_method", length = 50)
+	@Size(max = 50, message = "Shipping method must not exceed 50 characters")
+	private String shippingMethod;
+	
+	@Column(name = "shipping_carrier", length = 100)
+	@Size(max = 100, message = "Shipping carrier must not exceed 100 characters")
+	private String shippingCarrier;
 
 	@Column(name = "customer_name", length = 100)
 	@Size(max = 100, message = "Customer name must not exceed 100 characters")
@@ -165,8 +163,7 @@ public class Order {
 	public BigDecimal calculateGrandTotal() {
 		BigDecimal subtotal = calculateSubtotal();
 		BigDecimal shipping = shippingFee != null ? shippingFee : BigDecimal.ZERO;
-		BigDecimal tax = taxAmount != null ? taxAmount : BigDecimal.ZERO;
-		return subtotal.add(shipping).add(tax);
+		return subtotal.add(shipping);
 	}
 
 	public Integer getTotalItems() {

@@ -74,7 +74,7 @@ public class AuthController {
                         user.getEmail(),
                         user.getFullName(),
                         user.getPhoneNumber(),
-                        user.getAdmin(),
+                        user.getRole(),
                         user.getIsActive(),
                         user.getCreatedAt(),
                         user.getUpdatedAt()
@@ -215,7 +215,7 @@ public class AuthController {
                             user.getEmail(),
                             user.getFullName(),
                             user.getPhoneNumber(),
-                            user.getAdmin(),
+                            user.getRole(),
                             user.getIsActive(),
                             user.getCreatedAt(),
                             user.getUpdatedAt()
@@ -287,7 +287,7 @@ public class AuthController {
                         user.getEmail(),
                         user.getFullName(),
                         user.getPhoneNumber(),
-                        user.getAdmin(),
+                        user.getRole(),
                         user.getIsActive(),
                         user.getCreatedAt(),
                         user.getUpdatedAt()

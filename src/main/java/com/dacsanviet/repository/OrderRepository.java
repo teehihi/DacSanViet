@@ -107,6 +107,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Long countByUserId(@Param("userId") Long userId);
     
     /**
+     * Sum total amount by user ID
+     */
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.user.id = :userId AND o.status != 'CANCELLED'")
+    BigDecimal sumTotalAmountByUserId(@Param("userId") Long userId);
+    
+    /**
      * Calculate total revenue
      */
     @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status != 'CANCELLED'")
