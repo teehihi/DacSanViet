@@ -740,7 +740,7 @@
                         <input type="hidden" name="subtotal" id="subtotalInput" value="0">
                         <input type="hidden" name="shippingFee" id="shippingFeeHiddenInput" value="0">
                         
-                        <button type="submit" class="place-order-btn mt-4" id="placeOrderBtn">
+                        <button type="button" class="place-order-btn mt-4" id="placeOrderBtn">
                             <i class="fas fa-check-circle me-2"></i>Đặt Hàng Ngay
                         </button>
                         
@@ -1239,18 +1239,34 @@
         
         // Load cart from localStorage and display
         function loadCheckoutCart() {
+            console.log('=== CHECKOUT CART DEBUG START ===');
+            
+            // Debug localStorage directly
+            const rawCart = localStorage.getItem('shopping_cart');
+            console.log('Raw localStorage cart:', rawCart);
+            
             const cart = CartManager.getCart();
             const container = document.getElementById('orderItemsContainer');
             
             console.log('=== CHECKOUT CART DEBUG ===');
-            console.log('Cart from localStorage:', cart);
+            console.log('Cart from CartManager.getCart():', cart);
             console.log('Cart items:', cart.items);
             console.log('Cart items length:', cart.items ? cart.items.length : 0);
+            console.log('Cart total:', cart.total);
             console.log('User authenticated:', document.querySelector('meta[name="user-authenticated"]') ? 'YES' : 'NO');
+            
+            // Additional debug - check if CartManager exists
+            console.log('CartManager exists:', typeof window.CartManager !== 'undefined');
+            console.log('CartManager.CART_KEY:', window.CartManager ? window.CartManager.CART_KEY : 'N/A');
             
             // Check if cart is empty
             if (!cart.items || cart.items.length === 0) {
-                console.error('Cart is empty! Redirecting to cart page...');
+                console.error('Cart is empty! Details:');
+                console.error('- cart:', cart);
+                console.error('- cart.items:', cart.items);
+                console.error('- typeof cart.items:', typeof cart.items);
+                console.error('- Array.isArray(cart.items):', Array.isArray(cart.items));
+                
                 alert('Giỏ hàng trống. Vui lòng thêm sản phẩm vào giỏ hàng.');
                 window.location.href = '/cart';
                 return;
@@ -1404,13 +1420,17 @@
             console.log('Initial cart items count:', initialCart.items ? initialCart.items.length : 0);
             console.log('localStorage content:', localStorage.getItem('shopping_cart'));
             
-            // CRITICAL: Prevent default form submission and use AJAX instead
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault(); // PREVENT DEFAULT FORM SUBMISSION
+            // CRITICAL: Use button click instead of form submit
+            placeOrderBtn.addEventListener('click', async function(e) {
+                console.log('=== BUTTON CLICK EVENT TRIGGERED ===');
+                console.log('Event type:', e.type);
+                console.log('Event target:', e.target);
+                
+                e.preventDefault(); // PREVENT ANY DEFAULT BEHAVIOR
                 e.stopPropagation(); // STOP EVENT BUBBLING
                 
-                console.log('=== FORM SUBMIT INTERCEPTED ===');
-                console.log('Form submission prevented - using AJAX instead');
+                console.log('=== BUTTON CLICK INTERCEPTED ===');
+                console.log('Processing order via AJAX instead of form submission');
                 
                 const errors = validateForm();
                 
@@ -1440,15 +1460,15 @@
                 
                 // Get cart items - CRITICAL CHECK
                 const cart = CartManager.getCart();
-                console.log('=== FORM SUBMIT CART CHECK ===');
-                console.log('Cart data at submit:', cart);
-                console.log('Cart items at submit:', cart.items);
-                console.log('Cart items length at submit:', cart.items ? cart.items.length : 0);
-                console.log('localStorage at submit:', localStorage.getItem('shopping_cart'));
+                console.log('=== BUTTON CLICK CART CHECK ===');
+                console.log('Cart data at click:', cart);
+                console.log('Cart items at click:', cart.items);
+                console.log('Cart items length at click:', cart.items ? cart.items.length : 0);
+                console.log('localStorage at click:', localStorage.getItem('shopping_cart'));
                 
                 if (!cart.items || cart.items.length === 0) {
                     alert('Giỏ hàng trống. Vui lòng thêm sản phẩm vào giỏ hàng.');
-                    console.error('CRITICAL: Cart is empty at form submit!');
+                    console.error('CRITICAL: Cart is empty at button click!');
                     return false;
                 }
                 
@@ -1463,6 +1483,7 @@
                     customerEmail: document.getElementById('customerEmail').value,
                     shippingAddress: document.getElementById('shippingAddress').value,
                     paymentMethod: document.getElementById('paymentMethodInput').value,
+                    shippingMethod: document.getElementById('shippingMethodInput').value,
                     notes: document.getElementById('notes').value,
                     subtotal: cart.total,
                     shippingFee: currentShippingFee,
@@ -1535,6 +1556,13 @@
             loadCheckoutCart();
             loadProvinces();
             loadProductWeights(); // Load product weights for shipping calculation
+            
+            // CRITICAL: Ensure form event listener is attached
+            console.log('=== FORM EVENT LISTENER SETUP ===');
+            const formElement = document.getElementById('checkoutForm');
+            console.log('Form element found:', formElement ? 'YES' : 'NO');
+            console.log('Form onsubmit:', formElement ? formElement.onsubmit : 'N/A');
+            console.log('Event listeners attached:', 'YES (see above)');
         });
         
         function selectPaymentMethod(method) {

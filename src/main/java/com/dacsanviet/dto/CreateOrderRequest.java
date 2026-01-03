@@ -46,6 +46,10 @@ public class CreateOrderRequest {
     @JsonProperty("paymentMethod")
     private String paymentMethod;
     
+    @Size(max = 50, message = "Phương thức vận chuyển không được quá 50 ký tự")
+    @JsonProperty("shippingMethod")
+    private String shippingMethod;
+    
     @Size(max = 1000, message = "Ghi chú không được quá 1000 ký tự")
     @JsonProperty("notes")
     private String notes;

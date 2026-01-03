@@ -222,7 +222,8 @@ function getCarrierText(carrier) {
         'GHTK': 'Giao Hàng Tiết Kiệm',
         'VIETTEL_POST': 'Viettel Post',
         'VN_POST': 'Bưu Điện Việt Nam',
-        'JT': 'J&T Express'
+        'JT': 'J&T Express',
+        'DacSanVietShip': 'DacSanVietShip'
     };
     return carrierMap[carrier] || carrier;
 }
@@ -303,6 +304,9 @@ function closeDropdownOnClickOutside(event) {
 function showEditOrderModal(order) {
     const isExpress5H = order.shippingMethod === 'EXPRESS_5H';
     
+    // Auto-select DacSanVietShip for EXPRESS_5H orders
+    const defaultCarrier = isExpress5H ? 'DacSanVietShip' : (order.shippingCarrier || '');
+    
     const content = `
         <div class="edit-modal-header">
             <h3>Cập Nhật Đơn Hàng</h3>
@@ -315,7 +319,6 @@ function showEditOrderModal(order) {
             <!-- Customer Info Card -->
             <div class="info-card">
                 <div class="info-card-header">
-                    <i class="bi bi-person-circle"></i>
                     <span>Thông Tin Khách Hàng</span>
                 </div>
                 <div class="info-card-body">
@@ -341,15 +344,14 @@ function showEditOrderModal(order) {
             <!-- Shipping & Payment Info -->
             <div class="info-card">
                 <div class="info-card-header">
-                    <i class="bi bi-truck"></i>
                     <span>Vận Chuyển & Thanh Toán</span>
                 </div>
                 <div class="info-card-body">
                     <div class="info-row">
                         <span class="info-label">Phương thức vận chuyển:</span>
                         <span class="info-value">
-                            ${order.shippingMethod === 'EXPRESS_5H' ? '⚡ Giao Nhanh 5H' : 
-                              order.shippingMethod === 'STANDARD' ? '📦 Giao Tiêu Chuẩn' : 
+                            ${order.shippingMethod === 'EXPRESS_5H' ? 'Giao Nhanh 5H' : 
+                              order.shippingMethod === 'STANDARD' ? 'Giao Tiêu Chuẩn' : 
                               order.shippingMethod || 'Chưa chọn'}
                         </span>
                     </div>
@@ -362,10 +364,10 @@ function showEditOrderModal(order) {
                     <div class="info-row">
                         <span class="info-label">Phương thức thanh toán:</span>
                         <span class="info-value">
-                            ${order.paymentMethod === 'COD' ? '💵 Thanh toán khi nhận hàng' :
-                              order.paymentMethod === 'BANK_TRANSFER' ? '🏦 Chuyển khoản ngân hàng' :
-                              order.paymentMethod === 'MOMO' ? '📱 Ví MoMo' :
-                              order.paymentMethod === 'VNPAY' ? '💳 VNPay' :
+                            ${order.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng' :
+                              order.paymentMethod === 'BANK_TRANSFER' ? 'Chuyển khoản ngân hàng' :
+                              order.paymentMethod === 'MOMO' ? 'Ví MoMo' :
+                              order.paymentMethod === 'VNPAY' ? 'VNPay' :
                               order.paymentMethod || 'Chưa chọn'}
                         </span>
                     </div>
@@ -438,8 +440,8 @@ function showEditOrderModal(order) {
                     <label for="editShippingCarrier">Đơn Vị Vận Chuyển ${order.status === 'SHIPPED' || order.status === 'DELIVERED' ? '*' : ''}</label>
                     <div class="custom-dropdown" data-dropdown="shippingCarrier">
                         <div class="dropdown-selected" onclick="toggleDropdown('shippingCarrier')">
-                            <span class="selected-text" data-value="${order.shippingCarrier || ''}">
-                                ${order.shippingCarrier ? getCarrierText(order.shippingCarrier) : '-- Chọn đơn vị vận chuyển --'}
+                            <span class="selected-text" data-value="${defaultCarrier}">
+                                ${defaultCarrier ? getCarrierText(defaultCarrier) : '-- Chọn đơn vị vận chuyển --'}
                             </span>
                             <i class="bi bi-chevron-down"></i>
                         </div>
@@ -448,32 +450,36 @@ function showEditOrderModal(order) {
                                 <i class="bi bi-search"></i>
                                 <input type="text" placeholder="Tìm kiếm..." onkeyup="filterDropdown('shippingCarrier', this.value)">
                             </div>
-                            <div class="dropdown-item ${!order.shippingCarrier ? 'selected' : ''}" data-value="" onclick="selectDropdownItem('shippingCarrier', '', '-- Chọn đơn vị vận chuyển --')">
+                            <div class="dropdown-item ${!defaultCarrier ? 'selected' : ''}" data-value="" onclick="selectDropdownItem('shippingCarrier', '', '-- Chọn đơn vị vận chuyển --')">
                                 <span>-- Chọn đơn vị vận chuyển --</span>
                             </div>
-                            <div class="dropdown-item ${order.shippingCarrier === 'GHN' ? 'selected' : ''}" data-value="GHN" data-search="giao hang nhanh ghn" onclick="selectDropdownItem('shippingCarrier', 'GHN', 'Giao Hàng Nhanh')">
+                            <div class="dropdown-item ${defaultCarrier === 'GHN' ? 'selected' : ''}" data-value="GHN" data-search="giao hang nhanh ghn" onclick="selectDropdownItem('shippingCarrier', 'GHN', 'Giao Hàng Nhanh')">
                                 <img src="/images/carriers/ghn.png" alt="GHN" class="carrier-icon" onerror="this.style.display='none'">
                                 <span>Giao Hàng Nhanh</span>
                             </div>
-                            <div class="dropdown-item ${order.shippingCarrier === 'GHTK' ? 'selected' : ''}" data-value="GHTK" data-search="giao hang tiet kiem ghtk" onclick="selectDropdownItem('shippingCarrier', 'GHTK', 'Giao Hàng Tiết Kiệm')">
+                            <div class="dropdown-item ${defaultCarrier === 'GHTK' ? 'selected' : ''}" data-value="GHTK" data-search="giao hang tiet kiem ghtk" onclick="selectDropdownItem('shippingCarrier', 'GHTK', 'Giao Hàng Tiết Kiệm')">
                                 <img src="/images/carriers/ghtk.png" alt="GHTK" class="carrier-icon" onerror="this.style.display='none'">
                                 <span>Giao Hàng Tiết Kiệm</span>
                             </div>
-                            <div class="dropdown-item ${order.shippingCarrier === 'VIETTEL_POST' ? 'selected' : ''}" data-value="VIETTEL_POST" data-search="viettel post" onclick="selectDropdownItem('shippingCarrier', 'VIETTEL_POST', 'Viettel Post')">
+                            <div class="dropdown-item ${defaultCarrier === 'VIETTEL_POST' ? 'selected' : ''}" data-value="VIETTEL_POST" data-search="viettel post" onclick="selectDropdownItem('shippingCarrier', 'VIETTEL_POST', 'Viettel Post')">
                                 <img src="/images/carriers/viettel-post.png" alt="Viettel Post" class="carrier-icon" onerror="this.style.display='none'">
                                 <span>Viettel Post</span>
                             </div>
-                            <div class="dropdown-item ${order.shippingCarrier === 'VN_POST' ? 'selected' : ''}" data-value="VN_POST" data-search="buu dien viet nam vnpost" onclick="selectDropdownItem('shippingCarrier', 'VN_POST', 'Bưu Điện Việt Nam')">
+                            <div class="dropdown-item ${defaultCarrier === 'VN_POST' ? 'selected' : ''}" data-value="VN_POST" data-search="buu dien viet nam vnpost" onclick="selectDropdownItem('shippingCarrier', 'VN_POST', 'Bưu Điện Việt Nam')">
                                 <img src="/images/carriers/vnpost.png" alt="VN Post" class="carrier-icon" onerror="this.style.display='none'">
                                 <span>Bưu Điện Việt Nam</span>
                             </div>
-                            <div class="dropdown-item ${order.shippingCarrier === 'JT' ? 'selected' : ''}" data-value="JT" data-search="jt express j&t" onclick="selectDropdownItem('shippingCarrier', 'JT', 'J&T Express')">
+                            <div class="dropdown-item ${defaultCarrier === 'JT' ? 'selected' : ''}" data-value="JT" data-search="jt express j&t" onclick="selectDropdownItem('shippingCarrier', 'JT', 'J&T Express')">
                                 <img src="/images/carriers/jt.png" alt="J&T" class="carrier-icon" onerror="this.style.display='none'">
                                 <span>J&T Express</span>
                             </div>
+                            <div class="dropdown-item ${defaultCarrier === 'DacSanVietShip' ? 'selected' : ''}" data-value="DacSanVietShip" data-search="dacsanviet ship giao nhanh 5h" onclick="selectDropdownItem('shippingCarrier', 'DacSanVietShip', 'DacSanVietShip')">
+                                <img src="/images/carriers/dacsanviet.png" alt="DacSanVietShip" class="carrier-icon" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect fill=%22%23FF6B35%22 width=%2240%22 height=%2240%22 rx=%224%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22 font-size=%2210%22 font-weight=%22bold%22%3EDSV%3C/text%3E%3C/svg%3E'">
+                                <span>DacSanVietShip</span>
+                            </div>
                         </div>
                     </div>
-                    <input type="hidden" id="editShippingCarrier" value="${order.shippingCarrier || ''}">
+                    <input type="hidden" id="editShippingCarrier" value="${defaultCarrier}">
                     <small class="form-hint">Bắt buộc khi chuyển sang trạng thái "Đang Giao"</small>
                 </div>
                 ` : `
@@ -505,7 +511,6 @@ function showEditOrderModal(order) {
         <div class="edit-modal-footer">
             <button class="btn-cancel" onclick="closeEditModal()">Hủy</button>
             <button class="btn-save" onclick="saveOrderChanges(${order.id})">
-                <i class="bi bi-check-lg"></i>
                 Lưu Thay Đổi
             </button>
         </div>
@@ -536,13 +541,19 @@ async function saveOrderChanges(orderId) {
     
     // Validate: if status is SHIPPED or DELIVERED, shipping carrier is required
     if ((status === 'SHIPPED' || status === 'DELIVERED') && !shippingCarrier) {
-        showNotification('⚠️ Vui lòng chọn đơn vị vận chuyển khi chuyển sang trạng thái "Đang Giao" hoặc "Đã Giao"', 'warning');
+        showNotification('Vui lòng chọn đơn vị vận chuyển khi chuyển sang trạng thái "Đang Giao" hoặc "Đã Giao"', 'warning');
         return;
     }
     
     // Get CSRF token from meta tag
-    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+    
+    if (!csrfToken || !csrfHeader) {
+        console.error('CSRF token not found');
+        showNotification('Lỗi: Không tìm thấy CSRF token', 'error');
+        return;
+    }
     
     try {
         const response = await fetch(`/api/admin/orders/${orderId}`, {
@@ -561,16 +572,18 @@ async function saveOrderChanges(orderId) {
         });
         
         if (response.ok) {
-            showNotification('Đã cập nhật đơn hàng thành công!', 'success');
+            showNotification('Đã cập nhật đơn hàng thành công', 'success');
             closeEditModal();
-            loadOrders();
+            // Reload page to see changes
+            window.location.reload();
         } else {
             const error = await response.json();
-            showNotification('Lỗi: ' + (error.error || 'Không thể cập nhật đơn hàng'), 'error');
+            console.error('Server error:', error);
+            showNotification('Lỗi: ' + (error.error || error.message || 'Không thể cập nhật đơn hàng'), 'error');
         }
     } catch (error) {
         console.error('Error updating order:', error);
-        showNotification('Lỗi khi cập nhật đơn hàng', 'error');
+        showNotification('Lỗi khi cập nhật đơn hàng: ' + error.message, 'error');
     }
 }
 
@@ -635,23 +648,25 @@ function formatDate(dateString) {
 
 function getStatusBadge(status) {
     const statusMap = {
-        'PENDING': 'pending',
-        'CONFIRMED': 'processing',
-        'PROCESSING': 'processing',
-        'SHIPPED': 'delivered',
-        'DELIVERED': 'active',
-        'CANCELLED': 'cancelled'
+        'PENDING': { class: 'pending', text: 'Chờ Xác Nhận' },
+        'CONFIRMED': { class: 'processing', text: 'Đã Xác Nhận' },
+        'PROCESSING': { class: 'processing', text: 'Đang Xử Lý' },
+        'SHIPPED': { class: 'delivered', text: 'Đang Giao' },
+        'DELIVERED': { class: 'active', text: 'Đã Giao' },
+        'CANCELLED': { class: 'cancelled', text: 'Đã Hủy' }
     };
-    return `<span class="status-badge status-${statusMap[status] || 'pending'}">${status}</span>`;
+    const statusInfo = statusMap[status] || { class: 'pending', text: status };
+    return `<span class="status-badge status-${statusInfo.class}">${statusInfo.text}</span>`;
 }
 
 function getPaymentBadge(status) {
     const statusMap = {
-        'PENDING': 'pending',
-        'COMPLETED': 'active',
-        'FAILED': 'cancelled'
+        'PENDING': { class: 'pending', text: 'Chờ Thanh Toán' },
+        'COMPLETED': { class: 'active', text: 'Đã Thanh Toán' },
+        'FAILED': { class: 'cancelled', text: 'Thanh Toán Thất Bại' }
     };
-    return `<span class="status-badge status-${statusMap[status] || 'pending'}">${status}</span>`;
+    const statusInfo = statusMap[status] || { class: 'pending', text: status };
+    return `<span class="status-badge status-${statusInfo.class}">${statusInfo.text}</span>`;
 }
 
 function createOrder() {

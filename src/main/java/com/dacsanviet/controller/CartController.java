@@ -49,7 +49,8 @@ public class CartController {
     
     /**
      * Add product to cart (AJAX)
-     * Works for both authenticated users and guests
+     * YAME BEHAVIOR: All users use localStorage only
+     * This endpoint is kept for compatibility but returns success without server-side storage
      */
     @PostMapping("/add")
     @ResponseBody
@@ -57,22 +58,14 @@ public class CartController {
                                       Authentication authentication,
                                       HttpSession session) {
         try {
-            CartDao cart;
-            
-            if (authentication != null && authentication.isAuthenticated()) {
-                // Logged in user - save to database
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                cart = cartService.addToCart(userPrincipal.getId(), request);
-            } else {
-                // Guest user - save to session
-                cart = sessionCartService.addToSessionCart(session, request);
-            }
-            
+            // YAME BEHAVIOR: Cart is localStorage-only for all users
+            // Return success response for client-side cart management
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Đã thêm sản phẩm vào giỏ hàng",
-                "cartItemCount", cart.getTotalItems(),
-                "cartTotal", cart.getTotalAmount()
+                "cartItemCount", 1, // Client will update this
+                "cartTotal", 0,     // Client will calculate this
+                "localStorage", true // Indicate this is localStorage-only
             ));
             
         } catch (Exception e) {
@@ -85,6 +78,7 @@ public class CartController {
     
     /**
      * Update cart item quantity (AJAX)
+     * YAME BEHAVIOR: All users use localStorage only
      */
     @PutMapping("/update")
     @ResponseBody
@@ -92,20 +86,13 @@ public class CartController {
                                            Authentication authentication,
                                            HttpSession session) {
         try {
-            CartDao cart;
-            
-            if (authentication != null && authentication.isAuthenticated()) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                cart = cartService.updateCartItem(userPrincipal.getId(), request);
-            } else {
-                cart = sessionCartService.updateSessionCartItem(session, request.getProductId(), request.getQuantity());
-            }
-            
+            // YAME BEHAVIOR: Cart is localStorage-only for all users
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Đã cập nhật giỏ hàng",
-                "cartItemCount", cart.getTotalItems(),
-                "cartTotal", cart.getTotalAmount()
+                "cartItemCount", 1, // Client will update this
+                "cartTotal", 0,     // Client will calculate this
+                "localStorage", true
             ));
             
         } catch (Exception e) {
@@ -118,6 +105,7 @@ public class CartController {
     
     /**
      * Remove item from cart (AJAX)
+     * YAME BEHAVIOR: All users use localStorage only
      */
     @DeleteMapping("/remove/{productId}")
     @ResponseBody
@@ -125,20 +113,13 @@ public class CartController {
                                            Authentication authentication,
                                            HttpSession session) {
         try {
-            CartDao cart;
-            
-            if (authentication != null && authentication.isAuthenticated()) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                cart = cartService.removeFromCart(userPrincipal.getId(), productId);
-            } else {
-                cart = sessionCartService.removeFromSessionCart(session, productId);
-            }
-            
+            // YAME BEHAVIOR: Cart is localStorage-only for all users
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Đã xóa sản phẩm khỏi giỏ hàng",
-                "cartItemCount", cart.getTotalItems(),
-                "cartTotal", cart.getTotalAmount()
+                "cartItemCount", 0, // Client will update this
+                "cartTotal", 0,     // Client will calculate this
+                "localStorage", true
             ));
             
         } catch (Exception e) {
@@ -151,23 +132,19 @@ public class CartController {
     
     /**
      * Clear entire cart (AJAX)
+     * YAME BEHAVIOR: All users use localStorage only
      */
     @DeleteMapping("/clear")
     @ResponseBody
     public ResponseEntity<?> clearCart(Authentication authentication, HttpSession session) {
         try {
-            if (authentication != null && authentication.isAuthenticated()) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                cartService.clearCart(userPrincipal.getId());
-            } else {
-                sessionCartService.clearSessionCart(session);
-            }
-            
+            // YAME BEHAVIOR: Cart is localStorage-only for all users
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Đã xóa tất cả sản phẩm khỏi giỏ hàng",
                 "cartItemCount", 0,
-                "cartTotal", 0
+                "cartTotal", 0,
+                "localStorage", true
             ));
             
         } catch (Exception e) {
@@ -180,27 +157,21 @@ public class CartController {
     
     /**
      * Get cart items (for syncing with localStorage)
+     * YAME BEHAVIOR: Always return empty - cart is localStorage-only
      */
     @GetMapping("/api/items")
     @ResponseBody
     public ResponseEntity<?> getCartItems(Authentication authentication) {
         try {
-            if (authentication != null && authentication.isAuthenticated()) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                CartDao cart = cartService.getCart(userPrincipal.getId());
-                
-                return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "items", cart.getItems(),
-                    "total", cart.getTotalAmount()
-                ));
-            } else {
-                return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "items", new java.util.ArrayList<>(),
-                    "total", 0
-                ));
-            }
+            // YAME BEHAVIOR: Cart is localStorage-only for all users
+            // Always return empty cart - client should use localStorage
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "items", new java.util.ArrayList<>(),
+                "total", 0,
+                "localStorage", true,
+                "message", "Cart is localStorage-only (Yame behavior)"
+            ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,

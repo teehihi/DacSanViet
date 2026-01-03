@@ -181,26 +181,26 @@ const CartManager = {
     
     /**
      * Sync cart to server (when user logs in)
-     * YAME BEHAVIOR: Cart is NOT synced to server
-     * Cart only exists in localStorage (per browser)
+     * YAME BEHAVIOR: Cart is NOT synced to server for ANY user
+     * Cart only exists in localStorage (per browser) for guests AND authenticated users
      */
     async syncToServer() {
-        // Yame behavior: Do NOT sync cart to server
-        // Cart is browser-specific (localStorage only)
-        console.log('Cart sync disabled - Yame behavior: localStorage only');
-        return { success: true, message: 'Cart is localStorage-only (Yame behavior)' };
+        // Yame behavior: Do NOT sync cart to server for any user
+        // Cart is browser-specific (localStorage only) for everyone
+        console.log('Cart sync disabled - Yame behavior: localStorage only for ALL users');
+        return { success: true, message: 'Cart is localStorage-only for all users (Yame behavior)' };
     },
     
     /**
      * Load cart from server
-     * YAME BEHAVIOR: Cart is NOT loaded from server
-     * Each browser has its own cart (localStorage)
+     * YAME BEHAVIOR: Cart is NOT loaded from server for ANY user
+     * Each browser has its own cart (localStorage) regardless of authentication
      */
     async loadFromServer() {
-        // Yame behavior: Do NOT load cart from server
-        // Each browser has its own independent cart
-        console.log('Cart load from server disabled - Yame behavior: localStorage only');
-        return { success: true, message: 'Cart is localStorage-only (Yame behavior)' };
+        // Yame behavior: Do NOT load cart from server for any user
+        // Each browser has its own independent cart (guests + authenticated)
+        console.log('Cart load from server disabled - Yame behavior: localStorage only for ALL users');
+        return { success: true, message: 'Cart is localStorage-only for all users (Yame behavior)' };
     }
 };
 

@@ -770,20 +770,8 @@ public class OrderService {
 	 * Create order from cart with customer information - supports guest checkout
 	 */
 	public OrderDao createOrderFromCart(CreateOrderRequest request) {
-		// Debug logging
-		System.out.println("=== CREATE ORDER FROM CART DEBUG ===");
-		System.out.println("User ID: " + request.getUserId());
-		System.out.println("Customer Name: " + request.getCustomerName());
-		System.out.println("Payment Method: " + request.getPaymentMethod());
-		System.out.println("Items from request: " + (request.getItems() != null ? request.getItems().size() : 0));
-		System.out.println("====================================");
-		
 		// Validate COD order requirements
 		validateCODOrder(request);
-
-		// Debug logging
-		System.out.println("Creating order with payment method: " + request.getPaymentMethod());
-		System.out.println("User ID: " + request.getUserId());
 
 		User user = null;
 		List<CartItem> cartItems = new ArrayList<>();
@@ -791,7 +779,6 @@ public class OrderService {
 
 		// Priority 1: Use items from request (localStorage - works for both guest and logged-in users)
 		if (request.getItems() != null && !request.getItems().isEmpty()) {
-			System.out.println("Using items from request (localStorage)");
 			useRequestItems = true;
 			
 			// Get user if authenticated
@@ -801,7 +788,6 @@ public class OrderService {
 		}
 		// Priority 2: Fallback to database cart (only for authenticated users without request items)
 		else if (request.getUserId() != null) {
-			System.out.println("Using items from database cart");
 			user = getUserById(request.getUserId());
 			cartItems = cartItemRepository.findByUserIdOrderByAddedDateDesc(request.getUserId());
 
@@ -840,24 +826,16 @@ public class OrderService {
 		order.setShippingAddressText(request.getShippingAddress());
 		order.setShippingFee(shippingFee);
 		order.setPaymentMethod(request.getPaymentMethod());
+		order.setShippingMethod(request.getShippingMethod()); // Save shipping method from checkout
 		order.setNotes(request.getNotes());
-
-		// Debug logging before save
-		System.out.println("=== BEFORE SAVING ORDER ===");
-		System.out.println("Order User: " + (order.getUser() != null ? order.getUser().getId() : "NULL"));
-		System.out.println("Order Customer Name: " + order.getCustomerName());
-		System.out.println("Order Total: " + order.getTotalAmount());
-		System.out.println("===========================");
 
 		// Set appropriate status based on payment method
 		if ("COD".equals(request.getPaymentMethod())) {
 			order.setStatus(OrderStatus.PROCESSING);
 			order.setPaymentStatus(PaymentStatus.PENDING);
-			System.out.println("COD order created with PROCESSING status");
 		} else {
 			order.setStatus(OrderStatus.PENDING);
 			order.setPaymentStatus(PaymentStatus.PENDING);
-			System.out.println("Non-COD order created with PENDING status");
 		}
 
 		// Set order date
@@ -869,7 +847,6 @@ public class OrderService {
 		// Create order items - Priority: request items (localStorage) > database cart
 		if (useRequestItems && request.getItems() != null && !request.getItems().isEmpty()) {
 			// Use items from request (localStorage - works for both guest and logged-in users)
-			System.out.println("Creating order items from request (localStorage)");
 			for (CreateOrderRequest.CartItemRequest itemRequest : request.getItems()) {
 				// Get product from database
 				Product product = productRepository.findById(itemRequest.getProductId())
@@ -901,15 +878,12 @@ public class OrderService {
 			if (request.getUserId() != null) {
 				try {
 					cartItemRepository.deleteByUserId(request.getUserId());
-					System.out.println("Cleared database cart for authenticated user after localStorage checkout");
 				} catch (Exception e) {
-					System.err.println("Error clearing database cart: " + e.getMessage());
 					// Don't fail the order if cart clearing fails
 				}
 			}
 		} else if (!cartItems.isEmpty()) {
 			// Fallback: Use cart items from database (authenticated user)
-			System.out.println("Creating order items from database cart");
 			for (CartItem cartItem : cartItems) {
 				OrderItem orderItem = new OrderItem(order, cartItem);
 				orderItemRepository.save(orderItem);
@@ -925,9 +899,8 @@ public class OrderService {
 			if (request.getUserId() != null) {
 				try {
 					cartItemRepository.deleteByUserId(request.getUserId());
-					System.out.println("Cleared database cart after database cart checkout");
 				} catch (Exception e) {
-					System.err.println("Error clearing database cart: " + e.getMessage());
+					// Don't fail the order if cart clearing fails
 				}
 			}
 		}
@@ -936,10 +909,8 @@ public class OrderService {
 		try {
 			// Send order confirmation email
 			emailService.sendOrderConfirmationEmail(convertToOrderDto(order));
-			System.out.println("Order created successfully: " + order.getOrderNumber());
 		} catch (Exception e) {
 			// Log error but don't fail the order
-			System.err.println("Failed to send order confirmation: " + e.getMessage());
 		}
 
 		return convertToOrderDto(order);

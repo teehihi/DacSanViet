@@ -224,7 +224,12 @@
                                                              status.key == 'CONFIRMED' ? 'bg-info' : 
                                                              status.key == 'SHIPPED' ? 'bg-primary' : 
                                                              status.key == 'DELIVERED' ? 'bg-success' : 'bg-danger'}"
-                                              th:text="${status.key}">Status</span>
+                                              th:text="${status.key == 'PENDING' ? 'Chờ Xác Nhận' :
+                                                        status.key == 'CONFIRMED' ? 'Đã Xác Nhận' :
+                                                        status.key == 'PROCESSING' ? 'Đang Xử Lý' :
+                                                        status.key == 'SHIPPED' ? 'Đang Giao' :
+                                                        status.key == 'DELIVERED' ? 'Đã Giao' :
+                                                        status.key == 'CANCELLED' ? 'Đã Hủy' : status.key}">Status</span>
                                     </td>
                                     <td th:text="${status.value}">0</td>
                                     <td>

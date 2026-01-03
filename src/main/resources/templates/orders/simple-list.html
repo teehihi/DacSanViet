@@ -125,7 +125,12 @@
                             <div class="col-md-2">
                                 <span class="badge" 
                                       th:classappend="'bg-' + ${order.status == 'PENDING' ? 'warning' : (order.status == 'PROCESSING' ? 'info' : (order.status == 'SHIPPED' ? 'primary' : (order.status == 'DELIVERED' ? 'success' : 'secondary')))}"
-                                      th:text="${order.status}">PROCESSING</span>
+                                      th:text="${order.status == 'PENDING' ? 'Chờ Xác Nhận' : 
+                                                order.status == 'CONFIRMED' ? 'Đã Xác Nhận' :
+                                                order.status == 'PROCESSING' ? 'Đang Xử Lý' :
+                                                order.status == 'SHIPPED' ? 'Đang Giao' :
+                                                order.status == 'DELIVERED' ? 'Đã Giao' :
+                                                order.status == 'CANCELLED' ? 'Đã Hủy' : order.status}">PROCESSING</span>
                             </div>
                             <div class="col-md-2">
                                 <small class="text-muted">Thanh toán:</small><br>

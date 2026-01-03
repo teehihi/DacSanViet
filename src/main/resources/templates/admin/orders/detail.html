@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>Chi Tiết Đơn Hàng - Đặc Sản Việt Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
@@ -90,7 +92,7 @@
                 <!-- Customer Info Card -->
                 <div class="card">
                     <div class="card-header">
-                        <h5><i class="bi bi-person-circle me-2"></i>Thông Tin Khách Hàng</h5>
+                        <h5>Thông Tin Khách Hàng</h5>
                     </div>
                     <div class="card-body">
                         <div class="info-item mb-3">
@@ -115,7 +117,7 @@
                 <!-- Products Card -->
                 <div class="card">
                     <div class="card-header">
-                        <h5><i class="bi bi-box-seam me-2"></i>Sản Phẩm</h5>
+                        <h5>Sản Phẩm</h5>
                     </div>
                     <div class="card-body" style="padding: 0;">
                         <table class="data-table">
@@ -153,20 +155,28 @@
                 <!-- Shipping Info Card -->
                 <div class="card">
                     <div class="card-header">
-                        <h5><i class="bi bi-truck me-2"></i>Vận Chuyển</h5>
+                        <h5>Vận Chuyển</h5>
                     </div>
                     <div class="card-body">
                         <div class="info-item mb-3">
                             <div class="info-label">Phương Thức Vận Chuyển</div>
                             <div class="info-value">
-                                <span th:if="${order.shippingMethod == 'EXPRESS_5H'}">⚡ Giao Nhanh 5H</span>
-                                <span th:if="${order.shippingMethod == 'STANDARD'}">📦 Giao Tiêu Chuẩn</span>
+                                <span th:if="${order.shippingMethod == 'EXPRESS_5H'}">Giao Nhanh 5H</span>
+                                <span th:if="${order.shippingMethod == 'STANDARD'}">Giao Tiêu Chuẩn</span>
                                 <span th:if="${order.shippingMethod != 'EXPRESS_5H' && order.shippingMethod != 'STANDARD'}" th:text="${order.shippingMethod}">Chưa chọn</span>
                             </div>
                         </div>
                         <div class="info-item mb-3" th:if="${order.shippingCarrier}">
                             <div class="info-label">Đơn Vị Vận Chuyển</div>
-                            <div class="info-value" th:text="${order.shippingCarrier}">GHN</div>
+                            <div class="info-value">
+                                <span th:if="${order.shippingCarrier == 'GHN'}">Giao Hàng Nhanh</span>
+                                <span th:if="${order.shippingCarrier == 'GHTK'}">Giao Hàng Tiết Kiệm</span>
+                                <span th:if="${order.shippingCarrier == 'VIETTEL_POST'}">Viettel Post</span>
+                                <span th:if="${order.shippingCarrier == 'VN_POST'}">Bưu Điện Việt Nam</span>
+                                <span th:if="${order.shippingCarrier == 'JT'}">J&T Express</span>
+                                <span th:if="${order.shippingCarrier == 'DacSanVietShip'}">DacSanVietShip</span>
+                                <span th:if="${order.shippingCarrier != 'GHN' && order.shippingCarrier != 'GHTK' && order.shippingCarrier != 'VIETTEL_POST' && order.shippingCarrier != 'VN_POST' && order.shippingCarrier != 'JT' && order.shippingCarrier != 'DacSanVietShip'}" th:text="${order.shippingCarrier}">Khác</span>
+                            </div>
                         </div>
                         <div class="info-item mb-3" th:if="${order.trackingNumber}">
                             <div class="info-label">Mã Vận Đơn</div>
@@ -182,16 +192,16 @@
                 <!-- Payment Info Card -->
                 <div class="card">
                     <div class="card-header">
-                        <h5><i class="bi bi-credit-card me-2"></i>Thanh Toán</h5>
+                        <h5>Thanh Toán</h5>
                     </div>
                     <div class="card-body">
                         <div class="info-item mb-3">
                             <div class="info-label">Phương Thức Thanh Toán</div>
                             <div class="info-value">
-                                <span th:if="${order.paymentMethod == 'COD'}">💵 Thanh toán khi nhận hàng</span>
-                                <span th:if="${order.paymentMethod == 'BANK_TRANSFER'}">🏦 Chuyển khoản ngân hàng</span>
-                                <span th:if="${order.paymentMethod == 'MOMO'}">📱 Ví MoMo</span>
-                                <span th:if="${order.paymentMethod == 'VNPAY'}">💳 VNPay</span>
+                                <span th:if="${order.paymentMethod == 'COD'}">Thanh toán khi nhận hàng</span>
+                                <span th:if="${order.paymentMethod == 'BANK_TRANSFER'}">Chuyển khoản ngân hàng</span>
+                                <span th:if="${order.paymentMethod == 'MOMO'}">Ví MoMo</span>
+                                <span th:if="${order.paymentMethod == 'VNPAY'}">VNPay</span>
                                 <span th:if="${order.paymentMethod != 'COD' && order.paymentMethod != 'BANK_TRANSFER' && order.paymentMethod != 'MOMO' && order.paymentMethod != 'VNPAY'}" th:text="${order.paymentMethod}">Chưa chọn</span>
                             </div>
                         </div>
@@ -214,7 +224,7 @@
                 <!-- Notes Card -->
                 <div class="card" th:if="${order.notes}">
                     <div class="card-header">
-                        <h5><i class="bi bi-sticky me-2"></i>Ghi Chú</h5>
+                        <h5>Ghi Chú</h5>
                     </div>
                     <div class="card-body">
                         <p th:text="${order.notes}" style="margin: 0; white-space: pre-wrap;">Ghi chú đơn hàng</p>

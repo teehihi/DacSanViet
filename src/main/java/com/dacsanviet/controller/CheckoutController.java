@@ -5,6 +5,9 @@ import com.dacsanviet.dao.OrderDao;
 import com.dacsanviet.dto.CreateOrderRequest;
 import com.dacsanviet.security.UserPrincipal;
 import com.dacsanviet.service.OrderService;
+import com.dacsanviet.service.CartSyncService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,12 +26,17 @@ import java.util.Map;
 @RequestMapping("/checkout")
 public class CheckoutController {
     
+    private static final Logger logger = LoggerFactory.getLogger(CheckoutController.class);
+    
     @Autowired
     private OrderService orderService;
     
+    @Autowired
+    private CartSyncService cartSyncService;
+    
     /**
      * Show checkout page - supports both authenticated users and guests
-     * Cart is loaded from localStorage on client side
+     * YAME BEHAVIOR: All users use localStorage cart only
      */
     @GetMapping
     public String showCheckout(Model model, Authentication authentication) {
@@ -39,12 +47,19 @@ public class CheckoutController {
             if (authentication != null && authentication.isAuthenticated()
                 && authentication.getPrincipal() instanceof UserPrincipal) {
                 UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+                Long userId = userPrincipal.getId();
+                
+                logger.debug("Authenticated user {} accessing checkout - using localStorage cart", userId);
+                
                 model.addAttribute("isAuthenticated", true);
-                model.addAttribute("userId", userPrincipal.getId());
+                model.addAttribute("userId", userId);
             } else {
+                logger.debug("Guest user accessing checkout - using localStorage cart");
                 model.addAttribute("isGuest", true);
             }
             
+            // YAME BEHAVIOR: Cart is always from localStorage
+            // No cart synchronization needed
             model.addAttribute("cart", cart);
             model.addAttribute("orderRequest", new CreateOrderRequest());
             model.addAttribute("pageTitle", "Thanh Toán");
@@ -52,6 +67,7 @@ public class CheckoutController {
             return "checkout/simple-checkout";
             
         } catch (Exception e) {
+            logger.error("Error in checkout page: {}", e.getMessage(), e);
             model.addAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
             return "redirect:/cart";
         }
@@ -81,11 +97,12 @@ public class CheckoutController {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            System.out.println("=== CHECKOUT JSON PROCESS (CORRECT METHOD) ===");
+            System.out.println("=== CHECKOUT JSON PROCESS (YAME BEHAVIOR) ===");
             System.out.println("Request received: " + orderRequest);
             System.out.println("Customer Name: " + orderRequest.getCustomerName());
             System.out.println("Items count: " + (orderRequest.getItems() != null ? orderRequest.getItems().size() : 0));
-            System.out.println("Content-Type: application/json - USING JSON METHOD");
+            System.out.println("Content-Type: application/json - Cart from localStorage");
+            System.out.println("YAME BEHAVIOR: All users use localStorage cart");
             
             // Validate request
             if (orderRequest.getItems() == null || orderRequest.getItems().isEmpty()) {
@@ -100,9 +117,9 @@ public class CheckoutController {
                 && authentication.getPrincipal() instanceof UserPrincipal) {
                 UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
                 userId = userPrincipal.getId();
-                System.out.println("User authenticated: ID = " + userId);
+                System.out.println("User authenticated: ID = " + userId + " (but using localStorage cart)");
             } else {
-                System.out.println("Guest checkout");
+                System.out.println("Guest checkout (using localStorage cart)");
             }
             
             // Set user ID (null for guest orders)
@@ -159,7 +176,7 @@ public class CheckoutController {
         try {
             System.out.println("=== CHECKOUT FORM PROCESS (FALLBACK METHOD) ===");
             System.out.println("WARNING: Using form submission instead of JSON!");
-            System.out.println("This should NOT happen for logged-in users!");
+            System.out.println("YAME BEHAVIOR: All users use localStorage cart");
             
             // Check if user is authenticated
             Long userId = null;

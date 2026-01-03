@@ -91,13 +91,20 @@ public class AdminApiController {
 				try {
 					OrderDao dao = orderService.convertToDao(order);
 					if (dao == null) {
-						System.err.println("convertToDao returned null for order " + order.getId());
+						// Create a minimal DAO as fallback
+						OrderDao fallback = new OrderDao();
+						fallback.setId(order.getId());
+						fallback.setOrderNumber(order.getOrderNumber());
+						fallback.setTotalAmount(order.getTotalAmount());
+						fallback.setStatus(order.getStatus());
+						fallback.setOrderDate(order.getOrderDate());
+						fallback.setPaymentStatus(order.getPaymentStatus());
+						fallback.setCustomerName(order.getCustomerName());
+						fallback.setCustomerEmail(order.getCustomerEmail());
+						return fallback;
 					}
 					return dao;
 				} catch (Exception e) {
-					System.err.println("Error converting order " + order.getId() + ": " + e.getMessage());
-					e.printStackTrace();
-
 					// Create a minimal DAO as fallback
 					OrderDao fallback = new OrderDao();
 					fallback.setId(order.getId());
@@ -114,8 +121,6 @@ public class AdminApiController {
 
 			return ResponseEntity.ok(orderDaos);
 		} catch (Exception e) {
-			System.err.println("Error getting orders: " + e.getMessage());
-			e.printStackTrace();
 			return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
 		}
 	}
@@ -137,7 +142,6 @@ public class AdminApiController {
 			OrderDao dao = orderService.convertToDao(order);
 
 			if (dao == null) {
-				System.err.println("convertToDao returned null for order " + id);
 				// Create fallback
 				dao = new OrderDao();
 				dao.setId(order.getId());
@@ -156,8 +160,6 @@ public class AdminApiController {
 
 			return ResponseEntity.ok(dao);
 		} catch (Exception e) {
-			System.err.println("Error getting order " + id + ": " + e.getMessage());
-			e.printStackTrace();
 			return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
 		}
 	}
@@ -242,13 +244,15 @@ public class AdminApiController {
 
 			// Update status if provided
 			if (request.containsKey("status")) {
-				OrderStatus newStatus = OrderStatus.valueOf((String) request.get("status"));
+				String statusStr = (String) request.get("status");
+				OrderStatus newStatus = OrderStatus.valueOf(statusStr);
 				order.setStatus(newStatus);
 			}
 
 			// Update payment status if provided
 			if (request.containsKey("paymentStatus")) {
-				PaymentStatus newPaymentStatus = PaymentStatus.valueOf((String) request.get("paymentStatus"));
+				String paymentStatusStr = (String) request.get("paymentStatus");
+				PaymentStatus newPaymentStatus = PaymentStatus.valueOf(paymentStatusStr);
 				order.setPaymentStatus(newPaymentStatus);
 			}
 
