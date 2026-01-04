@@ -915,6 +915,102 @@ public class EmailService {
 	}
 
 	/**
+	 * Send shipping notification email with tracking info
+	 */
+	public void sendShippingNotificationEmail(OrderDao order) {
+		if (order.getCustomerEmail() == null || order.getCustomerEmail().isEmpty()) {
+			logger.warn("Cannot send shipping notification email - no customer email provided for order {}",
+					order.getOrderNumber());
+			return;
+		}
+
+		try {
+			MimeMessage message = mailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+			helper.setFrom(fromEmail, "Đặc Sản Việt");
+			helper.setTo(order.getCustomerEmail());
+			helper.setSubject("🚚 Đơn Hàng Đang Được Giao - " + order.getOrderNumber());
+
+			String htmlContent = buildShippingNotificationEmail(order);
+			helper.setText(htmlContent, true);
+
+			mailSender.send(message);
+			logger.info("Shipping notification email sent successfully to {} for order {}", order.getCustomerEmail(),
+					order.getOrderNumber());
+
+		} catch (MessagingException e) {
+			logger.error("Failed to send shipping notification email for order {}", order.getOrderNumber(), e);
+		} catch (Exception e) {
+			logger.error("Unexpected error sending shipping notification email for order {}", order.getOrderNumber(), e);
+		}
+	}
+
+	/**
+	 * Send order completion thank you email
+	 */
+	public void sendOrderCompletionEmail(OrderDao order) {
+		if (order.getCustomerEmail() == null || order.getCustomerEmail().isEmpty()) {
+			logger.warn("Cannot send completion email - no customer email provided for order {}",
+					order.getOrderNumber());
+			return;
+		}
+
+		try {
+			MimeMessage message = mailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+			helper.setFrom(fromEmail, "Đặc Sản Việt");
+			helper.setTo(order.getCustomerEmail());
+			helper.setSubject("🎉 Cảm Ơn Bạn - Đơn Hàng Hoàn Tất " + order.getOrderNumber());
+
+			String htmlContent = buildOrderCompletionEmail(order);
+			helper.setText(htmlContent, true);
+
+			mailSender.send(message);
+			logger.info("Order completion email sent successfully to {} for order {}", order.getCustomerEmail(),
+					order.getOrderNumber());
+
+		} catch (MessagingException e) {
+			logger.error("Failed to send order completion email for order {}", order.getOrderNumber(), e);
+		} catch (Exception e) {
+			logger.error("Unexpected error sending order completion email for order {}", order.getOrderNumber(), e);
+		}
+	}
+
+	/**
+	 * Send payment failure email with retry link
+	 */
+	public void sendPaymentFailureEmail(OrderDao order, String retryPaymentLink) {
+		if (order.getCustomerEmail() == null || order.getCustomerEmail().isEmpty()) {
+			logger.warn("Cannot send payment failure email - no customer email provided for order {}",
+					order.getOrderNumber());
+			return;
+		}
+
+		try {
+			MimeMessage message = mailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+			helper.setFrom(fromEmail, "Đặc Sản Việt");
+			helper.setTo(order.getCustomerEmail());
+			helper.setSubject("⚠️ Thanh Toán Chưa Thành Công - " + order.getOrderNumber());
+
+			String htmlContent = buildPaymentFailureEmail(order, retryPaymentLink);
+			helper.setText(htmlContent, true);
+
+			mailSender.send(message);
+			logger.info("Payment failure email sent successfully to {} for order {}", order.getCustomerEmail(),
+					order.getOrderNumber());
+
+		} catch (MessagingException e) {
+			logger.error("Failed to send payment failure email for order {}", order.getOrderNumber(), e);
+		} catch (Exception e) {
+			logger.error("Unexpected error sending payment failure email for order {}", order.getOrderNumber(), e);
+		}
+	}
+
+	/**
 	 * Send payment confirmation email
 	 */
 	public void sendPaymentConfirmationEmail(OrderDao order) {
@@ -982,6 +1078,266 @@ public class EmailService {
 		html.append("</body></html>");
 
 		return html.toString();
+	}
+
+	private String buildShippingNotificationEmail(OrderDao order) {
+		StringBuilder html = new StringBuilder();
+		html.append("<!DOCTYPE html>");
+		html.append("<html><head><meta charset='UTF-8'></head><body style='font-family: Arial, sans-serif;'>");
+		html.append("<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>");
+
+		// Header
+		html.append(
+				"<div style='background: linear-gradient(135deg, #4ec2b6 0%, #2e857c 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>");
+		html.append("<h1 style='margin: 0;'>🚚 Đơn Hàng Đang Được Giao</h1>");
+		html.append("</div>");
+
+		// Content
+		html.append("<div style='background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;'>");
+		html.append("<p style='font-size: 16px;'>Xin chào <strong>").append(order.getCustomerName())
+				.append("</strong>,</p>");
+		html.append("<p>Đơn hàng <strong>").append(order.getOrderNumber())
+				.append("</strong> của bạn đã được bàn giao cho đơn vị vận chuyển và đang trên đường đến với bạn!</p>");
+
+		// Shipping info
+		html.append("<div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0;'>");
+		html.append("<h3 style='color: #4ec2b6; margin-top: 0;'>Thông Tin Vận Chuyển</h3>");
+		html.append("<table style='width: 100%; border-collapse: collapse;'>");
+		
+		if (order.getShippingCarrier() != null && !order.getShippingCarrier().isEmpty()) {
+			html.append("<tr><td style='padding: 8px 0; border-bottom: 1px solid #dee2e6;'><strong>Đơn vị vận chuyển:</strong></td>");
+			html.append("<td style='padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;'>")
+					.append(order.getShippingCarrier()).append("</td></tr>");
+		}
+		
+		if (order.getTrackingNumber() != null && !order.getTrackingNumber().isEmpty()) {
+			html.append("<tr><td style='padding: 8px 0; border-bottom: 1px solid #dee2e6;'><strong>Mã vận đơn:</strong></td>");
+			html.append("<td style='padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right; font-family: monospace; font-size: 16px; color: #007bff;'><strong>")
+					.append(order.getTrackingNumber()).append("</strong></td></tr>");
+		}
+		
+		html.append("<tr><td style='padding: 8px 0;'><strong>Trạng thái:</strong></td>");
+		html.append("<td style='padding: 8px 0; text-align: right; color: #4ec2b6;'><strong>Đang giao hàng</strong></td></tr>");
+		html.append("</table>");
+		html.append("</div>");
+
+		// Tracking instructions
+		if (order.getTrackingNumber() != null && !order.getTrackingNumber().isEmpty()) {
+			html.append("<div style='background: #e7f3ff; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0;'>");
+			html.append("<h4 style='margin-top: 0; color: #007bff;'>📱 Theo Dõi Đơn Hàng</h4>");
+			html.append("<p style='margin-bottom: 0;'>Bạn có thể theo dõi tình trạng giao hàng bằng mã vận đơn <strong>")
+					.append(order.getTrackingNumber()).append("</strong> trên website của ").append(order.getShippingCarrier()).append(".</p>");
+			html.append("</div>");
+		}
+
+		html.append("<p>Thời gian giao hàng dự kiến: <strong>2-3 ngày làm việc</strong></p>");
+		html.append("<p>Vui lòng chuẩn bị sẵn sàng nhận hàng. Cảm ơn bạn đã tin tưởng <strong>Đặc Sản Việt</strong>!</p>");
+
+		html.append("</div>");
+		html.append("</div>");
+		html.append("</body></html>");
+
+		return html.toString();
+	}
+
+	private String buildOrderCompletionEmail(OrderDao order) {
+		StringBuilder html = new StringBuilder();
+		html.append("<!DOCTYPE html>");
+		html.append("<html><head><meta charset='UTF-8'></head><body style='font-family: Arial, sans-serif;'>");
+		html.append("<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>");
+
+		// Header
+		html.append(
+				"<div style='background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>");
+		html.append("<h1 style='margin: 0;'>🎉 Cảm Ơn Bạn!</h1>");
+		html.append("<p style='margin: 10px 0 0 0; font-size: 16px;'>Đơn hàng đã hoàn tất thành công</p>");
+		html.append("</div>");
+
+		// Content
+		html.append("<div style='background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;'>");
+		html.append("<p style='font-size: 16px;'>Kính chào <strong>").append(order.getCustomerName())
+				.append("</strong>,</p>");
+		html.append("<p>Đơn hàng <strong>").append(order.getOrderNumber())
+				.append("</strong> đã được giao thành công và hoàn tất!</p>");
+
+		// Thank you message
+		html.append("<div style='background: white; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center;'>");
+		html.append("<h2 style='color: #28a745; margin-top: 0;'>🌟 Cảm Ơn Bạn Đã Tin Tưởng!</h2>");
+		html.append("<p style='font-size: 16px; line-height: 1.6;'>Chúng tôi hy vọng bạn hài lòng với sản phẩm đặc sản Việt Nam chất lượng cao. ");
+		html.append("Sự tin tưởng của bạn là động lực để chúng tôi tiếp tục mang đến những sản phẩm tốt nhất.</p>");
+		html.append("</div>");
+
+		// Review request
+		html.append("<div style='background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;'>");
+		html.append("<h4 style='margin-top: 0; color: #856404;'>⭐ Đánh Giá Sản Phẩm</h4>");
+		html.append("<p style='margin-bottom: 0;'>Nếu bạn hài lòng với sản phẩm, hãy dành vài phút để đánh giá và chia sẻ trải nghiệm của bạn. ");
+		html.append("Điều này sẽ giúp chúng tôi cải thiện dịch vụ và hỗ trợ khách hàng khác đưa ra quyết định mua hàng.</p>");
+		html.append("</div>");
+
+		// Future offers
+		html.append("<div style='background: #e7f3ff; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0;'>");
+		html.append("<h4 style='margin-top: 0; color: #007bff;'>🎁 Ưu Đãi Đặc Biệt</h4>");
+		html.append("<p style='margin-bottom: 0;'>Theo dõi email và website của chúng tôi để không bỏ lỡ các chương trình khuyến mãi, ");
+		html.append("sản phẩm mới và ưu đãi đặc biệt dành riêng cho khách hàng thân thiết như bạn!</p>");
+		html.append("</div>");
+
+		html.append("<p style='text-align: center; font-size: 18px; color: #28a745; font-weight: bold;'>Một lần nữa, xin chân thành cảm ơn!</p>");
+		html.append("<p style='text-align: center;'><strong>Đội ngũ Đặc Sản Việt</strong></p>");
+
+		html.append("</div>");
+		html.append("</div>");
+		html.append("</body></html>");
+
+		return html.toString();
+	}
+
+	private String buildPaymentFailureEmail(OrderDao order, String retryPaymentLink) {
+		StringBuilder html = new StringBuilder();
+		html.append("<!DOCTYPE html>");
+		html.append("<html><head><meta charset='UTF-8'></head><body style='font-family: Arial, sans-serif;'>");
+		html.append("<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>");
+
+		// Header
+		html.append(
+				"<div style='background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>");
+		html.append("<h1 style='margin: 0;'>⚠️ Thanh Toán Chưa Thành Công</h1>");
+		html.append("</div>");
+
+		// Content
+		html.append("<div style='background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;'>");
+		html.append("<p style='font-size: 16px;'>Xin chào <strong>").append(order.getCustomerName())
+				.append("</strong>,</p>");
+		html.append("<p>Chúng tôi gặp sự cố khi xử lý thanh toán cho đơn hàng <strong>").append(order.getOrderNumber())
+				.append("</strong>. Đơn hàng của bạn vẫn được giữ và chờ thanh toán.</p>");
+
+		// Order info
+		html.append("<div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0;'>");
+		html.append("<h3 style='color: #dc3545; margin-top: 0;'>Thông Tin Đơn Hàng</h3>");
+		html.append("<table style='width: 100%; border-collapse: collapse;'>");
+		html.append("<tr><td style='padding: 8px 0; border-bottom: 1px solid #dee2e6;'><strong>Mã đơn hàng:</strong></td>");
+		html.append("<td style='padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;'>")
+				.append(order.getOrderNumber()).append("</td></tr>");
+		html.append("<tr><td style='padding: 8px 0; border-bottom: 1px solid #dee2e6;'><strong>Số tiền:</strong></td>");
+		html.append("<td style='padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right; font-size: 18px; color: #dc3545;'><strong>")
+				.append(formatPrice(order.getTotalAmount())).append("</strong></td></tr>");
+		html.append("<tr><td style='padding: 8px 0;'><strong>Trạng thái:</strong></td>");
+		html.append("<td style='padding: 8px 0; text-align: right; color: #dc3545;'><strong>Chờ thanh toán</strong></td></tr>");
+		html.append("</table>");
+		html.append("</div>");
+
+		// Retry payment button
+		html.append("<div style='text-align: center; margin: 30px 0;'>");
+		html.append("<a href='").append(retryPaymentLink).append("' ");
+		html.append("style='display: inline-block; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); ");
+		html.append("color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; ");
+		html.append("font-weight: bold; font-size: 16px;'>💳 Thanh Toán Ngay</a>");
+		html.append("</div>");
+
+		// Alternative contact
+		html.append("<div style='background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;'>");
+		html.append("<h4 style='margin-top: 0; color: #856404;'>📞 Cần Hỗ Trợ?</h4>");
+		html.append("<p style='margin-bottom: 0;'>Nếu bạn gặp khó khăn trong việc thanh toán, vui lòng liên hệ với chúng tôi:</p>");
+		html.append("<p style='margin: 10px 0 0 0;'>");
+		html.append("<strong>Hotline:</strong> 1900-xxxx<br>");
+		html.append("<strong>Zalo:</strong> 0123-456-789<br>");
+		html.append("<strong>Email:</strong> dacsanviethotro@gmail.com");
+		html.append("</p>");
+		html.append("</div>");
+
+		html.append("<p><strong>Lưu ý:</strong> Đơn hàng sẽ được giữ trong 24 giờ. Sau thời gian này, đơn hàng có thể bị hủy tự động.</p>");
+		html.append("<p>Cảm ơn bạn đã lựa chọn <strong>Đặc Sản Việt</strong>!</p>");
+
+		html.append("</div>");
+		html.append("</div>");
+		html.append("</body></html>");
+
+		return html.toString();
+	}
+
+	/**
+	 * Send order status update email to customer
+	 */
+	public void sendOrderStatusUpdateEmail(OrderDao order, String oldStatus, String newStatus) {
+		if (order.getCustomerEmail() == null || order.getCustomerEmail().isEmpty()) {
+			logger.warn("Cannot send order status update email - no customer email provided for order {}",
+					order.getOrderNumber());
+			return;
+		}
+
+		try {
+			MimeMessage message = mailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+			helper.setFrom(fromEmail, "Đặc Sản Việt");
+			helper.setTo(order.getCustomerEmail());
+			helper.setSubject("Cập Nhật Đơn Hàng - " + order.getOrderNumber());
+
+			String htmlContent = buildOrderStatusUpdateEmail(order, oldStatus, newStatus);
+			helper.setText(htmlContent, true);
+
+			mailSender.send(message);
+			logger.info("Order status update email sent successfully to {} for order {}", order.getCustomerEmail(),
+					order.getOrderNumber());
+
+		} catch (MessagingException e) {
+			logger.error("Failed to send order status update email for order {}", order.getOrderNumber(), e);
+		} catch (Exception e) {
+			logger.error("Unexpected error sending order status update email for order {}", order.getOrderNumber(), e);
+		}
+	}
+
+	private String buildOrderStatusUpdateEmail(OrderDao order, String oldStatus, String newStatus) {
+		StringBuilder html = new StringBuilder();
+		html.append("<!DOCTYPE html>");
+		html.append("<html><head><meta charset='UTF-8'></head><body style='font-family: Arial, sans-serif;'>");
+		html.append("<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>");
+
+		// Header
+		html.append(
+				"<div style='background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>");
+		html.append("<h1 style='margin: 0;'>📦 Cập Nhật Đơn Hàng</h1>");
+		html.append("</div>");
+
+		// Content
+		html.append("<div style='background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;'>");
+		html.append("<p style='font-size: 16px;'>Xin chào <strong>").append(order.getCustomerName())
+				.append("</strong>,</p>");
+		html.append("<p>Đơn hàng <strong>").append(order.getOrderNumber())
+				.append("</strong> của bạn đã được cập nhật trạng thái.</p>");
+
+		// Status update info
+		html.append("<div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0;'>");
+		html.append("<h3 style='color: #007bff; margin-top: 0;'>Thông Tin Cập Nhật</h3>");
+		html.append("<table style='width: 100%; border-collapse: collapse;'>");
+		html.append("<tr><td style='padding: 8px 0; border-bottom: 1px solid #dee2e6;'><strong>Trạng thái cũ:</strong></td>");
+		html.append("<td style='padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;'>")
+				.append(getOrderStatusText(oldStatus)).append("</td></tr>");
+		html.append("<tr><td style='padding: 8px 0;'><strong>Trạng thái mới:</strong></td>");
+		html.append("<td style='padding: 8px 0; text-align: right; color: #007bff; font-weight: bold;'>")
+				.append(getOrderStatusText(newStatus)).append("</td></tr>");
+		html.append("</table>");
+		html.append("</div>");
+
+		html.append("<p>Cảm ơn bạn đã mua hàng tại <strong>Đặc Sản Việt</strong>!</p>");
+
+		html.append("</div>");
+		html.append("</div>");
+		html.append("</body></html>");
+
+		return html.toString();
+	}
+
+	private String getOrderStatusText(String status) {
+		if (status == null) return "Chưa xác định";
+		return switch (status.toUpperCase()) {
+			case "PENDING" -> "Chờ xác nhận";
+			case "CONFIRMED" -> "Đã xác nhận";
+			case "PROCESSING" -> "Đang xử lý";
+			case "SHIPPED" -> "Đang giao hàng";
+			case "DELIVERED" -> "Đã giao hàng";
+			case "CANCELLED" -> "Đã hủy";
+			default -> status;
+		};
 	}
 
 }

@@ -73,7 +73,8 @@ public class SecurityConfig {
                 // Enable CSRF for form-based endpoints, but ignore specific API endpoints
                 .ignoringRequestMatchers("/api/auth/**", "/api/csrf/**", "/api/payment/**", "/h2-console/**", "/ws/**", 
                                        "/api/admin/news/*/update-debug", "/api/admin/news/*/update-simple", "/api/admin/news/*/update",
-                                       "/api/admin/news/*", "/api/checkout/**", "/api/cart/**", "/checkout/process") // Allow checkout process without CSRF
+                                       "/api/admin/news/*", "/api/checkout/**", "/api/cart/**", "/checkout/process",
+                                       "/api/admin/orders/**", "/api/test/**") // Allow order updates and email testing without CSRF
                 .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
             )
             .headers(headers -> headers
@@ -91,12 +92,14 @@ public class SecurityConfig {
                 // Public endpoints
                 .requestMatchers("/about", "/contact", "/news", "/news/**", "/test", "/test-simple").permitAll()
                 .requestMatchers("/privacy-policy", "/terms-of-service", "/shipping-policy").permitAll()
+                .requestMatchers("/return-policy", "/return-policy/**").permitAll()
                 .requestMatchers("/error/**").permitAll()
                 .requestMatchers("/init-data", "/clear-test-data", "/check-conflicts", "/view-database", "/database").permitAll()
                 .requestMatchers("/login", "/register").permitAll()
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/csrf/**").permitAll() // Allow CSRF token endpoint
+                .requestMatchers("/api/test/**").permitAll() // Allow email testing endpoints
                 .requestMatchers("/admin/chat").permitAll() // Temporary for testing
                 .requestMatchers("/chat-demo").permitAll() // Demo page
                 

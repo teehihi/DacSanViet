@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Chính Sách Đổi Trả - Đặc Sản Việt</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .policy-header {
+            background: linear-gradient(135deg, #4ec2b6 0%, #2e857c 100%);
+            color: white;
+            padding: 60px 0;
+        }
+        .policy-section {
+            padding: 40px 0;
+        }
+        .policy-card {
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+        .policy-card:hover {
+            transform: translateY(-5px);
+        }
+        .policy-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #4ec2b6 0%, #2e857c 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 2rem;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #4ec2b6;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -23px;
+            top: 5px;
+            width: 16px;
+            height: 16px;
+            background: #4ec2b6;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #4ec2b6;
+        }
+        .contact-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 30px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="policy-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold mb-3">
+                        <i class="fas fa-exchange-alt me-3"></i>
+                        Chính Sách Đổi Trả
+                    </h1>
+                    <p class="lead mb-0">Cam kết bảo vệ quyền lợi khách hàng với chính sách đổi trả linh hoạt và minh bạch</p>
+                </div>
+                <div class="col-lg-4 text-center">
+                    <i class="fas fa-shield-alt" style="font-size: 8rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="container mt-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Trang chủ</a></li>
+                <li class="breadcrumb-item active">Chính sách đổi trả</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="container policy-section">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card policy-card h-100 text-center p-4">
+                    <div class="policy-icon">
+                        <i class="fas fa-list-check"></i>
+                    </div>
+                    <h5 class="fw-bold">Quy Trình Đổi Trả</h5>
+                    <p class="text-muted mb-4">Hướng dẫn chi tiết các bước thực hiện đổi trả sản phẩm</p>
+                    <a href="/return-policy/process" class="btn btn-outline-primary">Xem chi tiết</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card policy-card h-100 text-center p-4">
+                    <div class="policy-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <h5 class="fw-bold">Chính Sách Hoàn Tiền</h5>
+                    <p class="text-muted mb-4">Thông tin về việc hoàn tiền và thời gian xử lý</p>
+                    <a href="/return-policy/refund" class="btn btn-outline-primary">Xem chi tiết</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card policy-card h-100 text-center p-4">
+                    <div class="policy-icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h5 class="fw-bold">Hỗ Trợ Khách Hàng</h5>
+                    <p class="text-muted mb-4">Liên hệ với chúng tôi để được hỗ trợ tốt nhất</p>
+                    <a href="#contact" class="btn btn-outline-primary">Liên hệ ngay</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Policy Content -->
+    <div class="container policy-section">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card policy-card p-5">
+                    <h2 class="fw-bold text-primary mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Điều Kiện Đổi Trả
+                    </h2>
+
+                    <div class="mb-5">
+                        <h4 class="fw-bold text-success mb-3">✅ Sản phẩm được chấp nhận đổi trả:</h4>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Sản phẩm còn nguyên vẹn, chưa sử dụng</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Còn đầy đủ bao bì, nhãn mác gốc</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Trong thời hạn 7 ngày kể từ ngày nhận hàng</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Có hóa đơn mua hàng hoặc mã đơn hàng</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Sản phẩm bị lỗi do nhà sản xuất</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Giao sai sản phẩm so với đơn hàng</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-5">
+                        <h4 class="fw-bold text-danger mb-3">❌ Sản phẩm không được chấp nhận đổi trả:</h4>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-times text-danger me-2"></i> Sản phẩm đã qua sử dụng hoặc hư hỏng do người dùng</li>
+                            <li class="mb-2"><i class="fas fa-times text-danger me-2"></i> Sản phẩm đã quá thời hạn đổi trả (7 ngày)</li>
+                            <li class="mb-2"><i class="fas fa-times text-danger me-2"></i> Sản phẩm đã mở seal, bao bì bị hư hỏng</li>
+                            <li class="mb-2"><i class="fas fa-times text-danger me-2"></i> Sản phẩm thuộc danh mục không đổi trả (thực phẩm tươi sống)</li>
+                            <li class="mb-2"><i class="fas fa-times text-danger me-2"></i> Không có hóa đơn hoặc bằng chứng mua hàng</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h5 class="fw-bold mb-3">
+                            <i class="fas fa-clock me-2"></i>
+                            Thời Gian Xử Lý
+                        </h5>
+                        <p class="mb-2"><strong>Đổi sản phẩm:</strong> 3-5 ngày làm việc</p>
+                        <p class="mb-2"><strong>Hoàn tiền:</strong> 7-10 ngày làm việc</p>
+                        <p class="mb-0"><strong>Phản hồi yêu cầu:</strong> Trong vòng 24 giờ</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="contact-card" id="contact">
+                    <h4 class="fw-bold text-primary mb-4">
+                        <i class="fas fa-phone me-2"></i>
+                        Liên Hệ Hỗ Trợ
+                    </h4>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold">📞 Hotline</h6>
+                        <p class="mb-0">1900-xxxx (8:00 - 22:00)</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold">💬 Zalo</h6>
+                        <p class="mb-0">0123-456-789</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold">📧 Email</h6>
+                        <p class="mb-0">dacsanviethotro@gmail.com</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6 class="fw-bold">🏢 Địa chỉ</h6>
+                        <p class="mb-0">01 Võ Văn Ngân, Phường Thủ Đức, TP Hồ Chí Minh</p>
+                    </div>
+
+                    <div class="d-grid">
+                        <a href="tel:1900xxxx" class="btn btn-primary">
+                            <i class="fas fa-phone me-2"></i>
+                            Gọi ngay
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card mt-4 p-4">
+                    <h5 class="fw-bold text-primary mb-3">
+                        <i class="fas fa-download me-2"></i>
+                        Tài Liệu Hữu Ích
+                    </h5>
+                    <div class="d-grid gap-2">
+                        <a href="/return-policy/process" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-file-alt me-2"></i>
+                            Quy trình đổi trả
+                        </a>
+                        <a href="/return-policy/refund" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-money-bill me-2"></i>
+                            Chính sách hoàn tiền
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="container policy-section">
+        <div class="card policy-card p-5">
+            <h2 class="fw-bold text-primary mb-4">
+                <i class="fas fa-question-circle me-2"></i>
+                Câu Hỏi Thường Gặp
+            </h2>
+            
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            Tôi có thể đổi trả sản phẩm sau bao lâu?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Bạn có thể đổi trả sản phẩm trong vòng <strong>7 ngày</strong> kể từ ngày nhận hàng, với điều kiện sản phẩm còn nguyên vẹn và có đầy đủ bao bì gốc.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            Chi phí vận chuyển đổi trả do ai chịu?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            <ul class="mb-0">
+                                <li><strong>Lỗi do shop:</strong> Chúng tôi chịu toàn bộ chi phí</li>
+                                <li><strong>Khách hàng đổi ý:</strong> Khách hàng chịu chi phí vận chuyển</li>
+                                <li><strong>Sản phẩm lỗi:</strong> Chúng tôi hỗ trợ 100% chi phí</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            Tôi có thể hoàn tiền thay vì đổi sản phẩm không?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Có, bạn có thể yêu cầu hoàn tiền thay vì đổi sản phẩm. Thời gian hoàn tiền là <strong>7-10 ngày làm việc</strong> kể từ khi chúng tôi nhận được sản phẩm trả lại.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

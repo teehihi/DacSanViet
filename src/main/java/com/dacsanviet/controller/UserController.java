@@ -1,5 +1,10 @@
 package com.dacsanviet.controller;
 
+import com.dacsanviet.model.Address;
+import com.dacsanviet.model.User;
+import com.dacsanviet.repository.AddressRepository;
+import com.dacsanviet.repository.UserRepository;
+import com.dacsanviet.security.UserPrincipal;
 import com.dacsanviet.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -7,6 +12,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.List;
 
 /**
  * User controller for user profile and account management
@@ -17,16 +24,36 @@ public class UserController {
     @Autowired
     private UserService userService;
     
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private AddressRepository addressRepository;
+    
     @GetMapping({"/profile", "/user/profile"})
     public String profile(Model model, Authentication authentication) {
         try {
             model.addAttribute("pageTitle", "Thông Tin Cá Nhân");
             
             if (authentication != null && authentication.isAuthenticated()) {
-                String username = authentication.getName();
+                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+                Long userId = userPrincipal.getId();
                 
-                // Create sample user data for now
-                model.addAttribute("user", createSampleUser(username));
+                // Load user from database
+                User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+                
+                // Load user addresses
+                List<Address> addresses = addressRepository.findByUserIdOrderByIsDefaultDescCreatedAtDesc(userId);
+                
+                model.addAttribute("user", user);
+                model.addAttribute("addresses", addresses);
+                model.addAttribute("addressCount", addresses.size());
+                
+                // Check if user has default address
+                boolean hasDefaultAddress = addressRepository.existsByUserIdAndIsDefaultTrue(userId);
+                model.addAttribute("hasDefaultAddress", hasDefaultAddress);
+                
             } else {
                 return "redirect:/login";
             }
@@ -37,19 +64,4 @@ public class UserController {
             return "user/simple-profile";
         }
     }
-    
-    private Object createSampleUser(String username) {
-        // This is a temporary implementation
-        return new Object() {
-            public String getUsername() { return username; }
-            public String getFullName() { return "Người dùng " + username; }
-            public String getEmail() { return username + "@example.com"; }
-            public String getPhoneNumber() { return "0123456789"; }
-            public Boolean getAdmin() { return false; }
-            public boolean isActive() { return true; }
-            public java.time.LocalDateTime getCreatedAt() { return java.time.LocalDateTime.now().minusDays(30); }
-        };
-    }
 }
-
-// Also add profile route to HomeController

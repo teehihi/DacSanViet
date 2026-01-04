@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +37,7 @@ import com.dacsanviet.repository.OrderRepository;
 import com.dacsanviet.repository.UserRepository;
 import com.dacsanviet.service.OrderService;
 import com.dacsanviet.service.ProductService;
+import com.dacsanviet.service.EmailService;
 
 /**
  * Admin API Controller for AJAX requests
@@ -59,6 +61,12 @@ public class AdminApiController {
 
 	@Autowired
 	private ProductService productService;
+
+	@Autowired
+	private EmailService emailService;
+
+	@Value("${app.frontend.url}")
+	private String frontendUrl;
 
 	/**
 	 * Get Orders with pagination and filters (AJAX)
@@ -170,10 +178,16 @@ public class AdminApiController {
 	@PutMapping("/orders/{id}/status")
 	public ResponseEntity<?> updateOrderStatus(@PathVariable Long id, @RequestBody Map<String, String> request) {
 
+		System.out.println("🔍 [DEBUG] updateOrderStatus called - Order ID: " + id + ", Request: " + request);
+		
 		Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
 
 		String statusStr = request.get("status");
+		OrderStatus oldStatus = order.getStatus();
 		OrderStatus newStatus = OrderStatus.valueOf(statusStr);
+
+		System.out.println("🔍 [DEBUG] Status change: " + oldStatus + " → " + newStatus);
+		System.out.println("🔍 [DEBUG] Customer email: " + order.getCustomerEmail());
 
 		order.setStatus(newStatus);
 		
@@ -183,6 +197,29 @@ public class AdminApiController {
 		}
 		
 		orderRepository.save(order);
+
+		// Send email notifications for status changes
+		if (oldStatus != newStatus) {
+			try {
+				OrderDao orderDao = orderService.convertToDao(order);
+				
+				// Send shipping notification when order is shipped
+				if (newStatus == OrderStatus.SHIPPED) {
+					emailService.sendShippingNotificationEmail(orderDao);
+					System.out.println("✅ [EMAIL] Shipping notification email sent for order: " + order.getOrderNumber());
+				}
+				// Send completion email when order is delivered
+				else if (newStatus == OrderStatus.DELIVERED) {
+					emailService.sendOrderCompletionEmail(orderDao);
+					System.out.println("✅ [EMAIL] Order completion email sent for order: " + order.getOrderNumber());
+				}
+			} catch (Exception e) {
+				System.err.println("❌ [EMAIL ERROR] Failed to send status notification email for order " + order.getOrderNumber() + ": " + e.getMessage());
+				e.printStackTrace();
+			}
+		} else {
+			System.out.println("ℹ️ [DEBUG] No status change, no email sent");
+		}
 
 		// Convert to DAO for response
 		OrderDao dao = orderService.convertToDao(order);
@@ -238,47 +275,160 @@ public class AdminApiController {
 	 * Update Order Details (AJAX) - for editing order
 	 */
 	@PutMapping("/orders/{id}")
+	@Transactional
 	public ResponseEntity<?> updateOrder(@PathVariable Long id, @RequestBody Map<String, Object> request) {
 		try {
+			System.out.println("🔍 [DEBUG] updateOrder called - Order ID: " + id + ", Request: " + request);
+			System.out.println("🔍 [DEBUG] Request headers: " + request);
+			System.out.println("🔍 [DEBUG] Timestamp: " + java.time.LocalDateTime.now());
+			
 			Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
+
+			System.out.println("🔍 [DEBUG] Current order - Email: " + order.getCustomerEmail() + ", Status: " + order.getStatus() + ", PaymentStatus: " + order.getPaymentStatus());
 
 			// Update status if provided
 			if (request.containsKey("status")) {
 				String statusStr = (String) request.get("status");
+				OrderStatus oldStatus = order.getStatus();
 				OrderStatus newStatus = OrderStatus.valueOf(statusStr);
 				order.setStatus(newStatus);
+				
+				System.out.println("🔍 [DEBUG] Order status change: " + oldStatus + " → " + newStatus);
+				
+				// Send email notifications for status changes
+				if (oldStatus != newStatus) {
+					try {
+						System.out.println("📧 [EMAIL] Attempting to send shipping notification email...");
+						
+						// Create OrderDao directly to avoid LazyInitializationException
+						OrderDao orderDao = new OrderDao();
+						orderDao.setId(order.getId());
+						orderDao.setOrderNumber(order.getOrderNumber());
+						orderDao.setCustomerName(order.getCustomerName());
+						orderDao.setCustomerEmail(order.getCustomerEmail());
+						orderDao.setCustomerPhone(order.getCustomerPhone());
+						orderDao.setTotalAmount(order.getTotalAmount());
+						orderDao.setPaymentMethod(order.getPaymentMethod());
+						orderDao.setOrderDate(order.getOrderDate());
+						orderDao.setShippingCarrier(order.getShippingCarrier());
+						orderDao.setTrackingNumber(order.getTrackingNumber());
+						orderDao.setShippingAddressText(order.getShippingAddressText());
+						
+						// Send shipping notification when order is shipped
+						if (newStatus == OrderStatus.SHIPPED) {
+							emailService.sendShippingNotificationEmail(orderDao);
+							System.out.println("✅ [EMAIL] Shipping notification email sent for order: " + order.getOrderNumber());
+						}
+						// Send completion email when order is delivered
+						else if (newStatus == OrderStatus.DELIVERED) {
+							System.out.println("📧 [EMAIL] Attempting to send completion email...");
+							emailService.sendOrderCompletionEmail(orderDao);
+							System.out.println("✅ [EMAIL] Order completion email sent for order: " + order.getOrderNumber());
+						}
+					} catch (Exception e) {
+						System.err.println("❌ [EMAIL ERROR] Failed to send status notification email for order " + order.getOrderNumber() + ": " + e.getMessage());
+						e.printStackTrace();
+					}
+				} else {
+					System.out.println("ℹ️ [DEBUG] No status change, no email sent");
+				}
 			}
 
 			// Update payment status if provided
 			if (request.containsKey("paymentStatus")) {
 				String paymentStatusStr = (String) request.get("paymentStatus");
+				PaymentStatus oldPaymentStatus = order.getPaymentStatus();
 				PaymentStatus newPaymentStatus = PaymentStatus.valueOf(paymentStatusStr);
 				order.setPaymentStatus(newPaymentStatus);
+				
+				System.out.println("🔍 [DEBUG] Payment status change: " + oldPaymentStatus + " → " + newPaymentStatus);
+				
+				// Send payment confirmation email if status changed to COMPLETED
+				if (oldPaymentStatus != PaymentStatus.COMPLETED && newPaymentStatus == PaymentStatus.COMPLETED) {
+					try {
+						System.out.println("📧 [EMAIL] Attempting to send payment confirmation email...");
+						
+						// Create OrderDao directly to avoid LazyInitializationException
+						OrderDao orderDao = new OrderDao();
+						orderDao.setId(order.getId());
+						orderDao.setOrderNumber(order.getOrderNumber());
+						orderDao.setCustomerName(order.getCustomerName());
+						orderDao.setCustomerEmail(order.getCustomerEmail());
+						orderDao.setCustomerPhone(order.getCustomerPhone());
+						orderDao.setTotalAmount(order.getTotalAmount());
+						orderDao.setPaymentMethod(order.getPaymentMethod());
+						orderDao.setOrderDate(order.getOrderDate());
+						orderDao.setShippingCarrier(order.getShippingCarrier());
+						orderDao.setTrackingNumber(order.getTrackingNumber());
+						orderDao.setShippingAddressText(order.getShippingAddressText());
+						
+						emailService.sendPaymentConfirmationEmail(orderDao);
+						System.out.println("✅ [EMAIL] Payment confirmation email sent for order: " + order.getOrderNumber());
+					} catch (Exception e) {
+						System.err.println("❌ [EMAIL ERROR] Failed to send payment confirmation email for order " + order.getOrderNumber() + ": " + e.getMessage());
+						e.printStackTrace();
+					}
+				}
+				// Send payment failure email if status changed to FAILED
+				else if (oldPaymentStatus != PaymentStatus.FAILED && newPaymentStatus == PaymentStatus.FAILED) {
+					try {
+						System.out.println("📧 [EMAIL] Attempting to send payment failure email...");
+						
+						// Create OrderDao directly to avoid LazyInitializationException
+						OrderDao orderDao = new OrderDao();
+						orderDao.setId(order.getId());
+						orderDao.setOrderNumber(order.getOrderNumber());
+						orderDao.setCustomerName(order.getCustomerName());
+						orderDao.setCustomerEmail(order.getCustomerEmail());
+						orderDao.setCustomerPhone(order.getCustomerPhone());
+						orderDao.setTotalAmount(order.getTotalAmount());
+						orderDao.setPaymentMethod(order.getPaymentMethod());
+						orderDao.setOrderDate(order.getOrderDate());
+						orderDao.setShippingCarrier(order.getShippingCarrier());
+						orderDao.setTrackingNumber(order.getTrackingNumber());
+						orderDao.setShippingAddressText(order.getShippingAddressText());
+						
+						String retryPaymentLink = frontendUrl + "/checkout/retry/" + order.getOrderNumber();
+						emailService.sendPaymentFailureEmail(orderDao, retryPaymentLink);
+						System.out.println("✅ [EMAIL] Payment failure email sent for order: " + order.getOrderNumber());
+					} catch (Exception e) {
+						System.err.println("❌ [EMAIL ERROR] Failed to send payment failure email for order " + order.getOrderNumber() + ": " + e.getMessage());
+						e.printStackTrace();
+					}
+				} else {
+					System.out.println("ℹ️ [DEBUG] No payment status change requiring email, or no change occurred");
+				}
 			}
 
 			// Update shipping carrier if provided
 			if (request.containsKey("shippingCarrier")) {
 				String carrier = (String) request.get("shippingCarrier");
 				order.setShippingCarrier(carrier);
+				System.out.println("🔍 [DEBUG] Updated shipping carrier: " + carrier);
 			}
 
 			// Update tracking number if provided
 			if (request.containsKey("trackingNumber")) {
 				String trackingNumber = (String) request.get("trackingNumber");
 				order.setTrackingNumber(trackingNumber);
+				System.out.println("🔍 [DEBUG] Updated tracking number: " + trackingNumber);
 			}
 
 			// Update notes if provided
 			if (request.containsKey("notes")) {
 				String notes = (String) request.get("notes");
 				order.setNotes(notes);
+				System.out.println("🔍 [DEBUG] Updated notes: " + notes);
 			}
 
 			orderRepository.save(order);
+			System.out.println("✅ [DEBUG] Order saved successfully");
 
-			return ResponseEntity.ok(Map.of("message", "Order updated successfully"));
+			return ResponseEntity.ok(Map.of("message", "Order updated successfully", "timestamp", java.time.LocalDateTime.now().toString()));
 		} catch (Exception e) {
-			return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
+			System.err.println("❌ [ERROR] Failed to update order: " + e.getMessage());
+			e.printStackTrace();
+			return ResponseEntity.status(400).body(Map.of("error", e.getMessage(), "timestamp", java.time.LocalDateTime.now().toString()));
 		}
 	}
 

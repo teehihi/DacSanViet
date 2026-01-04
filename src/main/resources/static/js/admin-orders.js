@@ -11,6 +11,10 @@ let currentFilters = {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 [DEBUG] Admin orders page loaded');
+    console.log('🔍 [DEBUG] CSRF token available:', document.querySelector('meta[name="_csrf"]')?.content ? 'yes' : 'no');
+    console.log('🔍 [DEBUG] CSRF header available:', document.querySelector('meta[name="_csrf_header"]')?.content ? 'yes' : 'no');
+    
     loadOrders();
     
     // Set default date range (last 30 days)
@@ -18,8 +22,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 30);
     
-    document.getElementById('startDate').valueAsDate = startDate;
-    document.getElementById('endDate').valueAsDate = endDate;
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    
+    if (startDateInput) {
+        startDateInput.valueAsDate = startDate;
+    }
+    if (endDateInput) {
+        endDateInput.valueAsDate = endDate;
+    }
+    
+    console.log('🔍 [DEBUG] Page initialization complete');
 });
 
 // Load Orders with pagination (AJAX - no page reload)
@@ -177,19 +190,25 @@ function viewOrder(id) {
 
 // Update Order Status - Open Edit Modal
 async function updateOrderStatus(id) {
+    console.log('🔍 [DEBUG] updateOrderStatus called with id:', id);
+    
     try {
         const response = await fetch(`/api/admin/orders/${id}`);
         
+        console.log('🔍 [DEBUG] Fetch order response status:', response.status);
+        
         if (!response.ok) {
+            console.error('❌ [ERROR] Failed to load order details:', response.statusText);
             alert('Lỗi khi tải chi tiết đơn hàng');
             return;
         }
         
         const order = await response.json();
+        console.log('🔍 [DEBUG] Order data loaded:', order);
         showEditOrderModal(order);
         
     } catch (error) {
-        console.error('Error loading order:', error);
+        console.error('❌ [ERROR] Error loading order:', error);
         alert('Lỗi khi tải chi tiết đơn hàng');
     }
 }
@@ -533,14 +552,21 @@ function closeEditModal() {
     document.removeEventListener('click', closeDropdownOnClickOutside);
 }
 async function saveOrderChanges(orderId) {
+    console.log('🔍 [DEBUG] saveOrderChanges called with orderId:', orderId);
+    
     const status = document.getElementById('editOrderStatus').value;
     const paymentStatus = document.getElementById('editPaymentStatus').value;
     const shippingCarrier = document.getElementById('editShippingCarrier').value;
     const trackingNumber = document.getElementById('editTrackingNumber').value;
     const notes = document.getElementById('editNotes').value;
     
+    console.log('🔍 [DEBUG] Form values:', {
+        status, paymentStatus, shippingCarrier, trackingNumber, notes
+    });
+    
     // Validate: if status is SHIPPED or DELIVERED, shipping carrier is required
     if ((status === 'SHIPPED' || status === 'DELIVERED') && !shippingCarrier) {
+        console.log('⚠️ [VALIDATION] Shipping carrier required for SHIPPED/DELIVERED status');
         showNotification('Vui lòng chọn đơn vị vận chuyển khi chuyển sang trạng thái "Đang Giao" hoặc "Đã Giao"', 'warning');
         return;
     }
@@ -549,11 +575,25 @@ async function saveOrderChanges(orderId) {
     const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
     
+    console.log('🔍 [DEBUG] CSRF token:', csrfToken ? 'present' : 'missing');
+    console.log('🔍 [DEBUG] CSRF header:', csrfHeader);
+    
     if (!csrfToken || !csrfHeader) {
-        console.error('CSRF token not found');
+        console.error('❌ [ERROR] CSRF token not found');
         showNotification('Lỗi: Không tìm thấy CSRF token', 'error');
         return;
     }
+    
+    const requestData = {
+        status: status,
+        paymentStatus: paymentStatus,
+        shippingCarrier: shippingCarrier,
+        trackingNumber: trackingNumber,
+        notes: notes
+    };
+    
+    console.log('🔍 [DEBUG] Sending request to:', `/api/admin/orders/${orderId}`);
+    console.log('🔍 [DEBUG] Request data:', requestData);
     
     try {
         const response = await fetch(`/api/admin/orders/${orderId}`, {
@@ -562,27 +602,26 @@ async function saveOrderChanges(orderId) {
                 'Content-Type': 'application/json',
                 [csrfHeader]: csrfToken
             },
-            body: JSON.stringify({
-                status: status,
-                paymentStatus: paymentStatus,
-                shippingCarrier: shippingCarrier,
-                trackingNumber: trackingNumber,
-                notes: notes
-            })
+            body: JSON.stringify(requestData)
         });
         
+        console.log('🔍 [DEBUG] Response status:', response.status);
+        console.log('🔍 [DEBUG] Response ok:', response.ok);
+        
         if (response.ok) {
+            const responseData = await response.json();
+            console.log('✅ [SUCCESS] Order updated successfully:', responseData);
             showNotification('Đã cập nhật đơn hàng thành công', 'success');
             closeEditModal();
             // Reload page to see changes
             window.location.reload();
         } else {
             const error = await response.json();
-            console.error('Server error:', error);
+            console.error('❌ [SERVER ERROR]:', error);
             showNotification('Lỗi: ' + (error.error || error.message || 'Không thể cập nhật đơn hàng'), 'error');
         }
     } catch (error) {
-        console.error('Error updating order:', error);
+        console.error('❌ [NETWORK ERROR] Error updating order:', error);
         showNotification('Lỗi khi cập nhật đơn hàng: ' + error.message, 'error');
     }
 }
