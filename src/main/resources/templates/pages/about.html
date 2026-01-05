@@ -321,6 +321,21 @@
             opacity: 1;
             transform: translateY(0);
         }
+        
+        /* Regional Stories Section */
+        .story-card-region:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .story-card-region .region-badge {
+            transition: all 0.3s ease;
+        }
+        
+        .story-card-region:hover .region-badge {
+            transform: scale(1.1);
+            background: rgba(78, 194, 182, 1) !important;
+        }
     </style>
 </head>
 
@@ -540,11 +555,10 @@
             </div>
         </div>
     </section>
-    
-    <!-- Contact Section -->
-    <section class="contact-section fade-in-section">
+     <!-- Contact Section -->
+    <section class="contact-section fade-in-section mb-5">
         <div class="container">
-            <h2 class="fw-bold mb-4 fs-1">
+            <h2 class="fw-bold mb-4 fs-1" style = "color: white">
                 <i class="fas fa-phone-alt me-3"></i>
                 Liên Hệ Với Chúng Tôi
             </h2>
@@ -562,6 +576,65 @@
             </div>
         </div>
     </section>
+    <!-- Regional Stories Section -->
+    <section class="regional-stories-section fade-in-section" style="padding: 80px 0;">
+        <div class="container">
+            <h2 class="text-center mb-5 fw-bold" style="color:#2e857c">
+                <i class="fas fa-map-marked-alt me-3"></i>
+                Câu Chuyện Vùng Miền
+            </h2>
+            <div class="row g-4">
+                <!-- Hà Giang Story -->
+                <div class="col-lg-4">
+                    <div class="story-card-region" style="background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('/images/nuiHG.webp'); background-size: cover; background-position: center; color: white; border-radius: 20px; padding: 40px; height: 400px; position: relative; overflow: hidden; transition: all 0.4s ease;">
+                        <div class="region-badge" style="position: absolute; top: 20px; left: 20px; background: rgba(78, 194, 182, 0.9); color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;">
+                            Hà Giang
+                        </div>
+                        <div style="position: absolute; bottom: 40px; left: 40px; right: 40px;">
+                            <h4 class="fw-bold mb-3" style="color: white;">Vị Ngọt Của Đá</h4>
+                            <p class="mb-3" style="line-height: 1.6; color: white;">Câu chuyện về những báo ngọt kiên cường mọc trên các ngọn núi đá vôi chẻn rạn ngỏ âm nóng thiên nhiên H'Mông.</p>
+                            <a href="https://www.youtube.com/watch?v=ORlO0RyhSug" target="_blank" class="btn btn-outline-light btn-sm" style="border-radius: 20px;">
+                                Xem Video <i class="fab fa-youtube ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Thái Nguyên Story -->
+                <div class="col-lg-4">
+                    <div class="story-card-region" style="background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('/images/comTN.webp'); background-size: cover; background-position: center; color: white; border-radius: 20px; padding: 40px; height: 400px; position: relative; overflow: hidden; transition: all 0.4s ease;">
+                        <div class="region-badge" style="position: absolute; top: 20px; left: 20px; background: rgba(78, 194, 182, 0.9); color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;">
+                            Thái Nguyên
+                        </div>
+                        <div style="position: absolute; bottom: 40px; left: 40px; right: 40px;">
+                            <h4 class="fw-bold mb-3" style="color: white;">Hương Cốm Mùa Thu</h4>
+                            <p class="mb-3" style="line-height: 1.6; color: white;">Làng nghề nhịp chày gia sốm đậm trắng và nghệ thuật tép trà sen tinh tế của người nghệ nhân gia.</p>
+                            <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="btn btn-outline-light btn-sm" style="border-radius: 20px;">
+                                Xem Video <i class="fab fa-youtube ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Miền Tây Story -->
+                <div class="col-lg-4">
+                    <div class="story-card-region" style="background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('/images/chonoi.webp'); background-size: cover; background-position: center; color: white; border-radius: 20px; padding: 40px; height: 400px; position: relative; overflow: hidden; transition: all 0.4s ease;">
+                        <div class="region-badge" style="position: absolute; top: 20px; left: 20px; background: rgba(78, 194, 182, 0.9); color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;">
+                            Miền Tây
+                        </div>
+                        <div style="position: absolute; bottom: 40px; left: 40px; right: 40px;">
+                            <h4 class="fw-bold mb-3" style="color: white;">Chợ Nổi Cái Răng</h4>
+                            <p class="mb-3" style="line-height: 1.6; color: white;">Văn hóa ghe xuồng đặc đáo và những thức quả bình dị được truy tay giữa sông nước mênh mông.</p>
+                            <a href="https://www.youtube.com/watch?v=ORlO0RyhSug" target="_blank" class="btn btn-outline-light btn-sm" style="border-radius: 20px;">
+                                Xem Video <i class="fab fa-youtube ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
 
     <!-- Footer -->
     <div th:replace="~{fragments/footer :: footer}"></div>

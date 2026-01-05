@@ -828,7 +828,7 @@ public class EmailService {
 														<tr>
 															<td style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px;">
 																<p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.8;">
-																	Chúng tôi sẽ liên hệ với bạn trong vòng 24h để xác nhận đơn hàng. Nếu cần hỗ trợ, vui lòng liên hệ hotline (028) 3896 8641.
+																	Chúng tôi sẽ liên hệ với bạn trong vòng 24h để xác nhận đơn hàng. Nếu cần hỗ trợ, vui lòng liên hệ hotline 093 165 2105.
 																</p>
 															</td>
 														</tr>
@@ -856,7 +856,7 @@ public class EmailService {
 																<div style="font-weight: 600; color: #333; font-size: 14px; margin-bottom: 10px;">Liên Hệ</div>
 																<div style="color: #666; font-size: 13px; line-height: 1.8;">
 																	01 Võ Văn Ngân, Phường Thủ Đức, TP Hồ Chí Minh<br>
-																	Hotline: (028) 3896 8641<br>
+																	Hotline: 093 165 2105<br>
 																	<a href="mailto:dacsanviethotro@gmail.com" style="color: #4ec2b6; text-decoration: none;">dacsanviethotro@gmail.com</a>
 																</div>
 															</td>
@@ -1034,224 +1034,667 @@ public class EmailService {
 	}
 
 	private String buildPaymentConfirmationEmail(OrderDao order) {
-		StringBuilder html = new StringBuilder();
-		html.append("<!DOCTYPE html>");
-		html.append("<html><head><meta charset='UTF-8'></head><body style='font-family: Arial, sans-serif;'>");
-		html.append("<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>");
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+		String orderDate = order.getOrderDate() != null ? order.getOrderDate().format(formatter) : "";
 
-		// Header
-		html.append(
-				"<div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>");
-		html.append("<h1 style='margin: 0;'>✅ Thanh Toán Thành Công!</h1>");
-		html.append("</div>");
+		return String.format(
+				"""
+						<!DOCTYPE html>
+						<html>
+						<head>
+							<meta charset="UTF-8">
+							<meta name="viewport" content="width=device-width, initial-scale=1.0">
+						</head>
+						<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background-color: #f5f5f5;">
+							<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5; padding: 20px 0;">
+								<tr>
+									<td align="center">
+										<table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; max-width: 600px;">
+											<!-- Header -->
+											<tr>
+												<td style="background: linear-gradient(135deg, #4ec2b6 0%%, #2e857c 100%%); padding: 40px 30px; text-align: center;">
+													<img src="https://files.catbox.moe/5uf8r1.png" alt="Đặc Sản Việt" style="max-width: 150px; margin-bottom: 15px;">
+													<h1 style="color: #ffffff; font-size: 26px; font-weight: 700; margin: 10px 0;">Đặc Sản Việt</h1>
+													<p style="color: #ffffff; font-size: 14px; margin: 0; opacity: 0.95;">Gìn giữ hồn quê, lan toả giá trị Việt</p>
+												</td>
+											</tr>
 
-		// Content
-		html.append("<div style='background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;'>");
-		html.append("<p style='font-size: 16px;'>Xin chào <strong>").append(order.getCustomerName())
-				.append("</strong>,</p>");
-		html.append("<p>Chúng tôi đã nhận được thanh toán của bạn cho đơn hàng <strong>").append(order.getOrderNumber())
-				.append("</strong>.</p>");
+											<!-- Success Banner -->
+											<tr>
+												<td style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 20px 30px;">
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+														<tr>
+															<td style="vertical-align: middle;">
+																<div style="display: inline-block; vertical-align: middle;">
+																	<div style="font-weight: 700; color: #155724; font-size: 18px; margin-bottom: 5px;">
+																		Thanh Toán Thành Công!
+																	</div>
+																	<div style="color: #155724; font-size: 14px;">
+																		Xin chào %s, chúng tôi đã nhận được thanh toán của bạn
+																	</div>
+																</div>
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
 
-		// Payment info
-		html.append("<div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0;'>");
-		html.append("<h3 style='color: #28a745; margin-top: 0;'>Thông Tin Thanh Toán</h3>");
-		html.append("<table style='width: 100%; border-collapse: collapse;'>");
-		html.append("<tr><td style='padding: 8px 0; border-bottom: 1px solid #dee2e6;'><strong>Số tiền:</strong></td>");
-		html.append(
-				"<td style='padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right; color: #28a745; font-size: 18px;'><strong>")
-				.append(formatPrice(order.getTotalAmount())).append("</strong></td></tr>");
-		html.append(
-				"<tr><td style='padding: 8px 0; border-bottom: 1px solid #dee2e6;'><strong>Phương thức:</strong></td>");
-		html.append("<td style='padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;'>")
-				.append(getPaymentMethodText(order.getPaymentMethod())).append("</td></tr>");
-		html.append("<tr><td style='padding: 8px 0;'><strong>Trạng thái:</strong></td>");
-		html.append(
-				"<td style='padding: 8px 0; text-align: right; color: #28a745;'><strong>Đã thanh toán</strong></td></tr>");
-		html.append("</table>");
-		html.append("</div>");
+											<!-- Payment Info -->
+											<tr>
+												<td style="padding: 35px 30px;">
+													<h2 style="font-size: 18px; font-weight: 700; color: #333; margin: 0 0 20px; border-bottom: 3px solid #4ec2b6; padding-bottom: 10px;">
+														Thông Tin Thanh Toán
+													</h2>
 
-		html.append("<p>Đơn hàng của bạn đang được xử lý và sẽ được giao sớm nhất có thể.</p>");
-		html.append("<p>Cảm ơn bạn đã mua hàng tại <strong>Đặc Sản Việt</strong>!</p>");
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8f9fa; border-radius: 8px; margin-bottom: 25px;">
+														<tr>
+															<td style="padding: 15px 20px; border-bottom: 1px solid #e9ecef;">
+																<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+																	<tr>
+																		<td width="140" style="font-weight: 600; color: #4ec2b6; font-size: 14px;">Mã đơn hàng</td>
+																		<td style="color: #000; font-size: 16px; font-weight: 700;">#%s</td>
+																	</tr>
+																</table>
+															</td>
+														</tr>
+														<tr>
+															<td style="padding: 15px 20px; border-bottom: 1px solid #e9ecef;">
+																<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+																	<tr>
+																		<td width="140" style="font-weight: 600; color: #4ec2b6; font-size: 14px;">Số tiền</td>
+																		<td style="color: #28a745; font-size: 18px; font-weight: 700; text-align: right;">%s</td>
+																	</tr>
+																</table>
+															</td>
+														</tr>
+														<tr>
+															<td style="padding: 15px 20px; border-bottom: 1px solid #e9ecef;">
+																<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+																	<tr>
+																		<td width="140" style="font-weight: 600; color: #4ec2b6; font-size: 14px;">Phương thức</td>
+																		<td style="color: #333; font-size: 14px; text-align: right;">%s</td>
+																	</tr>
+																</table>
+															</td>
+														</tr>
+														<tr>
+															<td style="padding: 15px 20px;">
+																<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+																	<tr>
+																		<td width="140" style="font-weight: 600; color: #4ec2b6; font-size: 14px;">Trạng thái</td>
+																		<td style="color: #28a745; font-size: 14px; font-weight: 600; text-align: right;">Đã Thanh Toán</td>
+																	</tr>
+																</table>
+															</td>
+														</tr>
+													</table>
 
-		html.append("</div>");
-		html.append("</div>");
-		html.append("</body></html>");
+													<!-- Next Steps -->
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
+														<tr>
+															<td style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px;">
+																<p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.8;">
+																	Đơn hàng của bạn đang được xử lý và sẽ được giao sớm nhất có thể. Chúng tôi sẽ thông báo khi đơn hàng được giao cho đơn vị vận chuyển.
+																</p>
+															</td>
+														</tr>
+													</table>
 
-		return html.toString();
+													<!-- CTA Button -->
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
+														<tr>
+															<td align="center">
+																<a href="%s" style="display: inline-block; background: linear-gradient(135deg, #4ec2b6 0%%, #2e857c 100%%); color: #ffffff; text-decoration: none; padding: 15px 40px; border-radius: 8px; font-weight: 700; font-size: 15px;">
+																	Tiếp Tục Mua Sắm
+																</a>
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
+
+											<!-- Footer -->
+											<tr>
+												<td style="background-color: #f8f9fa; padding: 30px; border-top: 1px solid #e9ecef;">
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+														<tr>
+															<td align="center" style="padding-bottom: 15px;">
+																<div style="font-weight: 600; color: #333; font-size: 14px; margin-bottom: 10px;">Liên Hệ</div>
+																<div style="color: #666; font-size: 13px; line-height: 1.8;">
+																	01 Võ Văn Ngân, Phường Thủ Đức, TP Hồ Chí Minh<br>
+																	Hotline: 093 165 2105<br>
+																	<a href="mailto:dacsanviethotro@gmail.com" style="color: #4ec2b6; text-decoration: none;">dacsanviethotro@gmail.com</a>
+																</div>
+															</td>
+														</tr>
+														<tr>
+															<td align="center" style="padding-top: 15px; border-top: 1px solid #e0e0e0; color: #999; font-size: 12px;">
+																© 2025 Đặc Sản Việt. All rights reserved.
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
+										</table>
+									</td>
+								</tr>
+							</table>
+						</body>
+						</html>
+						""",
+				order.getCustomerName(), order.getOrderNumber(), formatPrice(order.getTotalAmount()),
+				getPaymentMethodText(order.getPaymentMethod()), frontendUrl + "/products");
 	}
 
 	private String buildShippingNotificationEmail(OrderDao order) {
-		StringBuilder html = new StringBuilder();
-		html.append("<!DOCTYPE html>");
-		html.append("<html><head><meta charset='UTF-8'></head><body style='font-family: Arial, sans-serif;'>");
-		html.append("<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>");
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+		String orderDate = order.getOrderDate() != null ? order.getOrderDate().format(formatter) : "";
 
-		// Header
-		html.append(
-				"<div style='background: linear-gradient(135deg, #4ec2b6 0%, #2e857c 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>");
-		html.append("<h1 style='margin: 0;'>🚚 Đơn Hàng Đang Được Giao</h1>");
-		html.append("</div>");
+		return String.format(
+				"""
+						<!DOCTYPE html>
+						<html>
+						<head>
+							<meta charset="UTF-8">
+							<meta name="viewport" content="width=device-width, initial-scale=1.0">
+						</head>
+						<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background-color: #f5f5f5;">
+							<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5; padding: 20px 0;">
+								<tr>
+									<td align="center">
+										<table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; max-width: 600px;">
+											<!-- Header -->
+											<tr>
+												<td style="background: linear-gradient(135deg, #4ec2b6 0%%, #2e857c 100%%); padding: 40px 30px; text-align: center;">
+													<img src="https://files.catbox.moe/5uf8r1.png" alt="Đặc Sản Việt" style="max-width: 150px; margin-bottom: 15px;">
+													<h1 style="color: #ffffff; font-size: 26px; font-weight: 700; margin: 10px 0;">Đặc Sản Việt</h1>
+													<p style="color: #ffffff; font-size: 14px; margin: 0; opacity: 0.95;">Gìn giữ hồn quê, lan toả giá trị Việt</p>
+												</td>
+											</tr>
 
-		// Content
-		html.append("<div style='background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;'>");
-		html.append("<p style='font-size: 16px;'>Xin chào <strong>").append(order.getCustomerName())
-				.append("</strong>,</p>");
-		html.append("<p>Đơn hàng <strong>").append(order.getOrderNumber())
-				.append("</strong> của bạn đã được bàn giao cho đơn vị vận chuyển và đang trên đường đến với bạn!</p>");
+											<!-- Shipping Banner -->
+											<tr>
+												<td style="background-color: #cce5ff; border-left: 4px solid #007bff; padding: 20px 30px;">
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+														<tr>
+															<td style="vertical-align: middle;">
+																<div style="display: inline-block; vertical-align: middle;">
+																	<div style="font-weight: 700; color: #004085; font-size: 18px; margin-bottom: 5px;">
+																		Đơn Hàng Đang Được Giao!
+																	</div>
+																	<div style="color: #004085; font-size: 14px;">
+																		Xin chào %s, đơn hàng của bạn đang trên đường đến
+																	</div>
+																</div>
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
 
-		// Shipping info
-		html.append("<div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0;'>");
-		html.append("<h3 style='color: #4ec2b6; margin-top: 0;'>Thông Tin Vận Chuyển</h3>");
-		html.append("<table style='width: 100%; border-collapse: collapse;'>");
+											<!-- Shipping Info -->
+											<tr>
+												<td style="padding: 35px 30px;">
+													<h2 style="font-size: 18px; font-weight: 700; color: #333; margin: 0 0 20px; border-bottom: 3px solid #4ec2b6; padding-bottom: 10px;">
+														Thông Tin Vận Chuyển
+													</h2>
+
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8f9fa; border-radius: 8px; margin-bottom: 25px;">
+														<tr>
+															<td style="padding: 15px 20px; border-bottom: 1px solid #e9ecef;">
+																<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+																	<tr>
+																		<td width="140" style="font-weight: 600; color: #4ec2b6; font-size: 14px;">Mã đơn hàng</td>
+																		<td style="color: #000; font-size: 16px; font-weight: 700;">#%s</td>
+																	</tr>
+																</table>
+															</td>
+														</tr>
+														%s
+														<tr>
+															<td style="padding: 15px 20px;">
+																<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+																	<tr>
+																		<td width="140" style="font-weight: 600; color: #4ec2b6; font-size: 14px;">Trạng thái</td>
+																		<td style="color: #007bff; font-size: 14px; font-weight: 600; text-align: right;">Đang Giao Hàng</td>
+																	</tr>
+																</table>
+															</td>
+														</tr>
+													</table>
+
+													<!-- Tracking Instructions -->
+													%s
+
+													<!-- Delivery Info -->
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
+														<tr>
+															<td style="background-color: #e7f3ff; border-left: 4px solid #007bff; padding: 20px; border-radius: 8px;">
+																<h4 style="margin: 0 0 10px; color: #007bff;">Thông Tin Giao Hàng</h4>
+																<p style="margin: 0; color: #004085; font-size: 14px; line-height: 1.8;">
+																	• Thời gian giao hàng dự kiến: <strong>2-3 ngày làm việc</strong><br>
+																	• Vui lòng chuẩn bị sẵn sàng nhận hàng<br>
+																	• Kiểm tra kỹ sản phẩm trước khi nhận<br>
+																	• Liên hệ hotline 093 165 2105 nếu cần hỗ trợ
+																</p>
+															</td>
+														</tr>
+													</table>
+
+													<!-- CTA Button -->
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
+														<tr>
+															<td align="center">
+																<a href="%s" style="display: inline-block; background: linear-gradient(135deg, #4ec2b6 0%%, #2e857c 100%%); color: #ffffff; text-decoration: none; padding: 15px 40px; border-radius: 8px; font-weight: 700; font-size: 15px;">
+																	Tiếp Tục Mua Sắm
+																</a>
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
+
+											<!-- Footer -->
+											<tr>
+												<td style="background-color: #f8f9fa; padding: 30px; border-top: 1px solid #e9ecef;">
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+														<tr>
+															<td align="center" style="padding-bottom: 15px;">
+																<div style="font-weight: 600; color: #333; font-size: 14px; margin-bottom: 10px;">Liên Hệ</div>
+																<div style="color: #666; font-size: 13px; line-height: 1.8;">
+																	01 Võ Văn Ngân, Phường Thủ Đức, TP Hồ Chí Minh<br>
+																	Hotline: 093 165 2105<br>
+																	<a href="mailto:dacsanviethotro@gmail.com" style="color: #4ec2b6; text-decoration: none;">dacsanviethotro@gmail.com</a>
+																</div>
+															</td>
+														</tr>
+														<tr>
+															<td align="center" style="padding-top: 15px; border-top: 1px solid #e0e0e0; color: #999; font-size: 12px;">
+																© 2025 Đặc Sản Việt. All rights reserved.
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
+										</table>
+									</td>
+								</tr>
+							</table>
+						</body>
+						</html>
+						""",
+				order.getCustomerName(), order.getOrderNumber(),
+				buildShippingCarrierInfo(order),
+				buildTrackingInfo(order),
+				frontendUrl + "/products");
+	}
+
+	private String buildShippingCarrierInfo(OrderDao order) {
+		StringBuilder info = new StringBuilder();
 		
 		if (order.getShippingCarrier() != null && !order.getShippingCarrier().isEmpty()) {
-			html.append("<tr><td style='padding: 8px 0; border-bottom: 1px solid #dee2e6;'><strong>Đơn vị vận chuyển:</strong></td>");
-			html.append("<td style='padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;'>")
-					.append(order.getShippingCarrier()).append("</td></tr>");
+			info.append("""
+					<tr>
+						<td style="padding: 15px 20px; border-bottom: 1px solid #e9ecef;">
+							<table width="100%" cellpadding="0" cellspacing="0" border="0">
+								<tr>
+									<td width="140" style="font-weight: 600; color: #4ec2b6; font-size: 14px;">Đơn vị vận chuyển</td>
+									<td style="color: #333; font-size: 14px; text-align: right;">%s</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					""".formatted(order.getShippingCarrier()));
 		}
 		
 		if (order.getTrackingNumber() != null && !order.getTrackingNumber().isEmpty()) {
-			html.append("<tr><td style='padding: 8px 0; border-bottom: 1px solid #dee2e6;'><strong>Mã vận đơn:</strong></td>");
-			html.append("<td style='padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right; font-family: monospace; font-size: 16px; color: #007bff;'><strong>")
-					.append(order.getTrackingNumber()).append("</strong></td></tr>");
+			info.append("""
+					<tr>
+						<td style="padding: 15px 20px; border-bottom: 1px solid #e9ecef;">
+							<table width="100%" cellpadding="0" cellspacing="0" border="0">
+								<tr>
+									<td width="140" style="font-weight: 600; color: #4ec2b6; font-size: 14px;">Mã vận đơn</td>
+									<td style="color: #007bff; font-size: 16px; font-weight: 700; text-align: right; font-family: monospace;">%s</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					""".formatted(order.getTrackingNumber()));
 		}
 		
-		html.append("<tr><td style='padding: 8px 0;'><strong>Trạng thái:</strong></td>");
-		html.append("<td style='padding: 8px 0; text-align: right; color: #4ec2b6;'><strong>Đang giao hàng</strong></td></tr>");
-		html.append("</table>");
-		html.append("</div>");
+		return info.toString();
+	}
 
-		// Tracking instructions
+	private String buildTrackingInfo(OrderDao order) {
 		if (order.getTrackingNumber() != null && !order.getTrackingNumber().isEmpty()) {
-			html.append("<div style='background: #e7f3ff; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0;'>");
-			html.append("<h4 style='margin-top: 0; color: #007bff;'>📱 Theo Dõi Đơn Hàng</h4>");
-			html.append("<p style='margin-bottom: 0;'>Bạn có thể theo dõi tình trạng giao hàng bằng mã vận đơn <strong>")
-					.append(order.getTrackingNumber()).append("</strong> trên website của ").append(order.getShippingCarrier()).append(".</p>");
-			html.append("</div>");
+			return """
+					<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
+						<tr>
+							<td style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px;">
+								<h4 style="margin: 0 0 10px; color: #856404;">Theo Dõi Đơn Hàng</h4>
+								<p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.8;">
+									Bạn có thể theo dõi tình trạng giao hàng bằng mã vận đơn <strong>%s</strong> trên website của %s.
+								</p>
+							</td>
+						</tr>
+					</table>
+					""".formatted(order.getTrackingNumber(), order.getShippingCarrier() != null ? order.getShippingCarrier() : "đơn vị vận chuyển");
 		}
-
-		html.append("<p>Thời gian giao hàng dự kiến: <strong>2-3 ngày làm việc</strong></p>");
-		html.append("<p>Vui lòng chuẩn bị sẵn sàng nhận hàng. Cảm ơn bạn đã tin tưởng <strong>Đặc Sản Việt</strong>!</p>");
-
-		html.append("</div>");
-		html.append("</div>");
-		html.append("</body></html>");
-
-		return html.toString();
+		return "";
 	}
 
 	private String buildOrderCompletionEmail(OrderDao order) {
-		StringBuilder html = new StringBuilder();
-		html.append("<!DOCTYPE html>");
-		html.append("<html><head><meta charset='UTF-8'></head><body style='font-family: Arial, sans-serif;'>");
-		html.append("<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>");
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+		String orderDate = order.getOrderDate() != null ? order.getOrderDate().format(formatter) : "";
 
-		// Header
-		html.append(
-				"<div style='background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>");
-		html.append("<h1 style='margin: 0;'>🎉 Cảm Ơn Bạn!</h1>");
-		html.append("<p style='margin: 10px 0 0 0; font-size: 16px;'>Đơn hàng đã hoàn tất thành công</p>");
-		html.append("</div>");
+		return String.format(
+				"""
+						<!DOCTYPE html>
+						<html>
+						<head>
+							<meta charset="UTF-8">
+							<meta name="viewport" content="width=device-width, initial-scale=1.0">
+						</head>
+						<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background-color: #f5f5f5;">
+							<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5; padding: 20px 0;">
+								<tr>
+									<td align="center">
+										<table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; max-width: 600px;">
+											<!-- Header -->
+											<tr>
+												<td style="background: linear-gradient(135deg, #4ec2b6 0%%, #2e857c 100%%); padding: 40px 30px; text-align: center;">
+													<img src="https://files.catbox.moe/5uf8r1.png" alt="Đặc Sản Việt" style="max-width: 150px; margin-bottom: 15px;">
+													<h1 style="color: #ffffff; font-size: 26px; font-weight: 700; margin: 10px 0;">Đặc Sản Việt</h1>
+													<p style="color: #ffffff; font-size: 14px; margin: 0; opacity: 0.95;">Gìn giữ hồn quê, lan toả giá trị Việt</p>
+												</td>
+											</tr>
 
-		// Content
-		html.append("<div style='background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;'>");
-		html.append("<p style='font-size: 16px;'>Kính chào <strong>").append(order.getCustomerName())
-				.append("</strong>,</p>");
-		html.append("<p>Đơn hàng <strong>").append(order.getOrderNumber())
-				.append("</strong> đã được giao thành công và hoàn tất!</p>");
+											<!-- Completion Banner -->
+											<tr>
+												<td style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 20px 30px;">
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+														<tr>
+															<td style="vertical-align: middle; text-align: center;">
+																<div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
+																<div style="font-weight: 700; color: #155724; font-size: 20px; margin-bottom: 5px;">
+																	Cảm Ơn Bạn!
+																</div>
+																<div style="color: #155724; font-size: 14px;">
+																	Đơn hàng #%s đã hoàn tất thành công
+																</div>
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
 
-		// Thank you message
-		html.append("<div style='background: white; padding: 25px; border-radius: 8px; margin: 20px 0; text-align: center;'>");
-		html.append("<h2 style='color: #28a745; margin-top: 0;'>🌟 Cảm Ơn Bạn Đã Tin Tưởng!</h2>");
-		html.append("<p style='font-size: 16px; line-height: 1.6;'>Chúng tôi hy vọng bạn hài lòng với sản phẩm đặc sản Việt Nam chất lượng cao. ");
-		html.append("Sự tin tưởng của bạn là động lực để chúng tôi tiếp tục mang đến những sản phẩm tốt nhất.</p>");
-		html.append("</div>");
+											<!-- Thank You Message -->
+											<tr>
+												<td style="padding: 35px 30px;">
+													<h2 style="font-size: 18px; font-weight: 700; color: #333; margin: 0 0 20px; border-bottom: 3px solid #4ec2b6; padding-bottom: 10px;">
+														Cảm Ơn Sự Tin Tưởng
+													</h2>
 
-		// Review request
-		html.append("<div style='background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;'>");
-		html.append("<h4 style='margin-top: 0; color: #856404;'>⭐ Đánh Giá Sản Phẩm</h4>");
-		html.append("<p style='margin-bottom: 0;'>Nếu bạn hài lòng với sản phẩm, hãy dành vài phút để đánh giá và chia sẻ trải nghiệm của bạn. ");
-		html.append("Điều này sẽ giúp chúng tôi cải thiện dịch vụ và hỗ trợ khách hàng khác đưa ra quyết định mua hàng.</p>");
-		html.append("</div>");
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8f9fa; border-radius: 8px; margin-bottom: 25px;">
+														<tr>
+															<td style="padding: 25px; text-align: center;">
+																<h3 style="color: #28a745; margin: 0 0 15px; font-size: 20px;">Cảm Ơn Bạn Đã Tin Tưởng!</h3>
+																<p style="margin: 0; color: #333; font-size: 16px; line-height: 1.6;">
+																	Kính chào <strong>%s</strong>,<br><br>
+																	Chúng tôi hy vọng bạn hài lòng với sản phẩm đặc sản Việt Nam chất lượng cao. 
+																	Sự tin tưởng của bạn là động lực để chúng tôi tiếp tục mang đến những sản phẩm tốt nhất.
+																</p>
+															</td>
+														</tr>
+													</table>
 
-		// Future offers
-		html.append("<div style='background: #e7f3ff; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0;'>");
-		html.append("<h4 style='margin-top: 0; color: #007bff;'>🎁 Ưu Đãi Đặc Biệt</h4>");
-		html.append("<p style='margin-bottom: 0;'>Theo dõi email và website của chúng tôi để không bỏ lỡ các chương trình khuyến mãi, ");
-		html.append("sản phẩm mới và ưu đãi đặc biệt dành riêng cho khách hàng thân thiết như bạn!</p>");
-		html.append("</div>");
+													<!-- Review Request -->
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
+														<tr>
+															<td style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px;">
+																<h4 style="margin: 0 0 10px; color: #856404;">⭐ Đánh Giá Sản Phẩm</h4>
+																<p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.8;">
+																	Nếu bạn hài lòng với sản phẩm, hãy dành vài phút để đánh giá và chia sẻ trải nghiệm của bạn. 
+																	Điều này sẽ giúp chúng tôi cải thiện dịch vụ và hỗ trợ khách hàng khác đưa ra quyết định mua hàng.
+																</p>
+															</td>
+														</tr>
+													</table>
 
-		html.append("<p style='text-align: center; font-size: 18px; color: #28a745; font-weight: bold;'>Một lần nữa, xin chân thành cảm ơn!</p>");
-		html.append("<p style='text-align: center;'><strong>Đội ngũ Đặc Sản Việt</strong></p>");
+													<!-- Future Offers -->
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px;">
+														<tr>
+															<td style="background-color: #e7f3ff; border-left: 4px solid #007bff; padding: 20px; border-radius: 8px;">
+																<h4 style="margin: 0 0 10px; color: #007bff;">🎁 Ưu Đãi Đặc Biệt</h4>
+																<p style="margin: 0; color: #004085; font-size: 14px; line-height: 1.8;">
+																	Theo dõi email và website của chúng tôi để không bỏ lỡ các chương trình khuyến mãi, 
+																	sản phẩm mới và ưu đãi đặc biệt dành riêng cho khách hàng thân thiết như bạn!
+																</p>
+															</td>
+														</tr>
+													</table>
 
-		html.append("</div>");
-		html.append("</div>");
-		html.append("</body></html>");
+													<!-- Final Thank You -->
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
+														<tr>
+															<td style="text-align: center; padding: 20px; background-color: #f0f8f7; border-radius: 8px;">
+																<p style="margin: 0 0 10px; font-size: 18px; color: #28a745; font-weight: 700;">
+																	Một lần nữa, xin chân thành cảm ơn!
+																</p>
+																<p style="margin: 0; color: #333; font-weight: 600;">
+																	Đội ngũ Đặc Sản Việt
+																</p>
+															</td>
+														</tr>
+													</table>
 
-		return html.toString();
+													<!-- CTA Button -->
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
+														<tr>
+															<td align="center">
+																<a href="%s" style="display: inline-block; background: linear-gradient(135deg, #4ec2b6 0%%, #2e857c 100%%); color: #ffffff; text-decoration: none; padding: 15px 40px; border-radius: 8px; font-weight: 700; font-size: 15px;">
+																	Khám Phá Thêm Sản Phẩm
+																</a>
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
+
+											<!-- Footer -->
+											<tr>
+												<td style="background-color: #f8f9fa; padding: 30px; border-top: 1px solid #e9ecef;">
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+														<tr>
+															<td align="center" style="padding-bottom: 15px;">
+																<div style="font-weight: 600; color: #333; font-size: 14px; margin-bottom: 10px;">Liên Hệ</div>
+																<div style="color: #666; font-size: 13px; line-height: 1.8;">
+																	01 Võ Văn Ngân, Phường Thủ Đức, TP Hồ Chí Minh<br>
+																	Hotline: 093 165 2105<br>
+																	<a href="mailto:dacsanviethotro@gmail.com" style="color: #4ec2b6; text-decoration: none;">dacsanviethotro@gmail.com</a>
+																</div>
+															</td>
+														</tr>
+														<tr>
+															<td align="center" style="padding-top: 15px; border-top: 1px solid #e0e0e0; color: #999; font-size: 12px;">
+																© 2025 Đặc Sản Việt. All rights reserved.
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
+										</table>
+									</td>
+								</tr>
+							</table>
+						</body>
+						</html>
+						""",
+				order.getOrderNumber(), order.getCustomerName(), frontendUrl + "/products");
 	}
 
 	private String buildPaymentFailureEmail(OrderDao order, String retryPaymentLink) {
-		StringBuilder html = new StringBuilder();
-		html.append("<!DOCTYPE html>");
-		html.append("<html><head><meta charset='UTF-8'></head><body style='font-family: Arial, sans-serif;'>");
-		html.append("<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>");
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+		String orderDate = order.getOrderDate() != null ? order.getOrderDate().format(formatter) : "";
 
-		// Header
-		html.append(
-				"<div style='background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>");
-		html.append("<h1 style='margin: 0;'>⚠️ Thanh Toán Chưa Thành Công</h1>");
-		html.append("</div>");
+		return String.format(
+				"""
+						<!DOCTYPE html>
+						<html>
+						<head>
+							<meta charset="UTF-8">
+							<meta name="viewport" content="width=device-width, initial-scale=1.0">
+						</head>
+						<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background-color: #f5f5f5;">
+							<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5; padding: 20px 0;">
+								<tr>
+									<td align="center">
+										<table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; max-width: 600px;">
+											<!-- Header -->
+											<tr>
+												<td style="background: linear-gradient(135deg, #4ec2b6 0%%, #2e857c 100%%); padding: 40px 30px; text-align: center;">
+													<img src="https://files.catbox.moe/5uf8r1.png" alt="Đặc Sản Việt" style="max-width: 150px; margin-bottom: 15px;">
+													<h1 style="color: #ffffff; font-size: 26px; font-weight: 700; margin: 10px 0;">Đặc Sản Việt</h1>
+													<p style="color: #ffffff; font-size: 14px; margin: 0; opacity: 0.95;">Gìn giữ hồn quê, lan toả giá trị Việt</p>
+												</td>
+											</tr>
 
-		// Content
-		html.append("<div style='background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;'>");
-		html.append("<p style='font-size: 16px;'>Xin chào <strong>").append(order.getCustomerName())
-				.append("</strong>,</p>");
-		html.append("<p>Chúng tôi gặp sự cố khi xử lý thanh toán cho đơn hàng <strong>").append(order.getOrderNumber())
-				.append("</strong>. Đơn hàng của bạn vẫn được giữ và chờ thanh toán.</p>");
+											<!-- Warning Banner -->
+											<tr>
+												<td style="background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 20px 30px;">
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+														<tr>
+															<td style="vertical-align: middle;">
+																<div style="display: inline-block; vertical-align: middle;">
+																	<div style="font-weight: 700; color: #721c24; font-size: 18px; margin-bottom: 5px;">
+																		Thanh Toán Chưa Thành Công
+																	</div>
+																	<div style="color: #721c24; font-size: 14px;">
+																		Xin chào %s, chúng tôi gặp sự cố khi xử lý thanh toán
+																	</div>
+																</div>
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
 
-		// Order info
-		html.append("<div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0;'>");
-		html.append("<h3 style='color: #dc3545; margin-top: 0;'>Thông Tin Đơn Hàng</h3>");
-		html.append("<table style='width: 100%; border-collapse: collapse;'>");
-		html.append("<tr><td style='padding: 8px 0; border-bottom: 1px solid #dee2e6;'><strong>Mã đơn hàng:</strong></td>");
-		html.append("<td style='padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right;'>")
-				.append(order.getOrderNumber()).append("</td></tr>");
-		html.append("<tr><td style='padding: 8px 0; border-bottom: 1px solid #dee2e6;'><strong>Số tiền:</strong></td>");
-		html.append("<td style='padding: 8px 0; border-bottom: 1px solid #dee2e6; text-align: right; font-size: 18px; color: #dc3545;'><strong>")
-				.append(formatPrice(order.getTotalAmount())).append("</strong></td></tr>");
-		html.append("<tr><td style='padding: 8px 0;'><strong>Trạng thái:</strong></td>");
-		html.append("<td style='padding: 8px 0; text-align: right; color: #dc3545;'><strong>Chờ thanh toán</strong></td></tr>");
-		html.append("</table>");
-		html.append("</div>");
+											<!-- Order Info -->
+											<tr>
+												<td style="padding: 35px 30px;">
+													<h2 style="font-size: 18px; font-weight: 700; color: #333; margin: 0 0 20px; border-bottom: 3px solid #4ec2b6; padding-bottom: 10px;">
+														Thông Tin Đơn Hàng
+													</h2>
 
-		// Retry payment button
-		html.append("<div style='text-align: center; margin: 30px 0;'>");
-		html.append("<a href='").append(retryPaymentLink).append("' ");
-		html.append("style='display: inline-block; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); ");
-		html.append("color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; ");
-		html.append("font-weight: bold; font-size: 16px;'>💳 Thanh Toán Ngay</a>");
-		html.append("</div>");
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8f9fa; border-radius: 8px; margin-bottom: 25px;">
+														<tr>
+															<td style="padding: 15px 20px; border-bottom: 1px solid #e9ecef;">
+																<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+																	<tr>
+																		<td width="140" style="font-weight: 600; color: #4ec2b6; font-size: 14px;">Mã đơn hàng</td>
+																		<td style="color: #000; font-size: 16px; font-weight: 700;">#%s</td>
+																	</tr>
+																</table>
+															</td>
+														</tr>
+														<tr>
+															<td style="padding: 15px 20px; border-bottom: 1px solid #e9ecef;">
+																<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+																	<tr>
+																		<td width="140" style="font-weight: 600; color: #4ec2b6; font-size: 14px;">Số tiền</td>
+																		<td style="color: #dc3545; font-size: 18px; font-weight: 700; text-align: right;">%s</td>
+																	</tr>
+																</table>
+															</td>
+														</tr>
+														<tr>
+															<td style="padding: 15px 20px;">
+																<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+																	<tr>
+																		<td width="140" style="font-weight: 600; color: #4ec2b6; font-size: 14px;">Trạng thái</td>
+																		<td style="color: #dc3545; font-size: 14px; font-weight: 600; text-align: right;">Chờ Thanh Toán</td>
+																	</tr>
+																</table>
+															</td>
+														</tr>
+													</table>
 
-		// Alternative contact
-		html.append("<div style='background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;'>");
-		html.append("<h4 style='margin-top: 0; color: #856404;'>📞 Cần Hỗ Trợ?</h4>");
-		html.append("<p style='margin-bottom: 0;'>Nếu bạn gặp khó khăn trong việc thanh toán, vui lòng liên hệ với chúng tôi:</p>");
-		html.append("<p style='margin: 10px 0 0 0;'>");
-		html.append("<strong>Hotline:</strong> 1900-xxxx<br>");
-		html.append("<strong>Zalo:</strong> 0123-456-789<br>");
-		html.append("<strong>Email:</strong> dacsanviethotro@gmail.com");
-		html.append("</p>");
-		html.append("</div>");
+													<!-- Retry Payment Button -->
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin: 30px 0;">
+														<tr>
+															<td align="center" style="background-color: #e7f3ff; padding: 25px; border-radius: 8px;">
+																<h3 style="margin: 0 0 15px; color: #007bff; font-size: 18px;">Thanh Toán Ngay</h3>
+																<p style="margin: 0 0 20px; color: #004085; font-size: 14px;">
+																	Đơn hàng của bạn vẫn được giữ và chờ thanh toán
+																</p>
+																<a href="%s" style="display: inline-block; background: linear-gradient(135deg, #007bff 0%%, #0056b3 100%%); color: #ffffff; text-decoration: none; padding: 15px 40px; border-radius: 8px; font-weight: 700; font-size: 16px;">
+																	💳 Thanh Toán Ngay
+																</a>
+															</td>
+														</tr>
+													</table>
 
-		html.append("<p><strong>Lưu ý:</strong> Đơn hàng sẽ được giữ trong 24 giờ. Sau thời gian này, đơn hàng có thể bị hủy tự động.</p>");
-		html.append("<p>Cảm ơn bạn đã lựa chọn <strong>Đặc Sản Việt</strong>!</p>");
+													<!-- Support Info -->
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
+														<tr>
+															<td style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px;">
+																<h4 style="margin: 0 0 10px; color: #856404;">📞 Cần Hỗ Trợ?</h4>
+																<p style="margin: 0 0 15px; color: #856404; font-size: 14px; line-height: 1.8;">
+																	Nếu bạn gặp khó khăn trong việc thanh toán, vui lòng liên hệ với chúng tôi:
+																</p>
+																<p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.8;">
+																	<strong>Hotline:</strong> 093 165 2105<br>
+																	<strong>Email:</strong> dacsanviethotro@gmail.com<br>
+																	<strong>Zalo:</strong> 093 165 2105
+																</p>
+															</td>
+														</tr>
+													</table>
 
-		html.append("</div>");
-		html.append("</div>");
-		html.append("</body></html>");
+													<!-- Important Notice -->
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px;">
+														<tr>
+															<td style="background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; border-radius: 8px;">
+																<p style="margin: 0; color: #721c24; font-size: 14px; line-height: 1.8;">
+																	<strong>⚠️ Lưu ý:</strong> Đơn hàng sẽ được giữ trong 24 giờ. Sau thời gian này, đơn hàng có thể bị hủy tự động.
+																</p>
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
 
-		return html.toString();
+											<!-- Footer -->
+											<tr>
+												<td style="background-color: #f8f9fa; padding: 30px; border-top: 1px solid #e9ecef;">
+													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
+														<tr>
+															<td align="center" style="padding-bottom: 15px;">
+																<div style="font-weight: 600; color: #333; font-size: 14px; margin-bottom: 10px;">Liên Hệ</div>
+																<div style="color: #666; font-size: 13px; line-height: 1.8;">
+																	01 Võ Văn Ngân, Phường Thủ Đức, TP Hồ Chí Minh<br>
+																	Hotline: 093 165 2105<br>
+																	<a href="mailto:dacsanviethotro@gmail.com" style="color: #4ec2b6; text-decoration: none;">dacsanviethotro@gmail.com</a>
+																</div>
+															</td>
+														</tr>
+														<tr>
+															<td align="center" style="padding-top: 15px; border-top: 1px solid #e0e0e0; color: #999; font-size: 12px;">
+																© 2025 Đặc Sản Việt. All rights reserved.
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
+										</table>
+									</td>
+								</tr>
+							</table>
+						</body>
+						</html>
+						""",
+				order.getCustomerName(), order.getOrderNumber(), formatPrice(order.getTotalAmount()),
+				retryPaymentLink);
 	}
 
 	/**
