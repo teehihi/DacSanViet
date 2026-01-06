@@ -76,7 +76,9 @@ public class SecurityConfig {
                                 "/api/admin/news/*", "/api/checkout/**", "/api/cart/**", "/checkout/process",
                                 "/api/admin/orders/**", "/api/test/**",
                                 "/api/forgot-password", "/api/admin/forgot-password", // Allow both forgot password endpoints
-                                "/api/consultation" // Allow consultation form
+                                "/api/consultation", // Allow consultation form
+                                "/admin/suppliers/**", // Allow supplier management endpoints
+                                "/admin/categories/**" // Allow category management endpoints
                         )
                         .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
                 )

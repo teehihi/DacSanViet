@@ -102,6 +102,52 @@ public class AdminSupplierController {
     }
 
     /**
+     * Quick add supplier (for modal)
+     */
+    @PostMapping("/quick-add")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    public ResponseEntity<?> quickAddSupplier(@RequestBody Map<String, String> request) {
+        try {
+            String name = request.get("name");
+            String contactPerson = request.get("contactPerson");
+            String phone = request.get("phone");
+            String email = request.get("email");
+            String address = request.get("address");
+            
+            if (name == null || name.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Tên nhà phân phối không được để trống");
+            }
+            
+            if (supplierRepository.existsByName(name)) {
+                return ResponseEntity.badRequest().body("Tên nhà phân phối đã tồn tại");
+            }
+            
+            Supplier supplier = new Supplier();
+            supplier.setName(name.trim());
+            supplier.setContactPerson(contactPerson != null ? contactPerson.trim() : null);
+            supplier.setPhone(phone != null ? phone.trim() : null);
+            supplier.setEmail(email != null ? email.trim() : null);
+            supplier.setAddress(address != null ? address.trim() : null);
+            supplier.setIsActive(true);
+            
+            Supplier savedSupplier = supplierRepository.save(supplier);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Thêm nhà phân phối thành công");
+            response.put("supplier", savedSupplier);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Lỗi khi thêm nhà phân phối: " + e.getMessage());
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+
+    /**
      * Create new supplier
      */
     @PostMapping
