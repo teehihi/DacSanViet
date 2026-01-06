@@ -24,6 +24,8 @@ public class CategoryDao {
     
     private Boolean isActive;
     private Long productCount;
+    private Long parentId;
+    private String parentName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -32,13 +34,15 @@ public class CategoryDao {
     
     // Constructor with all fields
     public CategoryDao(Long id, String name, String description, String imageUrl, Boolean isActive, 
-                      Long productCount, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                      Long productCount, Long parentId, String parentName, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.imageUrl = imageUrl;
         this.isActive = isActive;
         this.productCount = productCount;
+        this.parentId = parentId;
+        this.parentName = parentName;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -95,6 +99,22 @@ public class CategoryDao {
     
     public void setProductCount(Long productCount) {
         this.productCount = productCount;
+    }
+    
+    public Long getParentId() {
+        return parentId;
+    }
+    
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
+    }
+    
+    public String getParentName() {
+        return parentName;
+    }
+    
+    public void setParentName(String parentName) {
+        this.parentName = parentName;
     }
     
     public LocalDateTime getCreatedAt() {

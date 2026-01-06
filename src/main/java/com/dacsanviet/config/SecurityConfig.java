@@ -75,7 +75,8 @@ public class SecurityConfig {
                                 "/api/admin/news/*/update-debug", "/api/admin/news/*/update-simple", "/api/admin/news/*/update",
                                 "/api/admin/news/*", "/api/checkout/**", "/api/cart/**", "/checkout/process",
                                 "/api/admin/orders/**", "/api/test/**",
-                                "/api/forgot-password" // <-- THÊM ĐƯỜNG DẪN NÀY
+                                "/api/forgot-password", "/api/admin/forgot-password", // Allow both forgot password endpoints
+                                "/api/consultation" // Allow consultation form
                         )
                         .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
                 )
@@ -99,10 +100,14 @@ public class SecurityConfig {
                 .requestMatchers("/init-data", "/clear-test-data", "/check-conflicts", "/view-database", "/database").permitAll()
                 .requestMatchers("/login", "/register").permitAll()
                 .requestMatchers("/api/admin/forgot-password").permitAll()
+                .requestMatchers("/api/forgot-password").permitAll() // Allow public forgot password endpoint
+                .requestMatchers("/api/consultation").permitAll() // Allow public consultation form
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/csrf/**").permitAll() // Allow CSRF token endpoint
                 .requestMatchers("/api/test/**").permitAll() // Allow email testing endpoints
+                .requestMatchers("/api/demo/**").permitAll() // Allow demo endpoints
+                .requestMatchers("/admin/categories/test-categories").permitAll() // Test endpoint
                 .requestMatchers("/admin/chat").permitAll() // Temporary for testing
                 .requestMatchers("/chat-demo").permitAll() // Demo page
                     // Cho phép truy cập công khai API quên mật khẩu
@@ -147,6 +152,7 @@ public class SecurityConfig {
                 .requestMatchers("/admin/**").hasAnyRole("ADMIN", "STAFF")
                 .requestMatchers("/api/admin/news/*/update-debug", "/api/admin/news/*/update-simple", "/api/admin/news/*/update").permitAll() // Temporary for testing
                 .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "STAFF")
+                .requestMatchers("/api/admin/cleanup/**").hasRole("ADMIN") // Only ADMIN can cleanup data
                 .requestMatchers(HttpMethod.POST, "/api/products/**").hasAnyRole("ADMIN", "STAFF")
                 .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAnyRole("ADMIN", "STAFF")
                 .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAnyRole("ADMIN", "STAFF")

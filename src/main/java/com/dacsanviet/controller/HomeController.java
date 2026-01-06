@@ -66,8 +66,12 @@ public class HomeController {
 			Page<ProductDao> newProducts = productService.getAllProducts(newPageable);
 			model.addAttribute("newProducts", newProducts.getContent());
 
-			List<CategoryDao> categories = categoryService.getAllActiveCategories();
-			model.addAttribute("categories", categories);
+			// Get only parent categories (no parent_id) for homepage display
+			List<CategoryDao> parentCategories = categoryService.getAllActiveCategories()
+					.stream()
+					.filter(cat -> cat.getParentId() == null) // Only parent categories
+					.toList();
+			model.addAttribute("categories", parentCategories);
 
 			List<NewsArticleDto> latestNews = newsService.findRecentArticles(3);
 			model.addAttribute("newsList", latestNews);
@@ -85,7 +89,10 @@ public class HomeController {
 	@GetMapping("/login")
 	public String login(Model model) {
 		model.addAttribute("pageTitle", "Đăng Nhập");
-		model.addAttribute("categories", categoryService.getAllActiveCategories());
+		model.addAttribute("categories", categoryService.getAllActiveCategories()
+				.stream()
+				.filter(cat -> cat.getParentId() == null)
+				.toList());
 		return "auth/login";
 	}
 
@@ -161,21 +168,30 @@ public class HomeController {
 	@GetMapping("/register")
 	public String register(Model model) {
 		model.addAttribute("pageTitle", "Đăng Ký");
-		model.addAttribute("categories", categoryService.getAllActiveCategories());
+		model.addAttribute("categories", categoryService.getAllActiveCategories()
+				.stream()
+				.filter(cat -> cat.getParentId() == null)
+				.toList());
 		return "auth/register";
 	}
 
 	@GetMapping("/about")
 	public String about(Model model) {
 		model.addAttribute("pageTitle", "Giới Thiệu");
-		model.addAttribute("categories", categoryService.getAllActiveCategories());
+		model.addAttribute("categories", categoryService.getAllActiveCategories()
+				.stream()
+				.filter(cat -> cat.getParentId() == null)
+				.toList());
 		return "pages/about";
 	}
 
 	@GetMapping("/contact")
 	public String contact(Model model) {
 		model.addAttribute("pageTitle", "Liên Hệ");
-		model.addAttribute("categories", categoryService.getAllActiveCategories());
+		model.addAttribute("categories", categoryService.getAllActiveCategories()
+				.stream()
+				.filter(cat -> cat.getParentId() == null)
+				.toList());
 		return "pages/contact";
 	}
 }

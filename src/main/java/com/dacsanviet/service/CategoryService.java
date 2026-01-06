@@ -228,6 +228,13 @@ public class CategoryService {
             imageUrl = imageUrl.substring(1);
         }
         
+        Long parentId = null;
+        String parentName = null;
+        if (category.getParent() != null) {
+            parentId = category.getParent().getId();
+            parentName = category.getParent().getName();
+        }
+        
         return new CategoryDao(
             category.getId(),
             category.getName(),
@@ -235,6 +242,8 @@ public class CategoryService {
             imageUrl,
             category.getIsActive(),
             null, // productCount will be set separately when needed
+            parentId,
+            parentName,
             category.getCreatedAt(),
             category.getUpdatedAt()
         );

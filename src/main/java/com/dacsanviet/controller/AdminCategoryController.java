@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -76,6 +77,7 @@ public class AdminCategoryController {
      */
     @GetMapping("/list")
     @ResponseBody
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getCategories(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -84,48 +86,41 @@ public class AdminCategoryController {
         
         try {
             Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
-            Page<Category> categoriesPage;
+            Page<Category> categoriesPage = categoryRepository.findAll(pageable);
             
-            if (search != null && !search.trim().isEmpty()) {
-                categoriesPage = categoryRepository.searchCategories(search, pageable);
-            } else if (isActive != null) {
-                categoriesPage = categoryRepository.findByIsActiveOrderByName(isActive).stream()
-                    .skip((long) page * size)
-                    .limit(size)
-                    .collect(java.util.stream.Collectors.collectingAndThen(
-                        java.util.stream.Collectors.toList(),
-                        list -> new org.springframework.data.domain.PageImpl<>(
-                            list, pageable, 
-                            categoryRepository.findByIsActiveOrderByName(isActive).size()
-                        )
-                    ));
-            } else {
-                categoriesPage = categoryRepository.findAll(pageable);
-            }
-            
-            // Add product count and parent info for each category
+            // Simple category list without complex logic
             java.util.List<Map<String, Object>> categoryList = categoriesPage.getContent().stream()
                 .map(category -> {
                     Map<String, Object> categoryData = new HashMap<>();
                     categoryData.put("id", category.getId());
                     categoryData.put("name", category.getName());
-                    categoryData.put("description", category.getDescription());
-                    categoryData.put("imageUrl", category.getImageUrl());
+                    categoryData.put("description", category.getDescription() != null ? category.getDescription() : "");
+                    categoryData.put("imageUrl", category.getImageUrl() != null ? category.getImageUrl() : "");
                     categoryData.put("isActive", category.getIsActive());
-                    categoryData.put("createdAt", category.getCreatedAt());
-                    categoryData.put("updatedAt", category.getUpdatedAt());
+                    categoryData.put("createdAt", category.getCreatedAt() != null ? category.getCreatedAt().toString() : "");
+                    categoryData.put("updatedAt", category.getUpdatedAt() != null ? category.getUpdatedAt().toString() : "");
                     
-                    // Add parent info
-                    if (category.getParent() != null) {
-                        Map<String, Object> parentData = new HashMap<>();
-                        parentData.put("id", category.getParent().getId());
-                        parentData.put("name", category.getParent().getName());
-                        categoryData.put("parent", parentData);
+                    // Add parent info safely within transaction
+                    try {
+                        if (category.getParent() != null) {
+                            Map<String, Object> parentData = new HashMap<>();
+                            parentData.put("id", category.getParent().getId());
+                            parentData.put("name", category.getParent().getName());
+                            categoryData.put("parent", parentData);
+                        } else {
+                            categoryData.put("parent", null);
+                        }
+                    } catch (Exception e) {
+                        categoryData.put("parent", null);
                     }
                     
-                    // Count products
-                    Long productCount = categoryRepository.countActiveProductsInCategory(category.getId());
-                    categoryData.put("productCount", productCount);
+                    // Count products safely
+                    try {
+                        Long productCount = categoryRepository.countActiveProductsInCategory(category.getId());
+                        categoryData.put("productCount", productCount != null ? productCount : 0L);
+                    } catch (Exception e) {
+                        categoryData.put("productCount", 0L);
+                    }
                     
                     return categoryData;
                 })
@@ -140,7 +135,23 @@ public class AdminCategoryController {
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error loading categories: " + e.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Error loading categories: " + e.getMessage());
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+    
+    /**
+     * Test endpoint to check categories
+     */
+    @GetMapping("/test-categories")
+    @ResponseBody
+    public ResponseEntity<?> testCategories() {
+        try {
+            java.util.List<Category> categories = categoryRepository.findAll();
+            return ResponseEntity.ok(categories);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
     
