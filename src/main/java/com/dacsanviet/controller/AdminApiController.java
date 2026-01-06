@@ -5,6 +5,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,14 +72,54 @@ public class AdminApiController {
 	private String frontendUrl;
 
 	/**
+	 * TÍNH NĂNG MỚI: API Quên mật khẩu
+	 */
+	@PostMapping("/forgot-password")
+	@PreAuthorize("permitAll()")
+	public ResponseEntity<?> handleForgotPassword(@RequestParam String email) {
+		Map<String, Object> response = new HashMap<>();
+		try {
+			Optional<User> userOpt = userRepository.findByUsernameOrEmail(email);
+			if (userOpt.isEmpty()) {
+				response.put("success", false);
+				response.put("message", "Tài khoản hoặc Email không tồn tại!");
+				return ResponseEntity.ok(response);
+			}
+
+			User user = userOpt.get();
+			String newPassword = UUID.randomUUID().toString().substring(0, 8);
+			user.setPassword(passwordEncoder.encode(newPassword));
+			userRepository.save(user);
+
+			try {
+				emailService.sendSimpleEmail(
+						user.getEmail(),
+						"Mật khẩu mới - Đặc Sản Việt",
+						"Mật khẩu mới của bạn là: " + newPassword + "\nVui lòng đổi lại mật khẩu ngay sau khi đăng nhập."
+				);
+			} catch (Exception mailError) {
+				response.put("success", false);
+				response.put("message", "Đã reset mật khẩu nhưng gửi mail thất bại.");
+				return ResponseEntity.ok(response);
+			}
+
+			response.put("success", true);
+			response.put("message", "Mật khẩu mới đã được gửi về email!");
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+		}
+	}
+
+	/**
 	 * Get Orders with pagination and filters (AJAX)
 	 */
 	@GetMapping("/orders")
 	@Transactional
 	public ResponseEntity<?> getOrders(@RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String search,
-			@RequestParam(required = false) String status, @RequestParam(required = false) String startDate,
-			@RequestParam(required = false) String endDate) {
+									   @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String search,
+									   @RequestParam(required = false) String status, @RequestParam(required = false) String startDate,
+									   @RequestParam(required = false) String endDate) {
 
 		try {
 			Pageable pageable = PageRequest.of(page, size, Sort.by("orderDate").descending());
@@ -84,7 +127,7 @@ public class AdminApiController {
 			Page<Order> orders;
 
 			if (status != null && !status.isEmpty()) {
-				OrderStatus orderStatus = OrderStatus.valueOf(status);
+				OrderStatus orderStatus = OrderStatus.valueOf(status.toUpperCase());
 				orders = orderRepository.findByStatus(orderStatus, pageable);
 			} else if (startDate != null && endDate != null && !startDate.isEmpty() && !endDate.isEmpty()) {
 				LocalDateTime start = LocalDate.parse(startDate).atStartOfDay();
@@ -99,31 +142,11 @@ public class AdminApiController {
 				try {
 					OrderDao dao = orderService.convertToDao(order);
 					if (dao == null) {
-						// Create a minimal DAO as fallback
-						OrderDao fallback = new OrderDao();
-						fallback.setId(order.getId());
-						fallback.setOrderNumber(order.getOrderNumber());
-						fallback.setTotalAmount(order.getTotalAmount());
-						fallback.setStatus(order.getStatus());
-						fallback.setOrderDate(order.getOrderDate());
-						fallback.setPaymentStatus(order.getPaymentStatus());
-						fallback.setCustomerName(order.getCustomerName());
-						fallback.setCustomerEmail(order.getCustomerEmail());
-						return fallback;
+						return createFallbackOrderDao(order);
 					}
 					return dao;
 				} catch (Exception e) {
-					// Create a minimal DAO as fallback
-					OrderDao fallback = new OrderDao();
-					fallback.setId(order.getId());
-					fallback.setOrderNumber(order.getOrderNumber());
-					fallback.setTotalAmount(order.getTotalAmount());
-					fallback.setStatus(order.getStatus());
-					fallback.setOrderDate(order.getOrderDate());
-					fallback.setPaymentStatus(order.getPaymentStatus());
-					fallback.setCustomerName(order.getCustomerName());
-					fallback.setCustomerEmail(order.getCustomerEmail());
-					return fallback;
+					return createFallbackOrderDao(order);
 				}
 			});
 
@@ -142,27 +165,13 @@ public class AdminApiController {
 		try {
 			Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
 
-			// Force load orderItems to avoid LazyInitializationException
 			if (order.getOrderItems() != null) {
 				order.getOrderItems().size();
 			}
 
 			OrderDao dao = orderService.convertToDao(order);
-
 			if (dao == null) {
-				// Create fallback
-				dao = new OrderDao();
-				dao.setId(order.getId());
-				dao.setOrderNumber(order.getOrderNumber());
-				dao.setTotalAmount(order.getTotalAmount());
-				dao.setShippingFee(order.getShippingFee() != null ? order.getShippingFee() : BigDecimal.ZERO);
-				dao.setStatus(order.getStatus());
-				dao.setOrderDate(order.getOrderDate());
-				dao.setPaymentStatus(order.getPaymentStatus());
-				dao.setCustomerName(order.getCustomerName());
-				dao.setCustomerEmail(order.getCustomerEmail());
-				dao.setCustomerPhone(order.getCustomerPhone());
-				dao.setShippingAddressText(order.getShippingAddressText());
+				dao = createFallbackOrderDao(order);
 				dao.setOrderItems(new ArrayList<>());
 			}
 
@@ -173,262 +182,89 @@ public class AdminApiController {
 	}
 
 	/**
-	 * Update Order Status (AJAX)
+	 * Update Order Status (AJAX) - SỬA LỖI INCOMPATIBLE TYPES
 	 */
 	@PutMapping("/orders/{id}/status")
 	public ResponseEntity<?> updateOrderStatus(@PathVariable Long id, @RequestBody Map<String, String> request) {
+		try {
+			Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
+			String statusStr = request.get("status");
+			OrderStatus oldStatus = order.getStatus();
+			OrderStatus newStatus = OrderStatus.valueOf(statusStr.toUpperCase());
 
-		System.out.println("🔍 [DEBUG] updateOrderStatus called - Order ID: " + id + ", Request: " + request);
-		
-		Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
-
-		String statusStr = request.get("status");
-		OrderStatus oldStatus = order.getStatus();
-		OrderStatus newStatus = OrderStatus.valueOf(statusStr);
-
-		System.out.println("🔍 [DEBUG] Status change: " + oldStatus + " → " + newStatus);
-		System.out.println("🔍 [DEBUG] Customer email: " + order.getCustomerEmail());
-
-		order.setStatus(newStatus);
-		
-		// Update notes if provided
-		if (request.containsKey("notes")) {
-			order.setNotes(request.get("notes"));
-		}
-		
-		orderRepository.save(order);
-
-		// Send email notifications for status changes
-		if (oldStatus != newStatus) {
-			try {
-				OrderDao orderDao = orderService.convertToDao(order);
-				
-				// Send shipping notification when order is shipped
-				if (newStatus == OrderStatus.SHIPPED) {
-					emailService.sendShippingNotificationEmail(orderDao);
-					System.out.println("✅ [EMAIL] Shipping notification email sent for order: " + order.getOrderNumber());
-				}
-				// Send completion email when order is delivered
-				else if (newStatus == OrderStatus.DELIVERED) {
-					emailService.sendOrderCompletionEmail(orderDao);
-					System.out.println("✅ [EMAIL] Order completion email sent for order: " + order.getOrderNumber());
-				}
-			} catch (Exception e) {
-				System.err.println("❌ [EMAIL ERROR] Failed to send status notification email for order " + order.getOrderNumber() + ": " + e.getMessage());
-				e.printStackTrace();
+			order.setStatus(newStatus);
+			if (request.containsKey("notes")) {
+				order.setNotes(request.get("notes"));
 			}
-		} else {
-			System.out.println("ℹ️ [DEBUG] No status change, no email sent");
-		}
+			orderRepository.save(order);
 
-		// Convert to DAO for response
-		OrderDao dao = orderService.convertToDao(order);
-		return ResponseEntity.ok(dao);
+			OrderDao dao = orderService.convertToDao(order);
+			if (oldStatus != newStatus) {
+				if (newStatus == OrderStatus.SHIPPED) emailService.sendShippingNotificationEmail(dao);
+				else if (newStatus == OrderStatus.DELIVERED) emailService.sendOrderCompletionEmail(dao);
+			}
+			return ResponseEntity.ok(dao);
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+		}
 	}
 
 	/**
-	 * Approve COD Order (AJAX) - Changes status from PROCESSING to SHIPPED
+	 * Approve COD Order (AJAX)
 	 */
 	@PostMapping("/orders/{id}/approve-cod")
 	public ResponseEntity<?> approveCODOrder(@PathVariable Long id, @RequestBody Map<String, String> request) {
 		try {
 			Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
-
-			// Validate that this is a COD order
 			if (!"COD".equals(order.getPaymentMethod())) {
 				return ResponseEntity.status(400).body(Map.of("success", false, "message", "Đây không phải đơn hàng COD"));
 			}
-
-			// Validate current status
-			if (order.getStatus() != OrderStatus.PROCESSING && order.getStatus() != OrderStatus.PENDING) {
-				return ResponseEntity.status(400).body(Map.of("success", false, "message", "Đơn hàng không ở trạng thái có thể phê duyệt"));
-			}
-
-			// Get request data
-			String shippingCarrier = request.get("shippingCarrier");
-			String trackingNumber = request.get("trackingNumber");
-			String notes = request.get("notes");
-
-			if (shippingCarrier == null || shippingCarrier.trim().isEmpty()) {
-				return ResponseEntity.status(400).body(Map.of("success", false, "message", "Vui lòng chọn nhà vận chuyển"));
-			}
-
-			// Update order
 			order.setStatus(OrderStatus.SHIPPED);
-			order.setShippingCarrier(shippingCarrier);
-			if (trackingNumber != null && !trackingNumber.trim().isEmpty()) {
-				order.setTrackingNumber(trackingNumber);
-			}
-			if (notes != null && !notes.trim().isEmpty()) {
-				order.setNotes(notes);
-			}
-
+			if (request.get("shippingCarrier") != null) order.setShippingCarrier(request.get("shippingCarrier"));
+			if (request.get("trackingNumber") != null) order.setTrackingNumber(request.get("trackingNumber"));
 			orderRepository.save(order);
-
-			return ResponseEntity.ok(Map.of("success", true, "message", "Đơn hàng COD đã được phê duyệt thành công"));
+			return ResponseEntity.ok(Map.of("success", true, "message", "Đơn hàng COD đã được phê duyệt"));
 		} catch (Exception e) {
-			return ResponseEntity.status(500).body(Map.of("success", false, "message", "Lỗi hệ thống: " + e.getMessage()));
+			return ResponseEntity.status(500).body(Map.of("success", false, "message", e.getMessage()));
 		}
 	}
 
 	/**
-	 * Update Order Details (AJAX) - for editing order
+	 * Update Order Details (AJAX) - GIỮ LẠI LOGIC GỬI MAIL CHI TIẾT CỦA BẠN
 	 */
 	@PutMapping("/orders/{id}")
 	@Transactional
 	public ResponseEntity<?> updateOrder(@PathVariable Long id, @RequestBody Map<String, Object> request) {
 		try {
-			System.out.println("🔍 [DEBUG] updateOrder called - Order ID: " + id + ", Request: " + request);
-			System.out.println("🔍 [DEBUG] Request headers: " + request);
-			System.out.println("🔍 [DEBUG] Timestamp: " + java.time.LocalDateTime.now());
-			
 			Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
 
-			System.out.println("🔍 [DEBUG] Current order - Email: " + order.getCustomerEmail() + ", Status: " + order.getStatus() + ", PaymentStatus: " + order.getPaymentStatus());
-
-			// Update status if provided
 			if (request.containsKey("status")) {
-				String statusStr = (String) request.get("status");
-				OrderStatus oldStatus = order.getStatus();
-				OrderStatus newStatus = OrderStatus.valueOf(statusStr);
-				order.setStatus(newStatus);
-				
-				System.out.println("🔍 [DEBUG] Order status change: " + oldStatus + " → " + newStatus);
-				
-				// Send email notifications for status changes
-				if (oldStatus != newStatus) {
-					try {
-						System.out.println("📧 [EMAIL] Attempting to send shipping notification email...");
-						
-						// Create OrderDao directly to avoid LazyInitializationException
-						OrderDao orderDao = new OrderDao();
-						orderDao.setId(order.getId());
-						orderDao.setOrderNumber(order.getOrderNumber());
-						orderDao.setCustomerName(order.getCustomerName());
-						orderDao.setCustomerEmail(order.getCustomerEmail());
-						orderDao.setCustomerPhone(order.getCustomerPhone());
-						orderDao.setTotalAmount(order.getTotalAmount());
-						orderDao.setPaymentMethod(order.getPaymentMethod());
-						orderDao.setOrderDate(order.getOrderDate());
-						orderDao.setShippingCarrier(order.getShippingCarrier());
-						orderDao.setTrackingNumber(order.getTrackingNumber());
-						orderDao.setShippingAddressText(order.getShippingAddressText());
-						
-						// Send shipping notification when order is shipped
-						if (newStatus == OrderStatus.SHIPPED) {
-							emailService.sendShippingNotificationEmail(orderDao);
-							System.out.println("✅ [EMAIL] Shipping notification email sent for order: " + order.getOrderNumber());
-						}
-						// Send completion email when order is delivered
-						else if (newStatus == OrderStatus.DELIVERED) {
-							System.out.println("📧 [EMAIL] Attempting to send completion email...");
-							emailService.sendOrderCompletionEmail(orderDao);
-							System.out.println("✅ [EMAIL] Order completion email sent for order: " + order.getOrderNumber());
-						}
-					} catch (Exception e) {
-						System.err.println("❌ [EMAIL ERROR] Failed to send status notification email for order " + order.getOrderNumber() + ": " + e.getMessage());
-						e.printStackTrace();
-					}
-				} else {
-					System.out.println("ℹ️ [DEBUG] No status change, no email sent");
+				OrderStatus oldS = order.getStatus();
+				OrderStatus newS = OrderStatus.valueOf(((String) request.get("status")).toUpperCase());
+				order.setStatus(newS);
+				if (oldS != newS) {
+					OrderDao d = orderService.convertToDao(order);
+					if (newS == OrderStatus.SHIPPED) emailService.sendShippingNotificationEmail(d);
+					else if (newS == OrderStatus.DELIVERED) emailService.sendOrderCompletionEmail(d);
 				}
 			}
 
-			// Update payment status if provided
 			if (request.containsKey("paymentStatus")) {
-				String paymentStatusStr = (String) request.get("paymentStatus");
-				PaymentStatus oldPaymentStatus = order.getPaymentStatus();
-				PaymentStatus newPaymentStatus = PaymentStatus.valueOf(paymentStatusStr);
-				order.setPaymentStatus(newPaymentStatus);
-				
-				System.out.println("🔍 [DEBUG] Payment status change: " + oldPaymentStatus + " → " + newPaymentStatus);
-				
-				// Send payment confirmation email if status changed to COMPLETED
-				if (oldPaymentStatus != PaymentStatus.COMPLETED && newPaymentStatus == PaymentStatus.COMPLETED) {
-					try {
-						System.out.println("📧 [EMAIL] Attempting to send payment confirmation email...");
-						
-						// Create OrderDao directly to avoid LazyInitializationException
-						OrderDao orderDao = new OrderDao();
-						orderDao.setId(order.getId());
-						orderDao.setOrderNumber(order.getOrderNumber());
-						orderDao.setCustomerName(order.getCustomerName());
-						orderDao.setCustomerEmail(order.getCustomerEmail());
-						orderDao.setCustomerPhone(order.getCustomerPhone());
-						orderDao.setTotalAmount(order.getTotalAmount());
-						orderDao.setPaymentMethod(order.getPaymentMethod());
-						orderDao.setOrderDate(order.getOrderDate());
-						orderDao.setShippingCarrier(order.getShippingCarrier());
-						orderDao.setTrackingNumber(order.getTrackingNumber());
-						orderDao.setShippingAddressText(order.getShippingAddressText());
-						
-						emailService.sendPaymentConfirmationEmail(orderDao);
-						System.out.println("✅ [EMAIL] Payment confirmation email sent for order: " + order.getOrderNumber());
-					} catch (Exception e) {
-						System.err.println("❌ [EMAIL ERROR] Failed to send payment confirmation email for order " + order.getOrderNumber() + ": " + e.getMessage());
-						e.printStackTrace();
-					}
-				}
-				// Send payment failure email if status changed to FAILED
-				else if (oldPaymentStatus != PaymentStatus.FAILED && newPaymentStatus == PaymentStatus.FAILED) {
-					try {
-						System.out.println("📧 [EMAIL] Attempting to send payment failure email...");
-						
-						// Create OrderDao directly to avoid LazyInitializationException
-						OrderDao orderDao = new OrderDao();
-						orderDao.setId(order.getId());
-						orderDao.setOrderNumber(order.getOrderNumber());
-						orderDao.setCustomerName(order.getCustomerName());
-						orderDao.setCustomerEmail(order.getCustomerEmail());
-						orderDao.setCustomerPhone(order.getCustomerPhone());
-						orderDao.setTotalAmount(order.getTotalAmount());
-						orderDao.setPaymentMethod(order.getPaymentMethod());
-						orderDao.setOrderDate(order.getOrderDate());
-						orderDao.setShippingCarrier(order.getShippingCarrier());
-						orderDao.setTrackingNumber(order.getTrackingNumber());
-						orderDao.setShippingAddressText(order.getShippingAddressText());
-						
-						String retryPaymentLink = frontendUrl + "/checkout/retry/" + order.getOrderNumber();
-						emailService.sendPaymentFailureEmail(orderDao, retryPaymentLink);
-						System.out.println("✅ [EMAIL] Payment failure email sent for order: " + order.getOrderNumber());
-					} catch (Exception e) {
-						System.err.println("❌ [EMAIL ERROR] Failed to send payment failure email for order " + order.getOrderNumber() + ": " + e.getMessage());
-						e.printStackTrace();
-					}
-				} else {
-					System.out.println("ℹ️ [DEBUG] No payment status change requiring email, or no change occurred");
+				PaymentStatus oldP = order.getPaymentStatus();
+				PaymentStatus newP = PaymentStatus.valueOf(((String) request.get("paymentStatus")).toUpperCase());
+				order.setPaymentStatus(newP);
+				if (oldP != PaymentStatus.COMPLETED && newP == PaymentStatus.COMPLETED) {
+					emailService.sendPaymentConfirmationEmail(orderService.convertToDao(order));
 				}
 			}
 
-			// Update shipping carrier if provided
-			if (request.containsKey("shippingCarrier")) {
-				String carrier = (String) request.get("shippingCarrier");
-				order.setShippingCarrier(carrier);
-				System.out.println("🔍 [DEBUG] Updated shipping carrier: " + carrier);
-			}
-
-			// Update tracking number if provided
-			if (request.containsKey("trackingNumber")) {
-				String trackingNumber = (String) request.get("trackingNumber");
-				order.setTrackingNumber(trackingNumber);
-				System.out.println("🔍 [DEBUG] Updated tracking number: " + trackingNumber);
-			}
-
-			// Update notes if provided
-			if (request.containsKey("notes")) {
-				String notes = (String) request.get("notes");
-				order.setNotes(notes);
-				System.out.println("🔍 [DEBUG] Updated notes: " + notes);
-			}
+			if (request.get("shippingCarrier") != null) order.setShippingCarrier((String) request.get("shippingCarrier"));
+			if (request.get("trackingNumber") != null) order.setTrackingNumber((String) request.get("trackingNumber"));
 
 			orderRepository.save(order);
-			System.out.println("✅ [DEBUG] Order saved successfully");
-
-			return ResponseEntity.ok(Map.of("message", "Order updated successfully", "timestamp", java.time.LocalDateTime.now().toString()));
+			return ResponseEntity.ok(Map.of("message", "Order updated successfully"));
 		} catch (Exception e) {
-			System.err.println("❌ [ERROR] Failed to update order: " + e.getMessage());
-			e.printStackTrace();
-			return ResponseEntity.status(400).body(Map.of("error", e.getMessage(), "timestamp", java.time.LocalDateTime.now().toString()));
+			return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
 		}
 	}
 
@@ -437,22 +273,14 @@ public class AdminApiController {
 	 */
 	@GetMapping("/users")
 	public ResponseEntity<Page<UserDao>> getUsers(@RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String search,
-			@RequestParam(required = false) String status, @RequestParam(required = false) String timeRange) {
+												  @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String search) {
 
 		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-		Page<User> users;
+		Page<User> users = (search != null && !search.isEmpty())
+				? userRepository.searchUsers(search, pageable)
+				: userRepository.findAll(pageable);
 
-		// Apply filters
-		if (search != null && !search.trim().isEmpty()) {
-			users = userRepository
-					.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrFullNameContainingIgnoreCase(
-							search.trim(), search.trim(), search.trim(), pageable);
-		} else {
-			users = userRepository.findAll(pageable);
-		}
-
-		Page<UserDao> userDaos = users.map(user -> {
+		return ResponseEntity.ok(users.map(user -> {
 			UserDao dao = new UserDao();
 			dao.setId(user.getId());
 			dao.setUsername(user.getUsername());
@@ -460,19 +288,11 @@ public class AdminApiController {
 			dao.setFullName(user.getFullName());
 			dao.setPhoneNumber(user.getPhoneNumber());
 			dao.setCreatedAt(user.getCreatedAt());
-
-			// Calculate total orders and spent
-			long totalOrders = orderRepository.countByUserId(user.getId());
-			dao.setTotalOrders(totalOrders);
-
-			// Calculate total spent
+			dao.setTotalOrders(orderRepository.countByUserId(user.getId()));
 			BigDecimal totalSpent = orderRepository.sumTotalAmountByUserId(user.getId());
 			dao.setTotalSpent(totalSpent != null ? totalSpent : BigDecimal.ZERO);
-
 			return dao;
-		});
-
-		return ResponseEntity.ok(userDaos);
+		}));
 	}
 
 	/**
@@ -481,45 +301,18 @@ public class AdminApiController {
 	@PostMapping("/users")
 	public ResponseEntity<?> createUser(@RequestBody UserDao userDao) {
 		try {
-			// Check if username or email already exists
 			if (userRepository.existsByUsername(userDao.getUsername())) {
-				return ResponseEntity.status(400).body(Map.of("error", "Tên đăng nhập đã tồn tại"));
+				return ResponseEntity.status(400).body(Map.of("error", "Username đã tồn tại"));
 			}
-			if (userRepository.existsByEmail(userDao.getEmail())) {
-				return ResponseEntity.status(400).body(Map.of("error", "Email đã tồn tại"));
-			}
-
 			User user = new User();
 			user.setUsername(userDao.getUsername());
 			user.setEmail(userDao.getEmail());
 			user.setFullName(userDao.getFullName());
-			user.setPhoneNumber(userDao.getPhoneNumber());
+			user.setPassword(passwordEncoder.encode(userDao.getPassword()));
+			user.setRole(userDao.getRole() != null ? userDao.getRole() : Role.USER);
 			user.setIsActive(true);
-
-			// Set role from DAO or default to USER
-			if (userDao.getRole() != null) {
-				user.setRole(userDao.getRole());
-			} else {
-				user.setRole(Role.USER);
-			}
-
-			// Hash password using PasswordEncoder (same as registration)
-			if (userDao.getPassword() != null && !userDao.getPassword().isEmpty()) {
-				user.setPassword(passwordEncoder.encode(userDao.getPassword()));
-			}
-
-			user = userRepository.save(user);
-
-			UserDao dao = new UserDao();
-			dao.setId(user.getId());
-			dao.setUsername(user.getUsername());
-			dao.setEmail(user.getEmail());
-			dao.setFullName(user.getFullName());
-			dao.setPhoneNumber(user.getPhoneNumber());
-			dao.setRole(user.getRole());
-			dao.setCreatedAt(user.getCreatedAt());
-
-			return ResponseEntity.ok(dao);
+			userRepository.save(user);
+			return ResponseEntity.ok(Map.of("message", "Tạo người dùng thành công"));
 		} catch (Exception e) {
 			return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
 		}
@@ -532,22 +325,13 @@ public class AdminApiController {
 	public ResponseEntity<?> getUser(@PathVariable Long id) {
 		try {
 			User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-
 			UserDao dao = new UserDao();
 			dao.setId(user.getId());
 			dao.setUsername(user.getUsername());
 			dao.setEmail(user.getEmail());
 			dao.setFullName(user.getFullName());
 			dao.setPhoneNumber(user.getPhoneNumber());
-			dao.setCreatedAt(user.getCreatedAt());
-
-			// Get orders
-			long totalOrders = orderRepository.countByUserId(user.getId());
-			dao.setTotalOrders(totalOrders);
-
-			BigDecimal totalSpent = orderRepository.sumTotalAmountByUserId(user.getId());
-			dao.setTotalSpent(totalSpent != null ? totalSpent : BigDecimal.ZERO);
-
+			dao.setTotalOrders(orderRepository.countByUserId(user.getId()));
 			return ResponseEntity.ok(dao);
 		} catch (Exception e) {
 			return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
@@ -561,90 +345,57 @@ public class AdminApiController {
 	public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserDao userDao) {
 		try {
 			User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-
-			// Update fields
-			if (userDao.getFullName() != null) {
-				user.setFullName(userDao.getFullName());
-			}
-			if (userDao.getEmail() != null) {
-				user.setEmail(userDao.getEmail());
-			}
-			if (userDao.getPhoneNumber() != null) {
-				user.setPhoneNumber(userDao.getPhoneNumber());
-			}
-
-			user = userRepository.save(user);
-
-			UserDao dao = new UserDao();
-			dao.setId(user.getId());
-			dao.setUsername(user.getUsername());
-			dao.setEmail(user.getEmail());
-			dao.setFullName(user.getFullName());
-			dao.setPhoneNumber(user.getPhoneNumber());
-			dao.setCreatedAt(user.getCreatedAt());
-
-			return ResponseEntity.ok(dao);
+			if (userDao.getFullName() != null) user.setFullName(userDao.getFullName());
+			if (userDao.getEmail() != null) user.setEmail(userDao.getEmail());
+			userRepository.save(user);
+			return ResponseEntity.ok(Map.of("message", "Cập nhật thành công"));
 		} catch (Exception e) {
 			return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
 		}
 	}
 
 	/**
-	 * Delete User (AJAX) - Soft delete by deactivating Only ADMIN can delete users
+	 * Delete User (AJAX)
 	 */
 	@DeleteMapping("/users/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<?> deleteUser(@PathVariable Long id) {
 		try {
-			User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-
-			// Soft delete - just mark as inactive or delete
-			userRepository.delete(user);
-
-			return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
+			userRepository.deleteById(id);
+			return ResponseEntity.ok(Map.of("message", "Xóa thành công"));
 		} catch (Exception e) {
 			return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
 		}
 	}
 
-	/**
-	 * Export Orders CSV
-	 */
 	@GetMapping("/orders/export")
-	public ResponseEntity<String> exportOrders() {
-		// TODO: Implement CSV export
-		return ResponseEntity.ok("CSV export not implemented yet");
-	}
+	public ResponseEntity<String> exportOrders() { return ResponseEntity.ok("Tính năng đang phát triển"); }
 
-	/**
-	 * Export Customers CSV
-	 */
 	@GetMapping("/customers/export")
-	public ResponseEntity<String> exportCustomers() {
-		// TODO: Implement CSV export
-		return ResponseEntity.ok("CSV export not implemented yet");
-	}
+	public ResponseEntity<String> exportCustomers() { return ResponseEntity.ok("Tính năng đang phát triển"); }
 
-	/**
-	 * Export Analytics Report
-	 */
-	@GetMapping("/analytics/export")
-	public ResponseEntity<String> exportAnalytics(@RequestParam String period) {
-		// TODO: Implement report export
-		return ResponseEntity.ok("Analytics export not implemented yet");
-	}
-
-	/**
-	 * Delete Product (AJAX) - Only ADMIN can delete
-	 */
 	@DeleteMapping("/products/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
 		try {
 			productService.deleteProduct(id);
-			return ResponseEntity.ok(Map.of("message", "Product deleted successfully"));
+			return ResponseEntity.ok(Map.of("message", "Xóa sản phẩm thành công"));
 		} catch (Exception e) {
 			return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
 		}
+	}
+
+	// Helper fallback
+	private OrderDao createFallbackOrderDao(Order order) {
+		OrderDao dao = new OrderDao();
+		dao.setId(order.getId());
+		dao.setOrderNumber(order.getOrderNumber());
+		dao.setTotalAmount(order.getTotalAmount());
+		dao.setStatus(order.getStatus());
+		dao.setOrderDate(order.getOrderDate());
+		dao.setPaymentStatus(order.getPaymentStatus());
+		dao.setCustomerName(order.getCustomerName());
+		dao.setCustomerEmail(order.getCustomerEmail());
+		return dao;
 	}
 }

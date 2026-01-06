@@ -1,30 +1,39 @@
 package com.dacsanviet.controller;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import com.dacsanviet.dao.CategoryDao;
 import com.dacsanviet.dao.ProductDao;
+import com.dacsanviet.model.User;
+import com.dacsanviet.repository.UserRepository;
+import com.dacsanviet.dto.NewsArticleDto;
+import com.dacsanviet.dto.ConsultationRequest;
 import com.dacsanviet.service.CategoryService;
 import com.dacsanviet.service.EmailService;
+import com.dacsanviet.service.NewsService;
 import com.dacsanviet.service.ProductService;
 
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * Home controller for basic navigation and public pages
+ * Home controller handles public navigation, homepage data, and security requests.
  */
+@Slf4j
 @Controller
 public class HomeController {
 
@@ -37,82 +46,40 @@ public class HomeController {
 	@Autowired
 	private EmailService emailService;
 
+	@Autowired
+	private NewsService newsService;
+
+	@Autowired
+	private UserRepository userRepository; // Sử dụng UserRepository bạn vừa gửi
+
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
 	@GetMapping("/")
 	public String home(Model model) {
 		try {
-			// Get featured products for homepage
 			Pageable featuredPageable = PageRequest.of(0, 8);
 			Page<ProductDao> featuredProducts = productService.getFeaturedProducts(featuredPageable);
 			model.addAttribute("featuredProducts", featuredProducts.getContent());
 
-			// Get new products for homepage (load more for pagination)
 			Pageable newPageable = PageRequest.of(0, 20);
 			Page<ProductDao> newProducts = productService.getAllProducts(newPageable);
 			model.addAttribute("newProducts", newProducts.getContent());
 
-			// Get active categories
 			List<CategoryDao> categories = categoryService.getAllActiveCategories();
 			model.addAttribute("categories", categories);
 
+			List<NewsArticleDto> latestNews = newsService.findRecentArticles(3);
+			model.addAttribute("newsList", latestNews);
+
 		} catch (Exception e) {
-			// If there's an error, just continue without data
+			log.error("Lỗi khi tải dữ liệu trang chủ: {}", e.getMessage());
 			model.addAttribute("featuredProducts", List.of());
 			model.addAttribute("newProducts", List.of());
 			model.addAttribute("categories", List.of());
+			model.addAttribute("newsList", List.of());
 		}
-
 		return "index";
-	}
-
-	@GetMapping("/health")
-	public String health() {
-		return "index";
-	}
-
-	// Products mapping moved to ProductController
-
-	@GetMapping("/products/search")
-	public String searchProducts(Model model, @RequestParam(required = false) String keyword,
-			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size) {
-		try {
-			model.addAttribute("pageTitle", "Tìm Kiếm Sản Phẩm");
-			model.addAttribute("searchKeyword", keyword);
-
-			if (keyword != null && !keyword.trim().isEmpty()) {
-				Pageable pageable = PageRequest.of(page, size);
-				Page<ProductDao> products = productService.searchProducts(keyword.trim(), null, pageable);
-
-				model.addAttribute("products", products.getContent());
-				model.addAttribute("currentPage", page);
-				model.addAttribute("totalPages", products.getTotalPages());
-				model.addAttribute("totalElements", products.getTotalElements());
-			} else {
-				model.addAttribute("products", List.of());
-			}
-
-		} catch (Exception e) {
-			model.addAttribute("products", List.of());
-			model.addAttribute("error", "Không thể tìm kiếm sản phẩm");
-		}
-
-		return "products/search";
-	}
-
-	@GetMapping("/categories")
-	public String categories(Model model) {
-		try {
-			model.addAttribute("pageTitle", "Danh Mục Sản Phẩm");
-
-			// Get categories with product count
-			List<CategoryDao> categories = categoryService.getCategoriesWithProductCount();
-			model.addAttribute("categories", categories);
-
-		} catch (Exception e) {
-			model.addAttribute("categories", List.of());
-			model.addAttribute("error", "Không thể tải danh sách danh mục");
-		}
-
-		return "categories/index";
 	}
 
 	@GetMapping("/login")
@@ -122,6 +89,75 @@ public class HomeController {
 		return "auth/login";
 	}
 
+	/**
+	 * API xử lý Quên mật khẩu
+	 */
+	@PostMapping("/api/forgot-password")
+	@ResponseBody
+	public ResponseEntity<?> handleForgotPassword(@RequestParam String email) {
+		Map<String, Object> response = new HashMap<>();
+		try {
+			log.info("Yêu cầu quên mật khẩu cho: {}", email);
+
+			// Tìm bằng hàm findByUsernameOrEmail có sẵn trong Repository của bạn
+			Optional<User> userOpt = userRepository.findByUsernameOrEmail(email);
+
+			if (userOpt.isEmpty()) {
+				response.put("success", false);
+				response.put("message", "Tài khoản hoặc Email không tồn tại!");
+				return ResponseEntity.ok(response);
+			}
+
+			User user = userOpt.get();
+
+			// Tạo mật khẩu mới
+			String newPassword = UUID.randomUUID().toString().substring(0, 8);
+
+			// Cập nhật mật khẩu đã mã hóa
+			user.setPassword(passwordEncoder.encode(newPassword));
+			userRepository.save(user);
+
+			// Gửi Email
+			try {
+				emailService.sendSimpleEmail(
+						user.getEmail(),
+						"Mật khẩu mới - Đặc Sản Việt",
+						"Chào " + user.getFullName() + ",\n\nMật khẩu mới của bạn là: " + newPassword +
+								"\n\nVui lòng đăng nhập và đổi mật khẩu ngay để bảo mật."
+				);
+			} catch (Exception mailEx) {
+				log.error("Lỗi gửi mail: {}", mailEx.getMessage());
+				response.put("success", false);
+				response.put("message", "Mật khẩu đã reset nhưng không thể gửi email. Hãy liên hệ hỗ trợ.");
+				return ResponseEntity.ok(response);
+			}
+
+			response.put("success", true);
+			response.put("message", "Mật khẩu mới đã được gửi về email của bạn!");
+			return ResponseEntity.ok(response);
+
+		} catch (Exception e) {
+			log.error("Lỗi xử lý đặt lại mật khẩu: {}", e.getMessage());
+			response.put("success", false);
+			response.put("message", "Có lỗi xảy ra, vui lòng thử lại sau.");
+			return ResponseEntity.status(500).body(response);
+		}
+	}
+
+	@PostMapping("/api/consultation")
+	@ResponseBody
+	public ResponseEntity<?> submitConsultation(@Valid @RequestBody ConsultationRequest request) {
+		Map<String, String> response = new HashMap<>();
+		try {
+			emailService.sendConsultationEmail(request);
+			response.put("message", "Cảm ơn bạn! Chúng tôi sẽ liên hệ tư vấn trong vòng 24h.");
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("error", "Có lỗi xảy ra!");
+			return ResponseEntity.status(500).body(response);
+		}
+	}
+
 	@GetMapping("/register")
 	public String register(Model model) {
 		model.addAttribute("pageTitle", "Đăng Ký");
@@ -129,90 +165,17 @@ public class HomeController {
 		return "auth/register";
 	}
 
-	@GetMapping("/test-simple")
-	public String testSimple() {
-		return "test-simple";
-	}
-
-	@GetMapping("/privacy-policy")
-	public String privacyPolicy(Model model) {
-		model.addAttribute("pageTitle", "Chính Sách Bảo Mật");
-		model.addAttribute("categories", categoryService.getAllActiveCategories());
-		return "privacy-policy";
-	}
-
-	@GetMapping("/terms-of-service")
-	public String termsOfService(Model model) {
-		model.addAttribute("pageTitle", "Điều Khoản Sử Dụng");
-		model.addAttribute("categories", categoryService.getAllActiveCategories());
-		return "terms-of-service";
-	}
-
 	@GetMapping("/about")
 	public String about(Model model) {
-		model.addAttribute("pageTitle", "Giới Thiệu - Đặc Sản Việt Nam");
+		model.addAttribute("pageTitle", "Giới Thiệu");
 		model.addAttribute("categories", categoryService.getAllActiveCategories());
 		return "pages/about";
 	}
 
 	@GetMapping("/contact")
 	public String contact(Model model) {
-		model.addAttribute("pageTitle", "Liên Hệ - Đặc Sản Việt");
+		model.addAttribute("pageTitle", "Liên Hệ");
 		model.addAttribute("categories", categoryService.getAllActiveCategories());
 		return "pages/contact";
 	}
-
-	// News routes are now handled by NewsController
-
-	@GetMapping("/admin/chat")
-	public String adminChat(Model model) {
-		model.addAttribute("pageTitle", "Quản Lý Chat - Admin");
-		return "admin/chat";
-	}
-
-	@GetMapping("/chat-demo")
-	public String chatDemo(Model model) {
-		model.addAttribute("pageTitle", "Demo Chatbox - Đặc Sản Việt");
-		return "chat-demo";
-	}
-
-	@PostMapping("/api/consultation")
-	@ResponseBody
-	public org.springframework.http.ResponseEntity<?> submitConsultation(
-			@Valid @RequestBody com.dacsanviet.dto.ConsultationRequest request) {
-		try {
-			// Log consultation request
-			System.out.println("=== YÊU CẦU TƯ VẤN MỚI ===");
-			System.out.println("Tên: " + request.getName());
-			System.out.println("Số điện thoại: " + request.getPhone());
-			System.out.println("Email: " + request.getEmail());
-			System.out.println("Quan tâm: " + request.getInterest());
-			System.out.println("Ghi chú: " + request.getMessage());
-			System.out.println("Thời gian: " + java.time.LocalDateTime.now());
-			System.out.println("Gửi đến: dacsanviethotro@gmail.com");
-			System.out.println("========================");
-
-			// Send email notification with timeout handling
-			try {
-				emailService.sendConsultationEmail(request);
-				System.out.println("✅ Email sent successfully!");
-			} catch (Exception emailError) {
-				System.err.println("❌ Failed to send email: " + emailError.getMessage());
-				emailError.printStackTrace();
-				// Continue anyway - don't fail the user request
-			}
-
-			java.util.Map<String, String> response = new java.util.HashMap<>();
-			response.put("message", "Cảm ơn bạn! Chúng tôi sẽ liên hệ tư vấn trong vòng 24h.");
-			return org.springframework.http.ResponseEntity.ok(response);
-
-		} catch (Exception e) {
-			System.err.println("❌ Error in consultation endpoint: " + e.getMessage());
-			e.printStackTrace();
-			java.util.Map<String, String> error = new java.util.HashMap<>();
-			error.put("error", "Có lỗi xảy ra. Vui lòng thử lại sau!");
-			return org.springframework.http.ResponseEntity.status(500).body(error);
-		}
-	}
-
 }

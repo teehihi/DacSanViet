@@ -69,14 +69,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf
-                // Enable CSRF for form-based endpoints, but ignore specific API endpoints
-                .ignoringRequestMatchers("/api/auth/**", "/api/csrf/**", "/api/payment/**", "/h2-console/**", "/ws/**", 
-                                       "/api/admin/news/*/update-debug", "/api/admin/news/*/update-simple", "/api/admin/news/*/update",
-                                       "/api/admin/news/*", "/api/checkout/**", "/api/cart/**", "/checkout/process",
-                                       "/api/admin/orders/**", "/api/test/**") // Allow order updates and email testing without CSRF
-                .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
-            )
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers(
+                                "/api/auth/**", "/api/csrf/**", "/api/payment/**", "/h2-console/**", "/ws/**",
+                                "/api/admin/news/*/update-debug", "/api/admin/news/*/update-simple", "/api/admin/news/*/update",
+                                "/api/admin/news/*", "/api/checkout/**", "/api/cart/**", "/checkout/process",
+                                "/api/admin/orders/**", "/api/test/**",
+                                "/api/forgot-password" // <-- THÊM ĐƯỜNG DẪN NÀY
+                        )
+                        .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
+                )
             .headers(headers -> headers
                 .frameOptions().sameOrigin() // Allow H2 console frames
                 .contentTypeOptions().and()
@@ -96,12 +98,17 @@ public class SecurityConfig {
                 .requestMatchers("/error/**").permitAll()
                 .requestMatchers("/init-data", "/clear-test-data", "/check-conflicts", "/view-database", "/database").permitAll()
                 .requestMatchers("/login", "/register").permitAll()
+                .requestMatchers("/api/admin/forgot-password").permitAll()
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/csrf/**").permitAll() // Allow CSRF token endpoint
                 .requestMatchers("/api/test/**").permitAll() // Allow email testing endpoints
                 .requestMatchers("/admin/chat").permitAll() // Temporary for testing
                 .requestMatchers("/chat-demo").permitAll() // Demo page
+                    // Cho phép truy cập công khai API quên mật khẩu
+
+
+
                 
 
                 

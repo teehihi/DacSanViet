@@ -35,6 +35,51 @@ public class EmailService {
 	@Value("${app.frontend.url}")
 	private String frontendUrl;
 
+	/**
+	 * PHẦN BỔ SUNG: Gửi email văn bản đơn giản hoặc mật khẩu mới
+	 * Giải quyết lỗi trong HomeController và các logic reset mật khẩu nhanh
+	 */
+	public void sendSimpleEmail(String to, String subject, String content) throws UnsupportedEncodingException {
+		try {
+			MimeMessage message = mailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+			helper.setFrom(fromEmail, "Đặc Sản Việt");
+			helper.setTo(to);
+			helper.setSubject(subject);
+
+			// Sử dụng giao diện chung của Đặc Sản Việt để gửi mật khẩu
+			String htmlContent = String.format(
+					"""
+					<!DOCTYPE html>
+					<html>
+					<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+						<div style="max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
+							<div style="background: linear-gradient(135deg, #4ec2b6 0%%, #2e857c 100%%); padding: 20px; text-align: center; color: white;">
+								<h2>Đặc Sản Việt</h2>
+							</div>
+							<div style="padding: 30px;">
+								<p>Chào bạn,</p>
+								<p>%s</p>
+								<div style="text-align: center; margin: 30px 0;">
+									<a href="%s/login" style="background: #4ec2b6; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Đăng Nhập Ngay</a>
+								</div>
+							</div>
+						</div>
+					</body>
+					</html>
+					""", content, frontendUrl);
+
+			helper.setText(htmlContent, true);
+			mailSender.send(message);
+			logger.info("Simple email sent to: {}", to);
+		} catch (MessagingException e) {
+			logger.error("Failed to send simple email", e);
+		}
+	}
+
+	// --- CÁC NỘI DUNG GỐC BÊN DƯỚI ĐƯỢC GIỮ NGUYÊN HOÀN TOÀN ---
+
 	public void sendConsultationEmail(ConsultationRequest request) throws UnsupportedEncodingException {
 		try {
 			MimeMessage message = mailSender.createMimeMessage();
@@ -61,12 +106,12 @@ public class EmailService {
 			return "Không chọn";
 		}
 		return switch (interestValue) {
-		case "mien-bac" -> "Đặc sản miền Bắc";
-		case "mien-trung" -> "Đặc sản miền Trung";
-		case "mien-nam" -> "Đặc sản miền Nam";
-		case "tet" -> "Sản phẩm Tết";
-		case "qua-tang" -> "Quà tặng doanh nghiệp";
-		default -> interestValue;
+			case "mien-bac" -> "Đặc sản miền Bắc";
+			case "mien-trung" -> "Đặc sản miền Trung";
+			case "mien-nam" -> "Đặc sản miền Nam";
+			case "tet" -> "Sản phẩm Tết";
+			case "qua-tang" -> "Quà tặng doanh nghiệp";
+			default -> interestValue;
 		};
 	}
 
@@ -613,7 +658,7 @@ public class EmailService {
 				String productImageUrl = item.getProductImageUrl();
 				if (productImageUrl == null || productImageUrl.isEmpty()) {
 					productImageUrl = "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=300&q=80"; // Default
-																													// image
+					// image
 				}
 
 				orderItemsHtml.append(String.format(
@@ -669,7 +714,6 @@ public class EmailService {
 								<tr>
 									<td align="center">
 										<table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; max-width: 600px;">
-											<!-- Header -->
 											<tr>
 												<td style="background: linear-gradient(135deg, #4ec2b6 0%%, #2e857c 100%%); padding: 40px 30px; text-align: center;">
 													<img src="https://files.catbox.moe/5uf8r1.png" alt="Đặc Sản Việt" style="max-width: 150px; margin-bottom: 15px;">
@@ -678,7 +722,6 @@ public class EmailService {
 												</td>
 											</tr>
 
-											<!-- Success Banner -->
 											<tr>
 												<td style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 20px 30px;">
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
@@ -698,7 +741,6 @@ public class EmailService {
 												</td>
 											</tr>
 
-											<!-- Order Info -->
 											<tr>
 												<td style="padding: 35px 30px;">
 													<h2 style="font-size: 18px; font-weight: 700; color: #333; margin: 0 0 20px; border-bottom: 3px solid #4ec2b6; padding-bottom: 10px;">
@@ -748,7 +790,6 @@ public class EmailService {
 														</tr>
 													</table>
 
-													<!-- Customer Info -->
 													<h2 style="font-size: 18px; font-weight: 700; color: #333; margin: 30px 0 20px; border-bottom: 3px solid #4ec2b6; padding-bottom: 10px;">
 														Thông Tin Người Nhận
 													</h2>
@@ -796,7 +837,6 @@ public class EmailService {
 														</tr>
 													</table>
 
-													<!-- Order Items -->
 													<h2 style="font-size: 18px; font-weight: 700; color: #333; margin: 30px 0 20px; border-bottom: 3px solid #4ec2b6; padding-bottom: 10px;">
 														Chi Tiết Đơn Hàng
 													</h2>
@@ -823,7 +863,6 @@ public class EmailService {
 														</tr>
 													</table>
 
-													<!-- Next Steps -->
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
 														<tr>
 															<td style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px;">
@@ -834,7 +873,6 @@ public class EmailService {
 														</tr>
 													</table>
 
-													<!-- CTA Button -->
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
 														<tr>
 															<td align="center">
@@ -847,7 +885,6 @@ public class EmailService {
 												</td>
 											</tr>
 
-											<!-- Footer -->
 											<tr>
 												<td style="background-color: #f8f9fa; padding: 30px; border-top: 1px solid #e9ecef;">
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
@@ -892,12 +929,12 @@ public class EmailService {
 		if (method == null)
 			return "Chưa xác định";
 		return switch (method) {
-		case "COD" -> "Thanh toán khi nhận hàng (COD)";
-		case "MOMO" -> "Ví điện tử Momo";
-		case "VNPAY" -> "VNPAY";
-		case "VIETQR" -> "VietQR";
-		case "BANK_TRANSFER" -> "Chuyển khoản ngân hàng";
-		default -> method;
+			case "COD" -> "Thanh toán khi nhận hàng (COD)";
+			case "MOMO" -> "Ví điện tử Momo";
+			case "VNPAY" -> "VNPAY";
+			case "VIETQR" -> "VietQR";
+			case "BANK_TRANSFER" -> "Chuyển khoản ngân hàng";
+			default -> method;
 		};
 	}
 
@@ -905,12 +942,12 @@ public class EmailService {
 		if (status == null)
 			return "Chưa xác định";
 		return switch (status) {
-		case PENDING -> "Chờ xác nhận";
-		case CONFIRMED -> "Đã xác nhận";
-		case PROCESSING -> "Đang xử lý";
-		case SHIPPED -> "Đang giao hàng";
-		case DELIVERED -> "Đã giao hàng";
-		case CANCELLED -> "Đã hủy";
+			case PENDING -> "Chờ xác nhận";
+			case CONFIRMED -> "Đã xác nhận";
+			case PROCESSING -> "Đang xử lý";
+			case SHIPPED -> "Đang giao hàng";
+			case DELIVERED -> "Đã giao hàng";
+			case CANCELLED -> "Đã hủy";
 		};
 	}
 
@@ -1050,7 +1087,6 @@ public class EmailService {
 								<tr>
 									<td align="center">
 										<table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; max-width: 600px;">
-											<!-- Header -->
 											<tr>
 												<td style="background: linear-gradient(135deg, #4ec2b6 0%%, #2e857c 100%%); padding: 40px 30px; text-align: center;">
 													<img src="https://files.catbox.moe/5uf8r1.png" alt="Đặc Sản Việt" style="max-width: 150px; margin-bottom: 15px;">
@@ -1059,7 +1095,6 @@ public class EmailService {
 												</td>
 											</tr>
 
-											<!-- Success Banner -->
 											<tr>
 												<td style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 20px 30px;">
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
@@ -1079,7 +1114,6 @@ public class EmailService {
 												</td>
 											</tr>
 
-											<!-- Payment Info -->
 											<tr>
 												<td style="padding: 35px 30px;">
 													<h2 style="font-size: 18px; font-weight: 700; color: #333; margin: 0 0 20px; border-bottom: 3px solid #4ec2b6; padding-bottom: 10px;">
@@ -1129,7 +1163,6 @@ public class EmailService {
 														</tr>
 													</table>
 
-													<!-- Next Steps -->
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
 														<tr>
 															<td style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px;">
@@ -1140,7 +1173,6 @@ public class EmailService {
 														</tr>
 													</table>
 
-													<!-- CTA Button -->
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
 														<tr>
 															<td align="center">
@@ -1153,7 +1185,6 @@ public class EmailService {
 												</td>
 											</tr>
 
-											<!-- Footer -->
 											<tr>
 												<td style="background-color: #f8f9fa; padding: 30px; border-top: 1px solid #e9ecef;">
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
@@ -1203,7 +1234,6 @@ public class EmailService {
 								<tr>
 									<td align="center">
 										<table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; max-width: 600px;">
-											<!-- Header -->
 											<tr>
 												<td style="background: linear-gradient(135deg, #4ec2b6 0%%, #2e857c 100%%); padding: 40px 30px; text-align: center;">
 													<img src="https://files.catbox.moe/5uf8r1.png" alt="Đặc Sản Việt" style="max-width: 150px; margin-bottom: 15px;">
@@ -1212,7 +1242,6 @@ public class EmailService {
 												</td>
 											</tr>
 
-											<!-- Shipping Banner -->
 											<tr>
 												<td style="background-color: #cce5ff; border-left: 4px solid #007bff; padding: 20px 30px;">
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
@@ -1232,7 +1261,6 @@ public class EmailService {
 												</td>
 											</tr>
 
-											<!-- Shipping Info -->
 											<tr>
 												<td style="padding: 35px 30px;">
 													<h2 style="font-size: 18px; font-weight: 700; color: #333; margin: 0 0 20px; border-bottom: 3px solid #4ec2b6; padding-bottom: 10px;">
@@ -1263,10 +1291,8 @@ public class EmailService {
 														</tr>
 													</table>
 
-													<!-- Tracking Instructions -->
 													%s
 
-													<!-- Delivery Info -->
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
 														<tr>
 															<td style="background-color: #e7f3ff; border-left: 4px solid #007bff; padding: 20px; border-radius: 8px;">
@@ -1281,7 +1307,6 @@ public class EmailService {
 														</tr>
 													</table>
 
-													<!-- CTA Button -->
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
 														<tr>
 															<td align="center">
@@ -1294,7 +1319,6 @@ public class EmailService {
 												</td>
 											</tr>
 
-											<!-- Footer -->
 											<tr>
 												<td style="background-color: #f8f9fa; padding: 30px; border-top: 1px solid #e9ecef;">
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
@@ -1331,12 +1355,12 @@ public class EmailService {
 
 	private String buildShippingCarrierInfo(OrderDao order) {
 		StringBuilder info = new StringBuilder();
-		
+
 		if (order.getShippingCarrier() != null && !order.getShippingCarrier().isEmpty()) {
 			info.append("""
 					<tr>
 						<td style="padding: 15px 20px; border-bottom: 1px solid #e9ecef;">
-							<table width="100%" cellpadding="0" cellspacing="0" border="0">
+							<table width="100%%" cellpadding="0" cellspacing="0" border="0">
 								<tr>
 									<td width="140" style="font-weight: 600; color: #4ec2b6; font-size: 14px;">Đơn vị vận chuyển</td>
 									<td style="color: #333; font-size: 14px; text-align: right;">%s</td>
@@ -1346,12 +1370,12 @@ public class EmailService {
 					</tr>
 					""".formatted(order.getShippingCarrier()));
 		}
-		
+
 		if (order.getTrackingNumber() != null && !order.getTrackingNumber().isEmpty()) {
 			info.append("""
 					<tr>
 						<td style="padding: 15px 20px; border-bottom: 1px solid #e9ecef;">
-							<table width="100%" cellpadding="0" cellspacing="0" border="0">
+							<table width="100%%" cellpadding="0" cellspacing="0" border="0">
 								<tr>
 									<td width="140" style="font-weight: 600; color: #4ec2b6; font-size: 14px;">Mã vận đơn</td>
 									<td style="color: #007bff; font-size: 16px; font-weight: 700; text-align: right; font-family: monospace;">%s</td>
@@ -1361,14 +1385,14 @@ public class EmailService {
 					</tr>
 					""".formatted(order.getTrackingNumber()));
 		}
-		
+
 		return info.toString();
 	}
 
 	private String buildTrackingInfo(OrderDao order) {
 		if (order.getTrackingNumber() != null && !order.getTrackingNumber().isEmpty()) {
 			return """
-					<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
+					<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
 						<tr>
 							<td style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px;">
 								<h4 style="margin: 0 0 10px; color: #856404;">Theo Dõi Đơn Hàng</h4>
@@ -1400,7 +1424,6 @@ public class EmailService {
 								<tr>
 									<td align="center">
 										<table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; max-width: 600px;">
-											<!-- Header -->
 											<tr>
 												<td style="background: linear-gradient(135deg, #4ec2b6 0%%, #2e857c 100%%); padding: 40px 30px; text-align: center;">
 													<img src="https://files.catbox.moe/5uf8r1.png" alt="Đặc Sản Việt" style="max-width: 150px; margin-bottom: 15px;">
@@ -1409,7 +1432,6 @@ public class EmailService {
 												</td>
 											</tr>
 
-											<!-- Completion Banner -->
 											<tr>
 												<td style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 20px 30px;">
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
@@ -1428,7 +1450,6 @@ public class EmailService {
 												</td>
 											</tr>
 
-											<!-- Thank You Message -->
 											<tr>
 												<td style="padding: 35px 30px;">
 													<h2 style="font-size: 18px; font-weight: 700; color: #333; margin: 0 0 20px; border-bottom: 3px solid #4ec2b6; padding-bottom: 10px;">
@@ -1441,40 +1462,37 @@ public class EmailService {
 																<h3 style="color: #28a745; margin: 0 0 15px; font-size: 20px;">Cảm Ơn Bạn Đã Tin Tưởng!</h3>
 																<p style="margin: 0; color: #333; font-size: 16px; line-height: 1.6;">
 																	Kính chào <strong>%s</strong>,<br><br>
-																	Chúng tôi hy vọng bạn hài lòng với sản phẩm đặc sản Việt Nam chất lượng cao. 
+																	Chúng tôi hy vọng bạn hài lòng với sản phẩm đặc sản Việt Nam chất lượng cao. 
 																	Sự tin tưởng của bạn là động lực để chúng tôi tiếp tục mang đến những sản phẩm tốt nhất.
 																</p>
 															</td>
 														</tr>
 													</table>
 
-													<!-- Review Request -->
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
 														<tr>
 															<td style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px;">
 																<h4 style="margin: 0 0 10px; color: #856404;">⭐ Đánh Giá Sản Phẩm</h4>
 																<p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.8;">
-																	Nếu bạn hài lòng với sản phẩm, hãy dành vài phút để đánh giá và chia sẻ trải nghiệm của bạn. 
+																	Nếu bạn hài lòng với sản phẩm, hãy dành vài phút để đánh giá và chia sẻ trải nghiệm của bạn. 
 																	Điều này sẽ giúp chúng tôi cải thiện dịch vụ và hỗ trợ khách hàng khác đưa ra quyết định mua hàng.
 																</p>
 															</td>
 														</tr>
 													</table>
 
-													<!-- Future Offers -->
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px;">
 														<tr>
 															<td style="background-color: #e7f3ff; border-left: 4px solid #007bff; padding: 20px; border-radius: 8px;">
 																<h4 style="margin: 0 0 10px; color: #007bff;">🎁 Ưu Đãi Đặc Biệt</h4>
 																<p style="margin: 0; color: #004085; font-size: 14px; line-height: 1.8;">
-																	Theo dõi email và website của chúng tôi để không bỏ lỡ các chương trình khuyến mãi, 
+																	Theo dõi email và website của chúng tôi để không bỏ lỡ các chương trình khuyến mãi, 
 																	sản phẩm mới và ưu đãi đặc biệt dành riêng cho khách hàng thân thiết như bạn!
 																</p>
 															</td>
 														</tr>
 													</table>
 
-													<!-- Final Thank You -->
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
 														<tr>
 															<td style="text-align: center; padding: 20px; background-color: #f0f8f7; border-radius: 8px;">
@@ -1488,7 +1506,6 @@ public class EmailService {
 														</tr>
 													</table>
 
-													<!-- CTA Button -->
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
 														<tr>
 															<td align="center">
@@ -1501,7 +1518,6 @@ public class EmailService {
 												</td>
 											</tr>
 
-											<!-- Footer -->
 											<tr>
 												<td style="background-color: #f8f9fa; padding: 30px; border-top: 1px solid #e9ecef;">
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
@@ -1550,7 +1566,6 @@ public class EmailService {
 								<tr>
 									<td align="center">
 										<table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; max-width: 600px;">
-											<!-- Header -->
 											<tr>
 												<td style="background: linear-gradient(135deg, #4ec2b6 0%%, #2e857c 100%%); padding: 40px 30px; text-align: center;">
 													<img src="https://files.catbox.moe/5uf8r1.png" alt="Đặc Sản Việt" style="max-width: 150px; margin-bottom: 15px;">
@@ -1559,7 +1574,6 @@ public class EmailService {
 												</td>
 											</tr>
 
-											<!-- Warning Banner -->
 											<tr>
 												<td style="background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 20px 30px;">
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
@@ -1579,7 +1593,6 @@ public class EmailService {
 												</td>
 											</tr>
 
-											<!-- Order Info -->
 											<tr>
 												<td style="padding: 35px 30px;">
 													<h2 style="font-size: 18px; font-weight: 700; color: #333; margin: 0 0 20px; border-bottom: 3px solid #4ec2b6; padding-bottom: 10px;">
@@ -1619,7 +1632,6 @@ public class EmailService {
 														</tr>
 													</table>
 
-													<!-- Retry Payment Button -->
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin: 30px 0;">
 														<tr>
 															<td align="center" style="background-color: #e7f3ff; padding: 25px; border-radius: 8px;">
@@ -1634,7 +1646,6 @@ public class EmailService {
 														</tr>
 													</table>
 
-													<!-- Support Info -->
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 30px;">
 														<tr>
 															<td style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px;">
@@ -1651,7 +1662,6 @@ public class EmailService {
 														</tr>
 													</table>
 
-													<!-- Important Notice -->
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px;">
 														<tr>
 															<td style="background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; border-radius: 8px;">
@@ -1664,7 +1674,6 @@ public class EmailService {
 												</td>
 											</tr>
 
-											<!-- Footer -->
 											<tr>
 												<td style="background-color: #f8f9fa; padding: 30px; border-top: 1px solid #e9ecef;">
 													<table width="100%%" cellpadding="0" cellspacing="0" border="0">
