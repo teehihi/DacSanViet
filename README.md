@@ -458,6 +458,7 @@ volumes:
 *Quy trình thanh toán đơn giản tạo sự tiện lợi cho khách hàng*
 
 ![Thanh toán](screenshots/checkout-2.png)
+
 *Mã QR động hỗ trợ thanh toán tiện lợi*
 
 ![Email thông báo](screenshots/checkout-3.png)
